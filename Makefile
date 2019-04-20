@@ -12,6 +12,7 @@ db:
 	docker run \
 		-it \
 		--rm \
+		--net host \
 		--name ${DB_CONTAINER_NAME} \
 		-v "${PWD}/${DB_DATA}:/var/lib/postgresql/data" \
 		${DB_CONTAINER}
