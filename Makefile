@@ -1,4 +1,4 @@
-.PHONY: db
+.PHONY: db db-cli
 
 CONTAINER_DATA ?= container-data
 DB_DATA ?= ${CONTAINER_DATA}/postgres
@@ -16,3 +16,9 @@ db:
 		--name ${DB_CONTAINER_NAME} \
 		-v "${PWD}/${DB_DATA}:/var/lib/postgresql/data" \
 		${DB_CONTAINER}
+
+# db-cli connects to the local database with psql
+db-cli:
+	psql \
+		-h "localhost" \
+		-U "postgres"
