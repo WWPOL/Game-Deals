@@ -1,4 +1,4 @@
 CREATE TABLE games (
-       id PRIMARY KEY,
+       id SERIAL PRIMARY KEY,
        name TEXT NOT NULL
 )
