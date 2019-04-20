@@ -18,18 +18,10 @@ Start a local PostgreSQL server:
 make db
 ```
 
-## First Time Setup
-Install asset builder dependencies:
+Connect to database with `psql` client:
 
 ```
-cd assets
-npm install
-```
-
-Create database:
-
-```
-mix phx.create
+make db-cli
 ```
 
 # Models
@@ -46,8 +38,8 @@ Fields are not null by default.
 
 ## Deal
 - `game_id` (Foreign key)
-- `start` (Date time)
-- `end` (Date time, Nullable)
+- `start_time` (Date time)
+- `end_time` (Date time, Nullable)
 - `price` (Number)
 - `link` (String)
 - `description` (String, Nullable)
