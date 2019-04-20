@@ -1,3 +1,21 @@
+# Game Deals
+Game deals website.
+
+# Table Of Contents
+- [Oveview](#overview)
+- [Development](#development)
+- [Ideas](#ideas)
+
+# Overview
+API server stores data in PostgreSQL. Front end uses API.
+
+# Development
+Start a local PostgreSQL server:
+
+```
+make db
+```
+
 # Ideas
 - Google docs spreadsheet that Olly adds to, uses a sheets script (javascript) to grab deals he posts and makes a post request to a backend, which then displays the deal on a time line and sends notifications to subscribers
 - spreadsheet will have following columns: deal name/title, link to deal, deal expiry, deal hash, and post. only required fields are deal name and post (post takes in YES, will trigger script) hash is generated automatically based on other fields. link and expiry are just for extra features/niceness
