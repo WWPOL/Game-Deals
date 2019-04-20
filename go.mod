@@ -9,4 +9,5 @@ require (
 	github.com/jmoiron/sqlx v1.2.0 // indirect
 	github.com/kr/pty v1.1.3 // indirect
 	github.com/lib/pq v1.1.0 // indirect
+	golang.org/x/crypto v0.0.0-20190404164418-38d8ce5564a5
 )
