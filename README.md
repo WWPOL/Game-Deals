@@ -10,10 +10,25 @@ Game deals website.
 API server stores data in PostgreSQL. Front end uses API.
 
 # Development
+## Database
 Start a local PostgreSQL server:
 
 ```
 make db
+```
+
+## First Time Setup
+Install asset builder dependencies:
+
+```
+cd assets
+npm install
+```
+
+Create database:
+
+```
+mix phx.create
 ```
 
 # Ideas
