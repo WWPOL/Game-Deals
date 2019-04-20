@@ -6,6 +6,9 @@ import (
 
 // Deal on game
 type Deal struct {
+	// ID
+	ID int64
+	
 	// GameID is the ID of game deal relates to
 	GameID int
 
@@ -16,7 +19,7 @@ type Deal struct {
 	End time.Time
 
 	// Price of game with deal, 0 if free
-	Price float
+	Price float64
 
 	// Link to game deal
 	Link string
