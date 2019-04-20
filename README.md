@@ -4,6 +4,7 @@ Game deals website.
 # Table Of Contents
 - [Oveview](#overview)
 - [Development](#development)
+- [Models](#models)
 - [Ideas](#ideas)
 
 # Overview
@@ -30,6 +31,26 @@ Create database:
 ```
 mix phx.create
 ```
+
+# Models
+All models have an `id` primary key field.  
+
+Fields are not null by default.
+
+## User
+- `username` (String)
+- `password_hash` (String)
+
+## Game
+- `name` (String)
+
+## Deal
+- `game_id` (Foreign key)
+- `start` (Date time)
+- `end` (Date time, Nullable)
+- `price` (Number)
+- `link` (String)
+- `description` (String, Nullable)
 
 # Ideas
 - Google docs spreadsheet that Olly adds to, uses a sheets script (javascript) to grab deals he posts and makes a post request to a backend, which then displays the deal on a time line and sends notifications to subscribers
