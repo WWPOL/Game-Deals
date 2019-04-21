@@ -26,7 +26,7 @@ type ListGamesHandler struct {
 // listGamesResponse is the response the list games handler returns
 type listGamesResponse struct {
 	// Games is a list of games
-	Games []models.Game `json:"game"`
+	Games []models.Game `json:"games"`
 }
 
 // ServeHTTP implements http.Handler
