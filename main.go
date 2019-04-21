@@ -150,6 +150,12 @@ func main() {
 		Dbx: dbx,
 	}).Methods("GET")
 
+	r.Handle("/api/v0/games", routes.CreateGameHandler{
+		Logger: logger.GetChild("games create"),
+		Config: cfg,
+		Dbx: dbx,
+	}).Methods("POST")
+
 	serverAddr := fmt.Sprintf(":%d", cfg.Server.Port)
 
 	server := http.Server{
