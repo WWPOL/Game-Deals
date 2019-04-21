@@ -143,6 +143,12 @@ func main() {
 		Config: cfg,
 		Dbx: dbx,
 	}).Methods("POST")
+	
+	r.Handle("/api/v0/games", routes.ListGamesHandler{
+		Logger: logger.GetChild("games list route"),
+		Config: cfg,
+		Dbx: dbx,
+	}).Methods("GET")
 
 	serverAddr := fmt.Sprintf(":%d", cfg.Server.Port)
 
