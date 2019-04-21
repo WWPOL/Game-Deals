@@ -57,7 +57,7 @@ GET requests.
 
 ## User Endpoints
 ### Login
-`POST /user/login`
+`POST /users/login`
 
 Request:
 
@@ -67,6 +67,59 @@ Request:
 Response:
 
 - `token` (String, JWT)
+
+## Game Endpoints
+### List
+`GET /games`
+
+Request: Empty
+
+Response:
+
+- `games` ([]Game)
+
+### Create
+`POST /games`
+
+Request:
+
+- `game` (Game)
+
+Response:
+
+- `game` (Game)
+
+## Deal Endpoints
+### List
+`GET /deals`
+
+Request: Empty
+
+Response:
+
+- `deals` ([]Deal)
+
+### Create
+`POST /deals`
+
+Request:
+
+- `deal` (Deal)
+
+Response:
+
+- `deal` (Deal)
+
+### Publish
+`POST /deals/:id/publish`
+
+Request:
+
+- `id` (Integer): ID of deal to publish
+
+Response:
+
+- `deal` (Deal)
 
 # Ideas
 - Google docs spreadsheet that Olly adds to, uses a sheets script (javascript) to grab deals he posts and makes a post request to a backend, which then displays the deal on a time line and sends notifications to subscribers
