@@ -54,3 +54,25 @@ func QueryAllDeals(dbx *sqlx.DB) ([]Deal, error) {
 
 	return deals, nil
 }
+
+// Insert game into database
+func (g *Game) Insert(dbx *sqlx.DB) error {
+	tx, err := dbx.Beginx()
+	if err != nil {
+		return fmt.Errorf("error beginning transaction: %s", err.Error())
+	}
+
+	err = tx.QueryRowx("INSERT INTO deals (game_id, start_time, end_time, "+
+		"published_time, price, link, description) VALUES ($1, $2, $3, "+
+		"$4, $5, $6, $7) RETURNING id", g.GameID, g.Start, g.End, g.Published,
+	        g.Price, g.Link, g.Description).StructScan(g)
+	if err != nil {
+		return fmt.Errorf("error executing query: %s", err.Error())
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("error commiting transaction: %s", err.Error())
+	}
+
+	return nil
+}
