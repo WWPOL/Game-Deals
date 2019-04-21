@@ -71,12 +71,36 @@ func (g Game) Delete(dbx *sqlx.DB) error {
 	if numRows, err := res.RowsAffected(); err != nil {
 		return fmt.Errorf("error getting number of rows affected by query: %s", err.Error())
 	} else if numRows != 1 {
-		return fmt.Errorf("number of rows affect not 1, was: %d", numRows)
+		return fmt.Errorf("number of rows affected not 1, was: %d", numRows)
 	}
 
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("error commiting delete game transaction: %s", err.Error())
 	}
 
+	return nil
+}
+
+// Update game in database
+func (g Game) Update(dbx *sqlx.DB) error {
+	tx, err := dbx.Beginx()
+	if err != nil {
+		fmt.Errorf("error starting transaction: %s", err.Error())
+	}
+
+	res, err := tx.Exec("UPDATE games SET name = $1 WHERE id = $2", g.Name, g.ID)
+	if err != nil {
+		return fmt.Errorf("error executing update game query: %s", err.Error())
+	}
+
+	if numRows, err := res.RowsAffected(); err != nil {
+		return fmt.Errorf("error getting number of rows affected by query: %s", err.Error())
+	} else if numRows != 1 {
+		return fmt.Errorf("number of rows affected not 1, was: %d", numRows)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("error commiting update game transaction: %s", err.Error())
+	}
 	return nil
 }
