@@ -2,6 +2,12 @@ package config
 
 // Config is application configuration
 type Config struct {
+	// Server configuration
+	Server struct {
+		// Port
+		Port int `default:"8000"`
+	}
+	
 	// Database configuration
 	Database struct {
 		// Host
