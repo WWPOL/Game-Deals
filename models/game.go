@@ -9,10 +9,10 @@ import (
 // Game is a video game
 type Game struct {
 	// ID
-	ID int64 `db:"id"`
+	ID int64 `db:"id" json:"id"`
 	
 	// Name
-	Name string `db:"name"`
+	Name string `db:"name" json:"name" validate:"required"`
 }
 
 // QueryAllGames returns an array of Games in the database
@@ -38,7 +38,7 @@ func QueryAllGames(dbx *sqlx.DB) ([]Game, error) {
 
 // Insert game
 func (g *Game) Insert(dbx *sqlx.DB) error {
-	tx, err := dbx.Begin()
+	tx, err := dbx.Beginx()
 	if err != nil {
 		return fmt.Errorf("error starting transaction: %s", err.Error())
 	}
