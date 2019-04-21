@@ -16,10 +16,13 @@ type Deal struct {
 	GameID int
 
 	// Start is the date and time a deal starts on
-	Start time.Time
+	Start *time.Time
 
 	// End is the optional deal end date and time
-	End time.Time
+	End *time.Time
+
+	// Published is the optional published time
+	Published *time.Time
 
 	// Price of game with deal, 0 if free
 	Price float64
