@@ -96,6 +96,17 @@ Response:
 
 - `game` (Game)
 
+### Delete
+`DELETE /games/<id>`
+
+Request:
+
+- `id` (Integer): ID of game to delete
+
+Response:
+
+- `ok` (Boolean)
+
 ## Deal Endpoints
 ### List
 `GET /deals`
