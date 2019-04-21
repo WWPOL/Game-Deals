@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"errors"
 	"net/http"
 	"encoding/json"
 
@@ -33,6 +34,9 @@ func RespondJSON(logger golog.Logger, w http.ResponseWriter, data interface{}, s
 		logger.Fatalf("failed to write response: %s", err.Error())
 	}
 }
+
+// ErrorNotAuthenticated is a error indicating the user is not authenticated
+var ErrorNotAuthenticated error = errors.New("not authenticated")
 
 // RespondError responds to a request with a JSON encoded error
 func RespondError(logger golog.Logger, w http.ResponseWriter, err error, status int) {
