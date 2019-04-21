@@ -142,7 +142,7 @@ func main() {
 		Logger: logger.GetChild("user login route"),
 		Config: cfg,
 		Dbx: dbx,
-	})
+	}).Methods("POST")
 
 	serverAddr := fmt.Sprintf(":%d", cfg.Server.Port)
 
