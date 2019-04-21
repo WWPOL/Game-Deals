@@ -144,6 +144,17 @@ Response:
 
 - `deal` (Deal)
 
+### Update
+`UPDATE /deals/:id`
+
+Request:
+
+- `deal` (Deal)
+
+Response:
+
+- `deal` (Deal)
+
 ### Publish
 `POST /deals/:id/publish`
 
