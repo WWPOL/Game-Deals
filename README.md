@@ -55,6 +55,9 @@ Data is passed in the body as JSON for POST, PUT, and DELETE requests.
 Data can be passed in the request URL as well, and exclusively in the URL for 
 GET requests.
 
+By default requests require an authentication token to be provided in the 
+`Authorization` header in the format: `token <AUTHENTICATION_TOKEN>`.
+
 ## User Endpoints
 ### Login
 `POST /users/login`
@@ -63,6 +66,8 @@ Request:
 
 - `username` (String)
 - `password` (String)
+
+No authentication token required.
 
 Response:
 
@@ -73,6 +78,8 @@ Response:
 `GET /games`
 
 Request: Empty
+
+No authentication token required.
 
 Response:
 
@@ -94,6 +101,8 @@ Response:
 `GET /deals`
 
 Request: Empty
+
+No authentication token required.
 
 Response:
 
