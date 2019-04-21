@@ -55,7 +55,7 @@ func QueryAllDeals(dbx *sqlx.DB) ([]Deal, error) {
 	return deals, nil
 }
 
-// Insert game into database
+// Insert deal into database
 func (d *Deal) Insert(dbx *sqlx.DB) error {
 	tx, err := dbx.Beginx()
 	if err != nil {
@@ -72,6 +72,34 @@ func (d *Deal) Insert(dbx *sqlx.DB) error {
 
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("error commiting transaction: %s", err.Error())
+	}
+
+	return nil
+}
+
+// Update deal in database
+func (d Deal) Update(dbx *sqlx.DB) error {
+	tx, err := dbx.Beginx()
+	if err != nil {
+		return fmt.Errorf("error beginning transaction: %s", err.Error())
+	}
+
+	res, err := tx.Exec("UPDATE deals SET game_id = $1, start_time = $2, end_time = $3, "+
+		"published_time = $4, price = $5, link = $6, description = $7",
+		d.GameID, d.Start, d.End, d.Published, d.Price, d.Link, d.Description)
+	if err != nil {
+		return fmt.Errorf("error executing query: %s", err.Error())
+	}
+
+	if numRows, err := res.RowsAffected(); err != nil {
+		return fmt.Errorf("error getting number of rows affected by query: %s",
+			err.Error())
+	} else if numRows != 1 {
+		return fmt.Errorf("number of rows affect not 1, was: %d", numRows)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("error commit transaction: %s", err.Error())
 	}
 
 	return nil
