@@ -41,6 +41,7 @@ Fields are not null by default.
 - `game_id` (Foreign key)
 - `start_time` (Date time)
 - `end_time` (Date time, Nullable)
+- `published_time` (Date time, Nullable)
 - `price` (Number)
 - `link` (String)
 - `description` (String, Nullable)
