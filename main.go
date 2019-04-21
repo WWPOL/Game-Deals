@@ -189,6 +189,12 @@ func main() {
 		Dbx: dbx,
 	}).Methods("POST")
 
+	r.Handle("/api/v0/deals/{id:[0-9]+}", routes.UpdateDealHandler{
+		Logger: dealsLogger.GetChild("update"),
+		Config: cfg,
+		Dbx: dbx,
+	}).Methods("UPDATE")
+
 	// {{{1 Start server
 	serverAddr := fmt.Sprintf(":%d", cfg.Server.Port)
 
