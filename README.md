@@ -107,6 +107,17 @@ Response:
 
 - `ok` (Boolean)
 
+### Update
+`UPDATE /games/<id>`
+
+Request:
+
+- `game` (Game)
+
+Response:
+
+- `game` (Game)
+
 ## Deal Endpoints
 ### List
 `GET /deals`
