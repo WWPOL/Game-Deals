@@ -85,7 +85,7 @@ func (g Game) Delete(dbx *sqlx.DB) error {
 func (g Game) Update(dbx *sqlx.DB) error {
 	tx, err := dbx.Beginx()
 	if err != nil {
-		fmt.Errorf("error starting transaction: %s", err.Error())
+		return fmt.Errorf("error starting transaction: %s", err.Error())
 	}
 
 	res, err := tx.Exec("UPDATE games SET name = $1 WHERE id = $2", g.Name, g.ID)
