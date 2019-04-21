@@ -183,6 +183,13 @@ func main() {
 		Dbx: dbx,
 	}).Methods("GET")
 
+	r.Handle("/api/v0/deals", routes.CreateDealHandler{
+		Logger: dealsLogger.GetChild("create"),
+		Config: cfg,
+		Dbx: dbx,
+	}).Methods("POST")
+
+	// {{{1 Start server
 	serverAddr := fmt.Sprintf(":%d", cfg.Server.Port)
 
 	server := http.Server{
