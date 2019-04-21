@@ -10,28 +10,28 @@ import (
 // Deal on game
 type Deal struct {
 	// ID
-	ID int64
+	ID int64 `db:"id"`
 	
 	// GameID is the ID of game deal relates to
-	GameID int
+	GameID int `db:"game_id"`
 
 	// Start is the date and time a deal starts on
-	Start *time.Time
+	Start *time.Time `db:"start_time"`
 
 	// End is the optional deal end date and time
-	End *time.Time
+	End *time.Time `db:"end_time"`
 
 	// Published is the optional published time
-	Published *time.Time
+	Published *time.Time `db:"published_time"`
 
 	// Price of game with deal, 0 if free
-	Price float64
+	Price float64 `db:"price"`
 
 	// Link to game deal
-	Link string
+	Link string `db:"link"`
 
 	// Description is an optional description of the deal
-	Description string
+	Description string `db:"description"`
 }
 
 // QueryAllDeals return an array of deals in the database
