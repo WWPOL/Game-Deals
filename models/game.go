@@ -36,7 +36,7 @@ func QueryAllGames(dbx *sqlx.DB) ([]Game, error) {
 	return games, nil
 }
 
-// Insert game
+// Insert game into database
 func (g *Game) Insert(dbx *sqlx.DB) error {
 	tx, err := dbx.Beginx()
 	if err != nil {
@@ -51,6 +51,31 @@ func (g *Game) Insert(dbx *sqlx.DB) error {
 
 	if err = tx.Commit(); err != nil {
 		return fmt.Errorf("failed to commit insert game transaction: %s", err.Error())
+	}
+
+	return nil
+}
+
+// Delete game from database
+func (g Game) Delete(dbx *sqlx.DB) error {
+	tx, err := dbx.Beginx()
+	if err != nil {
+		return fmt.Errorf("error starting transaction: %s", err.Error())
+	}
+
+	res, err := tx.Exec("DELETE FROM games WHERE id = $1", g.ID)
+	if err != nil {
+		return fmt.Errorf("error executing delete game query: %s", err.Error())
+	}
+
+	if numRows, err := res.RowsAffected(); err != nil {
+		return fmt.Errorf("error getting number of rows affected by query: %s", err.Error())
+	} else if numRows != 1 {
+		return fmt.Errorf("number of rows affect not 1, was: %d", numRows)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("error commiting delete game transaction: %s", err.Error())
 	}
 
 	return nil
