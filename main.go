@@ -138,7 +138,7 @@ func main() {
 	// {{{1 Setup API server
 	r := mux.NewRouter()
 
-	r.Handle("/api/v0/user/login", routes.UserLoginHandler{
+	r.Handle("/api/v0/users/login", routes.UserLoginHandler{
 		Logger: logger.GetChild("user login route"),
 		Config: cfg,
 		Dbx: dbx,
