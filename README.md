@@ -5,6 +5,7 @@ Game deals website.
 - [Oveview](#overview)
 - [Development](#development)
 - [Models](#models)
+- [API](#api)
 - [Ideas](#ideas)
 
 # Overview
@@ -43,6 +44,28 @@ Fields are not null by default.
 - `price` (Number)
 - `link` (String)
 - `description` (String, Nullable)
+
+# API
+HTTP REST JSON API.
+
+All endpoint paths are prefixed with `/api/v0`.
+
+Data is passed in the body as JSON for POST, PUT, and DELETE requests.
+Data can be passed in the request URL as well, and exclusively in the URL for 
+GET requests.
+
+## User Endpoints
+### Login
+`POST /user/login`
+
+Request:
+
+- `username` (String)
+- `password` (String)
+
+Response:
+
+- `token` (String, JWT)
 
 # Ideas
 - Google docs spreadsheet that Olly adds to, uses a sheets script (javascript) to grab deals he posts and makes a post request to a backend, which then displays the deal on a time line and sends notifications to subscribers
