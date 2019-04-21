@@ -27,6 +27,7 @@ func RespondJSON(logger golog.Logger, w http.ResponseWriter, data interface{}, s
 	}
 
 	// Attempt to write
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	
 	_, err = w.Write(marshalled)
