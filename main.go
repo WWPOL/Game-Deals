@@ -137,39 +137,49 @@ func main() {
 
 	// {{{1 Setup API server
 	r := mux.NewRouter()
+	routesLogger := logger.GetChild("routes")
 
+	// {{{2 Users routes
+	usersLogger := routesLogger.GetChild("users")
+	
 	r.Handle("/api/v0/users/login", routes.UserLoginHandler{
-		Logger: logger.GetChild("user login route"),
+		Logger: usersLogger.GetChild("login"),
 		Config: cfg,
 		Dbx: dbx,
 	}).Methods("POST")
+
+	// {{{2 Games routes
+	gamesLogger := routesLogger.GetChild("games")
 	
 	r.Handle("/api/v0/games", routes.ListGamesHandler{
-		Logger: logger.GetChild("games list route"),
+		Logger: gamesLogger.GetChild("list"),
 		Config: cfg,
 		Dbx: dbx,
 	}).Methods("GET")
 
 	r.Handle("/api/v0/games", routes.CreateGameHandler{
-		Logger: logger.GetChild("games create"),
+		Logger: gamesLogger.GetChild("create"),
 		Config: cfg,
 		Dbx: dbx,
 	}).Methods("POST")
 
 	r.Handle("/api/v0/games/{id:[0-9]+}", routes.DeleteGameHandler{
-		Logger: logger.GetChild("games delete"),
+		Logger: gamesLogger.GetChild("delete"),
 		Config: cfg,
 		Dbx: dbx,
 	}).Methods("DELETE")
 
 	r.Handle("/api/v0/games/{id:[0-9]+}", routes.UpdateGameHandler{
-		Logger: logger.GetChild("games update"),
+		Logger: gamesLogger.GetChild("update"),
 		Config: cfg,
 		Dbx: dbx,
 	}).Methods("UPDATE")
 
+	// {{{2 Deals routes
+	dealsLogger := routesLogger.GetChild("deals")
+	
 	r.Handle("/api/v0/deals", routes.ListDealsHandler{
-		Logger: logger.GetChild("deals list"),
+		Logger: dealsLogger.GetChild("list"),
 		Dbx: dbx,
 	}).Methods("GET")
 
