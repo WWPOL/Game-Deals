@@ -162,6 +162,12 @@ func main() {
 		Dbx: dbx,
 	}).Methods("DELETE")
 
+	r.Handle("/api/v0/games/{id:[0-9]+}", routes.UpdateGameHandler{
+		Logger: logger.GetChild("games update"),
+		Config: cfg,
+		Dbx: dbx,
+	}).Methods("UPDATE")
+
 	serverAddr := fmt.Sprintf(":%d", cfg.Server.Port)
 
 	server := http.Server{
