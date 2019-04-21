@@ -58,6 +58,8 @@ GET requests.
 By default requests require a bearer `Authorization`
 header (`Authorization: Bearer <AUTH TOKEN>`).
 
+Dates should be passed to the API in RFC3339 format.
+
 ## User Endpoints
 ### Login
 `POST /users/login`
