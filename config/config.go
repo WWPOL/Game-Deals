@@ -19,4 +19,10 @@ type Config struct {
 		// Database
 		Database string `default:"game_deals"`
 	}
+
+	// Authentication configuration
+	Authentication struct {
+		// Signing secret
+		Secret string
+	}
 }
