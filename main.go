@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"flag"
 	"database/sql"
+	"os/signal"
+	"net/http"
 		
 	"github.com/WWPOL/Game-Deals/config"
 	"github.com/WWPOL/Game-Deals/models"
+	"github.com/WWPOL/Game-Deals/routes"
 
 	_ "github.com/lib/pq"
         "github.com/jmoiron/sqlx"
@@ -16,6 +19,7 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/gorilla/mux"
 )
 
 func main() {
@@ -125,5 +129,41 @@ func main() {
 		logger.Infof("Inserted user %s with ID %d", user.Username, user.ID)
 
 		os.Exit(0)
+	}
+
+	// {{{1 Exit on interrupt signal
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt)
+
+	// {{{1 Setup API server
+	r := mux.NewRouter()
+
+	r.Handle("/api/v0/user/login", routes.UserLoginHandler{
+		Logger: logger.GetChild("user login route"),
+		Config: cfg,
+		Dbx: dbx,
+	})
+
+	serverAddr := fmt.Sprintf(":%d", cfg.Server.Port)
+
+	server := http.Server{
+		Addr: serverAddr,
+		Handler: r,
+	}
+
+	logger.Infof("starting API server on %s", serverAddr)
+
+	go func() {
+		err = server.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
+			logger.Fatalf("failed to run API server")
+		}
+	}()
+
+	_ = <-sigChan
+	logger.Info("stopping API server")
+
+	if err := server.Close(); err != nil {
+		logger.Fatalf("failed to stop API server")
 	}
 }
