@@ -168,6 +168,11 @@ func main() {
 		Dbx: dbx,
 	}).Methods("UPDATE")
 
+	r.Handle("/api/v0/deals", routes.ListDealsHandler{
+		Logger: logger.GetChild("deals list"),
+		Dbx: dbx,
+	}).Methods("GET")
+
 	serverAddr := fmt.Sprintf(":%d", cfg.Server.Port)
 
 	server := http.Server{
