@@ -55,8 +55,8 @@ Data is passed in the body as JSON for POST, PUT, and DELETE requests.
 Data can be passed in the request URL as well, and exclusively in the URL for 
 GET requests.
 
-By default requests require an authentication token to be provided in the 
-`Authorization` header in the format: `token <AUTHENTICATION_TOKEN>`.
+By default requests require a bearer `Authorization`
+header (`Authorization: Bearer <AUTH TOKEN>`).
 
 ## User Endpoints
 ### Login
