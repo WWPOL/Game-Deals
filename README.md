@@ -51,14 +51,8 @@ Fields are not null by default.
 - `description` (String, Nullable)
 
 ## Subscription
-- `email` (String)
+- `registration_token` (String): Firebase Cloud Messaging registration token
   - Unique
-- `notify_email` (Boolean)
-- `notify_push` (Boolean)
-- `verify_token` (String)
-  - Unique
-  - Private, never exposed via API
-- `verified` (Boolean)
 
 # API
 HTTP REST JSON API.
@@ -189,30 +183,28 @@ Response:
 Request:
 
 - `subscription` (Subscription)
-  - Without `verified` key
   
 Response:
 
 - `subscription` (Subscription)
 
-### Verify Email
-`GET /subscription/<id>/verify_email/<verify_token>`
+### Get
+`GET /subscriptions/<registration_token>`
 
 Request:
 
-- `id` (Integer): ID of subscription email to verify
-- `verify_token` (String)
+- `registration_token` (String): Registration token to retrieve
 
 Response:
 
-- `ok` (Boolean)
+- `subscription` (Subscription)
 
 ### Delete
-`DELETE /subscription/<id>`
+`DELETE /subscription/<registration_token>`
 
 Request:
 
-- `id` (Integer): ID of subscription to delete
+- `registration_token` (String): Registration token delete and unsubscribe
 
 Response:
 
