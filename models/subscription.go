@@ -34,3 +34,29 @@ func (s *Subscription) Insert(db *sqlx.DB) error {
 
 	return nil
 }
+
+// Delete subscription from database
+func (s Subscription) Delete(db *sqlx.DB) error {
+	tx, err := db.Beginx()
+	if err != nil {
+		return fmt.Errorf("error beginning transaction: %s", err.Error())
+	}
+
+	res, err := tx.Exec("DELETE FROM subscriptions WHERE id = $1", s.ID)
+	if err != nil {
+		return fmt.Errorf("error executing delete query: %s", err.Error())
+	}
+
+	if numRows, err := res.RowsAffected(); err != nil {
+		return fmt.Errorf("error getting number of rows affected by query: %s",
+			err.Error())
+	} else if numRows != 1 {
+		return fmt.Errorf("number of rows affected by query != 1, was: %d", numRows)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("error committing transaction: %s", err.Error())
+	}
+
+	return nil
+}
