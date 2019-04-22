@@ -17,14 +17,14 @@ type Subscription struct {
 
 // QueryByRegistrationToken queries the database for a subscription with a matching
 // RegistrationToken field
-func (s *Subscription) QueryByRegistrationToken(db *sqlx.DB) error {
+func (s *Subscription) QueryByRegistrationToken(dbx *sqlx.DB) error {
 	return dbx.Get(s, "SELECT id FROM subscriptions WHERE registration_token = $1",
 		s.RegistrationToken)
 }
 
 // Insert subscription into database
-func (s *Subscription) Insert(db *sqlx.DB) error {
-	tx, err := db.Beginx()
+func (s *Subscription) Insert(dbx *sqlx.DB) error {
+	tx, err := dbx.Beginx()
 	if err != nil {
 		return fmt.Errorf("error beginning transaction: %s", err.Error())
 	}
@@ -43,8 +43,8 @@ func (s *Subscription) Insert(db *sqlx.DB) error {
 }
 
 // Delete subscription from database
-func (s Subscription) Delete(db *sqlx.DB) error {
-	tx, err := db.Beginx()
+func (s Subscription) Delete(dbx *sqlx.DB) error {
+	tx, err := dbx.Beginx()
 	if err != nil {
 		return fmt.Errorf("error beginning transaction: %s", err.Error())
 	}
