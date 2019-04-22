@@ -1,2 +1,5 @@
 [Authentication]
 Secret = "signingsecret"
+
+[Firebase]
+ServiceAccountFile = "firebase-service-account.json"

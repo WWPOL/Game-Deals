@@ -6,6 +6,7 @@ import (
 	"flag"
 	"database/sql"
 	"os/signal"
+	"context"
 	"net/http"
 		
 	"github.com/WWPOL/Game-Deals/config"
@@ -20,9 +21,14 @@ import (
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/gorilla/mux"
+	firebase "firebase.google.com/go"
+	"google.golang.org/api/option"
 )
 
 func main() {
+	// {{{1 Application context
+	ctx := context.Background()
+	
 	// {{{1 Setup logger
 	logger := golog.NewStdLogger("game-deals")
 
@@ -131,6 +137,19 @@ func main() {
 		os.Exit(0)
 	}
 
+	// {{{1 Connect to Firebase Cloud Messaging API
+	firebaseClient, err := firebase.NewApp(ctx, nil,
+		option.WithCredentialsFile(cfg.Firebase.ServiceAccountFile))
+	if err != nil {
+		logger.Fatalf("failed to created Firebase API client: %s", err.Error())
+	}
+
+	fcmClient, err := firebaseClient.Messaging(ctx)
+	if err != nil {
+		logger.Fatalf("failed to create Firebase Cloud Messaging client: %s",
+			err.Error())
+	}
+			
 	// {{{1 Exit on interrupt signal
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt)
