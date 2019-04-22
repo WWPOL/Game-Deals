@@ -214,6 +214,12 @@ func main() {
 		Dbx: dbx,
 	}).Methods("UPDATE")
 
+	r.Handle("/api/v0/deals/{id:[0-9]+}", routes.DeleteDealHandler{
+		Logger: dealsLogger.GetChild("delete"),
+		Config: cfg,
+		Dbx: dbx,
+	}).Methods("DELETE")
+
 	// {{{2 Subscription routes
 	subscriptionsLogger := routesLogger.GetChild("subscriptions")
 

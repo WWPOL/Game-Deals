@@ -176,6 +176,17 @@ Response:
 
 - `deal` (Deal)
 
+### Delete
+`DELETE /deals/<id>`
+
+Request:
+
+- `id` (Integer): ID of deal to delete
+
+Response:
+
+- `ok` (Boolean)
+
 ## Subscription
 ### Subscribe
 `POST /subscriptions`

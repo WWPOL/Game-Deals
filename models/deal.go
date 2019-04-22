@@ -128,3 +128,4 @@ func (d Deal) Delete(dbx *sqlx.DB) error {
 	}
 
 	return nil
+}
