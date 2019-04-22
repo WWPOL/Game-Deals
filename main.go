@@ -214,6 +214,17 @@ func main() {
 		Dbx: dbx,
 	}).Methods("UPDATE")
 
+	// {{{2 Subscription routes
+	subscriptionsLogger := routesLogger.GetChild("subscriptions")
+
+	r.Handle("/api/v0/subscriptions", routes.SubscribeHandler{
+		Ctx: ctx,
+		Logger: subscriptionsLogger.GetChild("subscribe"),
+		Config: cfg,
+		Dbx: dbx,
+		FCMClient: fcmClient,
+	}).Methods("POST")
+
 	// {{{1 Start server
 	serverAddr := fmt.Sprintf(":%d", cfg.Server.Port)
 
