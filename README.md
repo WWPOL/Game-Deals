@@ -196,7 +196,7 @@ Response:
 - `subscription` (Subscription)
 
 ### Verify Email
-`POST /subscription/<id>/verify_email/<verify_token>`
+`GET /subscription/<id>/verify_email/<verify_token>`
 
 Request:
 
