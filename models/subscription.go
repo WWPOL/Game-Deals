@@ -15,6 +15,13 @@ type Subscription struct {
 	RegistrationToken string `db:"registration_token" json:"registration_token" validate:"required"`
 }
 
+// QueryByRegistrationToken queries the database for a subscription with a matching
+// RegistrationToken field
+func (s *Subscription) QueryByRegistrationToken(db *sqlx.DB) error {
+	return dbx.Get(s, "SELECT id FROM subscriptions WHERE registration_token = $1",
+		s.RegistrationToken)
+}
+
 // Insert subscription into database
 func (s *Subscription) Insert(db *sqlx.DB) error {
 	tx, err := db.Beginx()
