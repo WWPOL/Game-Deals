@@ -32,19 +32,33 @@ Fields are not null by default.
 
 ## User
 - `username` (String)
+  - Unique
 - `password_hash` (String)
+  - Private, never exposed via API
 
 ## Game
 - `name` (String)
+  - Unique
 
 ## Deal
 - `game_id` (Foreign key)
 - `start_time` (Date time)
 - `end_time` (Date time, Nullable)
 - `published_time` (Date time, Nullable)
+  - If null then not published yet
 - `price` (Number)
 - `link` (String)
 - `description` (String, Nullable)
+
+## Subscription
+- `email` (String)
+  - Unique
+- `notify_email` (Boolean)
+- `notify_push` (Boolean)
+- `verify_token` (String)
+  - Unique
+  - Private, never exposed via API
+- `verified` (Boolean)
 
 # API
 HTTP REST JSON API.
@@ -115,6 +129,7 @@ Response:
 
 Request:
 
+- `id` (Integer): ID of game to update
 - `game` (Game)
 
 Response:
@@ -145,10 +160,11 @@ Response:
 - `deal` (Deal)
 
 ### Update
-`UPDATE /deals/:id`
+`UPDATE /deals/<id>`
 
 Request:
 
+- `id` (Integer): ID of deal to update
 - `deal` (Deal)
 
 Response:
@@ -156,7 +172,7 @@ Response:
 - `deal` (Deal)
 
 ### Publish
-`POST /deals/:id/publish`
+`POST /deals/<id>/publish`
 
 Request:
 
@@ -165,6 +181,42 @@ Request:
 Response:
 
 - `deal` (Deal)
+
+## Subscription
+### Subscribe
+`POST /subscriptions`
+
+Request:
+
+- `subscription` (Subscription)
+  - Without `verified` key
+  
+Response:
+
+- `subscription` (Subscription)
+
+### Verify Email
+`POST /subscription/<id>/verify_email/<verify_token>`
+
+Request:
+
+- `id` (Integer): ID of subscription email to verify
+- `verify_token` (String)
+
+Response:
+
+- `ok` (Boolean)
+
+### Delete
+`DELETE /subscription/<id>`
+
+Request:
+
+- `id` (Integer): ID of subscription to delete
+
+Response:
+
+- `ok` (Boolean)
 
 # Ideas
 - Google docs spreadsheet that Olly adds to, uses a sheets script (javascript) to grab deals he posts and makes a post request to a backend, which then displays the deal on a time line and sends notifications to subscribers
