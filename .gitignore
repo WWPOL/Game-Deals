@@ -3,3 +3,6 @@ container-data/
 
 # Emacs temp files
 **/#*#
+
+# Firebase service account file
+firebase-service-account.json
