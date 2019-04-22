@@ -85,6 +85,17 @@ Response:
 - `token` (String, JWT)
 
 ## Game Endpoints
+### Create
+`POST /games`
+
+Request:
+
+- `game` (Game)
+
+Response:
+
+- `game` (Game)
+
 ### List
 `GET /games`
 
@@ -96,11 +107,12 @@ Response:
 
 - `games` ([]Game)
 
-### Create
-`POST /games`
+### Update
+`UPDATE /games/<id>`
 
 Request:
 
+- `id` (Integer): ID of game to update
 - `game` (Game)
 
 Response:
@@ -118,30 +130,7 @@ Response:
 
 - `ok` (Boolean)
 
-### Update
-`UPDATE /games/<id>`
-
-Request:
-
-- `id` (Integer): ID of game to update
-- `game` (Game)
-
-Response:
-
-- `game` (Game)
-
 ## Deal Endpoints
-### List
-`GET /deals`
-
-Request: Empty
-
-No authentication token required.
-
-Response:
-
-- `deals` ([]Deal)
-
 ### Create
 `POST /deals`
 
@@ -153,6 +142,17 @@ Response:
 
 - `deal` (Deal)
 
+### List
+`GET /deals`
+
+Request: Empty
+
+No authentication token required.
+
+Response:
+
+- `deals` ([]Deal)
+
 ### Update
 `UPDATE /deals/<id>`
 
@@ -160,17 +160,6 @@ Request:
 
 - `id` (Integer): ID of deal to update
 - `deal` (Deal)
-
-Response:
-
-- `deal` (Deal)
-
-### Publish
-`POST /deals/<id>/publish`
-
-Request:
-
-- `id` (Integer): ID of deal to publish
 
 Response:
 
@@ -186,6 +175,17 @@ Request:
 Response:
 
 - `ok` (Boolean)
+
+### Publish
+`POST /deals/<id>/publish`
+
+Request:
+
+- `id` (Integer): ID of deal to publish
+
+Response:
+
+- `deal` (Deal)
 
 ## Subscription
 ### Subscribe
