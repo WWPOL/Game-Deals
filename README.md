@@ -69,13 +69,8 @@ header (`Authorization: Bearer <AUTH TOKEN>`).
 Dates should be passed to the API in 
 [RFC3339](https://tools.ietf.org/html/rfc3339#section-5.8) format.
 
-| Symbol                | Meaning       |
-| --------------------- | ------------- |
-| :white_check_mark:    | Implemented   |
-| :black_square_button: | Unimplemented |
-
 ## User Endpoints
-### :white_check_mark: Login
+### Login
 `POST /users/login`
 
 Request:
@@ -90,7 +85,7 @@ Response:
 - `token` (String, JWT)
 
 ## Game Endpoints
-### :white_check_mark: Create
+### Create
 `POST /games`
 
 Request:
