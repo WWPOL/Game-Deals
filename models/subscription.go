@@ -22,7 +22,7 @@ func (s *Subscription) Insert(db *sqlx.DB) error {
 		return fmt.Errorf("error beginning transaction: %s", err.Error())
 	}
 
-	err := tx.QueryRowx("INSERT INTO subscriptions (registration_token) "+
+	err = tx.QueryRowx("INSERT INTO subscriptions (registration_token) "+
 		"VALUES ($1) RETURNING id", s.RegistrationToken).StructScan(s)
 	if err != nil {
 		return fmt.Errorf("error executing insert query: %s", err.Error())
