@@ -5,5 +5,6 @@ CREATE TABLE subscriptions (
        notify_push BOOLEAN NOT NULL,
        verify_token TEXT NOT NULL,
        verified BOOLEAN NOT NULL,
-       UNIQUE(email)
+       UNIQUE(email),
+       UNIQUE(verify_token)
 )
