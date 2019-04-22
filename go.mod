@@ -3,6 +3,7 @@ module github.com/WWPOL/Game-Deals
 go 1.12
 
 require (
+	firebase.google.com/go v3.7.0+incompatible
 	github.com/Noah-Huppert/goconf v0.2.0 // indirect
 	github.com/Noah-Huppert/golog v0.0.0-20180826190739-0531f7300f66
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
