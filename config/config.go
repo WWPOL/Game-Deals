@@ -30,5 +30,9 @@ type Config struct {
 	Firebase struct {
 		// ServiceAccountFile is the path to a Firebase service account credentials file
 		ServiceAccountFile string `validate:"required"`
+
+		// DealsTopic is the name of Firebase Cloud Messaging topic which new deals
+		// will be published
+		DealsTopic string `default:"deals" validate:"required"`
 	}
 }
