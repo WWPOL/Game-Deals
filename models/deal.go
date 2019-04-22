@@ -104,3 +104,27 @@ func (d Deal) Update(dbx *sqlx.DB) error {
 
 	return nil
 }
+
+// Delete deal in database
+func (d Deal) Delete(dbx *sqlx.DB) error {
+	tx, err := dbx.Beginx()
+	if err != nil {
+		return fmt.Errorf("error beginning transaction: %s", err.Error())
+	}
+
+	res, err := tx.Exec("DELETE FROM deals WHERE id = $1", d.ID)
+	if err != nil {
+		return fmt.Errorf("error executing query: %s", err.Error())
+	}
+
+	if numRows, err := res.RowsAffected(); err != nil {
+		return fmt.Errorf("error getting number of rows affected: %s", err.Error())
+	} else if numRows != 1 {
+		return fmt.Errorf("number of rows affected by query != 1, is: %d", numRows)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("error comitting transaction: %s", err.Error())
+	}
+
+	return nil
