@@ -231,6 +231,11 @@ func main() {
 		FCMClient: fcmClient,
 	}).Methods("POST")
 
+	r.Handle("/api/v0/subscriptions/{registration_token:.+}", routes.GetSubscriptionHandler{
+		Logger: subscriptionsLogger.GetChild("get"),
+		Dbx: dbx,
+	}).Methods("GET")
+
 	// {{{1 Start server
 	serverAddr := fmt.Sprintf(":%d", cfg.Server.Port)
 
