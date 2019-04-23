@@ -13,7 +13,7 @@ type Deal struct {
 	ID int64 `db:"id" json:"id"`
 	
 	// GameID is the ID of game deal relates to
-	GameID int `db:"game_id" validate:"required" json:"game_id"`
+	GameID int64 `db:"game_id" validate:"required" json:"game_id"`
 
 	// Title of deal
 	Title string `db:"title" json:"title" validate:"required"`
