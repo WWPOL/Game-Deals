@@ -158,6 +158,9 @@ func main() {
 	r := mux.NewRouter()
 	routesLogger := logger.GetChild("routes")
 
+	// {{{2 Static files
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir("static")))
+
 	// {{{2 Users routes
 	usersLogger := routesLogger.GetChild("users")
 	
