@@ -236,6 +236,14 @@ func main() {
 		Dbx: dbx,
 	}).Methods("GET")
 
+	r.Handle("/api/v0/subscriptions/{registration_token:.+}", routes.DeleteSubscriptionHandler{
+		Ctx: ctx,
+		Logger: subscriptionsLogger.GetChild("delete"),
+		Config: cfg,
+		Dbx: dbx,
+		FCMClient: fcmClient,
+	}).Methods("DELETE")
+
 	// {{{1 Start server
 	serverAddr := fmt.Sprintf(":%d", cfg.Server.Port)
 
