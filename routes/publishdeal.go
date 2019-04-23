@@ -2,6 +2,7 @@ package routes
 
 import (
 	"context"
+	"time"
 	"path"
 	"net/url"
 	"net/http"
@@ -79,6 +80,13 @@ func (h PublishDealHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if already published
+	if deal.Published != nil {
+		RespondError(h.Logger, w, fmt.Errorf("deal already published"),
+			http.StatusConflict)
+		return
+	}
+
 	// Get game linked to deal
 	game := &models.Game{
 		ID: deal.GameID,
@@ -128,6 +136,16 @@ func (h PublishDealHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.Logger.Errorf("failed to push notification to FCM topic: %s", err.Error())
 		RespondError(h.Logger, w, fmt.Errorf("failed to push notification"),
+			http.StatusInternalServerError)
+		return
+	}
+
+	// Set published at field
+	deal.Published = time.Now()
+
+	if err := deal.Update(h.Dbx); err != nil {
+		h.Logger.Errorf("failed to update deal's published at time: %s", err.Error())
+		RespondError(h.Logger, w, fmt.Errorf("failed to update deal's published at time"),
 			http.StatusInternalServerError)
 		return
 	}
