@@ -141,7 +141,8 @@ func (h PublishDealHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Set published at field
-	deal.Published = time.Now()
+	now := time.Now()
+	deal.Published = &now
 
 	if err := deal.Update(h.Dbx); err != nil {
 		h.Logger.Errorf("failed to update deal's published at time: %s", err.Error())
