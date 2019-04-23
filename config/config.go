@@ -6,6 +6,9 @@ type Config struct {
 	Server struct {
 		// Port
 		Port int `default:"8000" validate:"required"`
+
+		// ExternalURL is the URL by which the server can be accessed externally
+		ExternalURL string `default:"https://oliversgame.deals" validate:"required,url"`
 	}
 	
 	// Database configuration
