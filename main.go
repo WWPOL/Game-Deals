@@ -220,7 +220,7 @@ func main() {
 		Dbx: dbx,
 	}).Methods("DELETE")
 
-	r.Handle("/api/v0/deals/{id:[0-9]+}", routes.PublishDealHandler{
+	r.Handle("/api/v0/deals/{id:[0-9]+}/publish", routes.PublishDealHandler{
 		Ctx: ctx,
 		Logger: dealsLogger.GetChild("publish"),
 		Config: cfg,
