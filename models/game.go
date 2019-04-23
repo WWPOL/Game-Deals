@@ -36,6 +36,11 @@ func QueryAllGames(dbx *sqlx.DB) ([]Game, error) {
 	return games, nil
 }
 
+// QueryByID queries the database for a game with a matching ID field
+func (g *Game) QueryByID(dbx *sqlx.DB) error {
+	return dbx.Get(g, "SELECT name FROM games WHERE id = $1", g.ID)
+}
+
 // Insert game into database
 func (g *Game) Insert(dbx *sqlx.DB) error {
 	tx, err := dbx.Beginx()
