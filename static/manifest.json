@@ -1,0 +1,20 @@
+{
+    "background_color": "#ffffff",
+    "display": "standalone",
+    "icons": [
+        {
+            "sizes": "16x16",
+            "src": "/img/favicon-16x16.png",
+            "type": "image/png"
+        },
+        {
+            "sizes": "32x32",
+            "src": "/img/favicon-32x32.png",
+            "type": "image/png"
+        }
+    ],
+    "name": "Oliver Game Deals",
+    "short_name": "Deals",
+    "theme_color": "#ffffff",
+    "gcm_sender_id": "103953800507"
+}
