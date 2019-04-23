@@ -249,7 +249,7 @@ func main() {
 	go func() {
 		err = server.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
-			logger.Fatalf("failed to run API server")
+			logger.Fatalf("failed to run API server: %s", err.Error())
 		}
 	}()
 
