@@ -223,6 +223,14 @@ func main() {
 		Dbx: dbx,
 	}).Methods("DELETE")
 
+	r.Handle("/api/v0/deals/{id:[0-9]+}", routes.PublishDealHandler{
+		Ctx: ctx,
+		Logger: dealsLogger.GetChild("publish"),
+		Config: cfg,
+		Dbx: dbx,
+		FCMClient: fcmClient,
+	}).Methods("POST")
+
 	// {{{2 Subscription routes
 	subscriptionsLogger := routesLogger.GetChild("subscriptions")
 
