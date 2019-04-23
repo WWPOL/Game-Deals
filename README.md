@@ -42,6 +42,7 @@ Fields are not null by default.
 
 ## Deal
 - `game_id` (Foreign key)
+- `title` (String)
 - `start_time` (Date time)
 - `end_time` (Date time, Nullable)
 - `published_time` (Date time, Nullable)
