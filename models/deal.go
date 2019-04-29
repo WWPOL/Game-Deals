@@ -34,7 +34,7 @@ type Deal struct {
 	Link string `db:"link" validate:"required" json:"link"`
 
 	// Description is an optional description of the deal
-	Description string `db:"description" validate:"required" json:"description"`
+	Description string `db:"description" json:"description"`
 }
 
 // QueryAllDeals return an array of deals in the database
