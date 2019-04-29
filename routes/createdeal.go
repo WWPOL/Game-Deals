@@ -3,6 +3,7 @@ package routes
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/WWPOL/Game-Deals/models"
 	"github.com/WWPOL/Game-Deals/config"
@@ -49,6 +50,21 @@ func (h CreateDealHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	req := createDealRequest{}
 	if err := DecodeJSON(r, &req); err != nil {
 		RespondError(h.Logger, w, err, http.StatusBadRequest)
+		return
+	}
+
+	// Ensure link is HTTPS
+	linkUrl, err := url.Parse(req.Deal.Link)
+	if err != nil {
+		RespondError(h.Logger, w,
+			fmt.Errorf("failed to parse link as URL: %s", err.Error()),
+			http.StatusBadRequest)
+		return
+	}
+
+	if linkUrl.Scheme != "https" {
+		RespondError(h.Logger, w, fmt.Errorf("deal link must use HTTPS"),
+			http.StatusBadRequest)
 		return
 	}
 
