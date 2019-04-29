@@ -116,6 +116,9 @@ func (h PublishDealHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				// https://tools.ietf.org/html/rfc8030#section-5.3
 				"Urgency": "normal",
 			},
+			FcmOptions: &messaging.WebpushFcmOptions{
+				Link: deal.Link,
+			},
 			Notification: &messaging.WebpushNotification{
 				Title: deal.Title,
 				Body: fmt.Sprintf("New deal on %s!", game.Name),
@@ -123,12 +126,6 @@ func (h PublishDealHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				Vibrate: []int{200, 100, 200},
 				Renotify: true,
 				RequireInteraction: true,
-				Actions: []*messaging.WebpushNotificationAction{
-					&messaging.WebpushNotificationAction{
-						Action: fmt.Sprintf("open:deal:%d", deal.ID),
-						Title: "Open",
-					},
-				},
 				Icon: iconURL.String(),
 			},
 		},
