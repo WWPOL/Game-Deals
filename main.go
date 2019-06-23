@@ -167,33 +167,6 @@ func main() {
 		Dbx: dbx,
 	}).Methods("POST")
 
-	// {{{2 Games routes
-	gamesLogger := routesLogger.GetChild("games")
-
-	r.Handle("/api/v0/games", routes.CreateGameHandler{
-		Logger: gamesLogger.GetChild("create"),
-		Config: cfg,
-		Dbx: dbx,
-	}).Methods("POST")
-	
-	r.Handle("/api/v0/games", routes.ListGamesHandler{
-		Logger: gamesLogger.GetChild("list"),
-		Config: cfg,
-		Dbx: dbx,
-	}).Methods("GET")
-	
-	r.Handle("/api/v0/games/{id:[0-9]+}", routes.UpdateGameHandler{
-		Logger: gamesLogger.GetChild("update"),
-		Config: cfg,
-		Dbx: dbx,
-	}).Methods("UPDATE")
-
-	r.Handle("/api/v0/games/{id:[0-9]+}", routes.DeleteGameHandler{
-		Logger: gamesLogger.GetChild("delete"),
-		Config: cfg,
-		Dbx: dbx,
-	}).Methods("DELETE")
-
 	// {{{2 Deals routes
 	dealsLogger := routesLogger.GetChild("deals")
 

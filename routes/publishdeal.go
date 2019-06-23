@@ -87,17 +87,6 @@ func (h PublishDealHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get game linked to deal
-	game := &models.Game{
-		ID: deal.GameID,
-	}
-	if err := game.QueryByID(h.Dbx); err != nil {
-		h.Logger.Errorf("error queryinf for associated game: %s", err.Error())
-		RespondError(h.Logger, w, fmt.Errorf("error querying for deal's game"),
-			http.StatusInternalServerError)
-		return
-	}
-
 	// Build URL for icon
 	iconURL, err := url.Parse(h.Config.Server.ExternalURL)
 	if err != nil {
@@ -121,7 +110,7 @@ func (h PublishDealHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			},
 			Notification: &messaging.WebpushNotification{
 				Title: deal.Title,
-				Body: fmt.Sprintf("New deal on %s!", game.Name),
+				Body: fmt.Sprintf("New deal on %s!", deal.Game),
 				//Vibration pattern ms, on 200, pause 100, on 200
 				Vibrate: []int{200, 100, 200},
 				Renotify: true,

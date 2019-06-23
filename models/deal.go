@@ -12,8 +12,8 @@ type Deal struct {
 	// ID
 	ID int64 `db:"id" json:"id"`
 	
-	// GameID is the ID of game deal relates to
-	GameID int64 `db:"game_id" validate:"required" json:"game_id"`
+	// Game is the name of the game the deal is for
+	Game string `db:"game" json:"game" validate:"required"`
 
 	// Title of deal
 	Title string `db:"title" json:"title" validate:"required"`
@@ -60,7 +60,7 @@ func QueryAllDeals(dbx *sqlx.DB) ([]Deal, error) {
 
 // QueryByID queries the database for a deal with a matching ID field
 func (d *Deal) QueryByID(dbx *sqlx.DB) error {
-	return dbx.Get(d, "SELECT game_id, title, start_time, end_time, published_time, price, "+
+	return dbx.Get(d, "SELECT game, title, start_time, end_time, published_time, price, "+
 		"link, description FROM deals WHERE id = $1", d.ID)
 }
 
@@ -71,9 +71,9 @@ func (d *Deal) Insert(dbx *sqlx.DB) error {
 		return fmt.Errorf("error beginning transaction: %s", err.Error())
 	}
 
-	err = tx.QueryRowx("INSERT INTO deals (game_id, title, start_time, "+
+	err = tx.QueryRowx("INSERT INTO deals (game, title, start_time, "+
 		"end_time, published_time, price, link, description) VALUES ($1, $2, $3, "+
-		"$4, $5, $6, $7, $8) RETURNING id", d.GameID, d.Title, d.Start, d.End,
+		"$4, $5, $6, $7, $8) RETURNING id", d.Game, d.Title, d.Start, d.End,
 		d.Published, d.Price, d.Link, d.Description).StructScan(d)
 	if err != nil {
 		return fmt.Errorf("error executing query: %s", err.Error())
@@ -93,10 +93,10 @@ func (d Deal) Update(dbx *sqlx.DB) error {
 		return fmt.Errorf("error beginning transaction: %s", err.Error())
 	}
 
-	res, err := tx.Exec("UPDATE deals SET game_id = $1, title = $2, start_time = $3, "+
+	res, err := tx.Exec("UPDATE deals SET game = $1, title = $2, start_time = $3, "+
                 "end_time = $4, published_time = $5, price = $6, link = $7, "+
 		"description = $8",
-		d.GameID, d.Title, d.Start, d.End, d.Published, d.Price, d.Link, d.Description)
+		d.Game, d.Title, d.Start, d.End, d.Published, d.Price, d.Link, d.Description)
 	if err != nil {
 		return fmt.Errorf("error executing query: %s", err.Error())
 	}

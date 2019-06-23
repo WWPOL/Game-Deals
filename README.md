@@ -36,12 +36,8 @@ Fields are not null by default.
 - `password_hash` (String)
   - Private, never exposed via API
 
-## Game
-- `name` (String)
-  - Unique
-
 ## Deal
-- `game_id` (Foreign key)
+- `game` (String)
 - `title` (String)
 - `start_time` (Date time)
 - `end_time` (Date time, Nullable)
@@ -84,52 +80,6 @@ No authentication token required.
 Response:
 
 - `token` (String, JWT)
-
-## Game Endpoints
-### Create
-`POST /games`
-
-Request:
-
-- `game` (Game)
-
-Response:
-
-- `game` (Game)
-
-### List
-`GET /games`
-
-Request: Empty
-
-No authentication token required.
-
-Response:
-
-- `games` ([]Game)
-
-### Update
-`UPDATE /games/<id>`
-
-Request:
-
-- `id` (Integer): ID of game to update
-- `game` (Game)
-
-Response:
-
-- `game` (Game)
-
-### Delete
-`DELETE /games/<id>`
-
-Request:
-
-- `id` (Integer): ID of game to delete
-
-Response:
-
-- `ok` (Boolean)
 
 ## Deal Endpoints
 ### Create
@@ -221,11 +171,3 @@ Request:
 Response:
 
 - `ok` (Boolean)
-
-# Ideas
-- Google docs spreadsheet that Olly adds to, uses a sheets script (javascript) to grab deals he posts and makes a post request to a backend, which then displays the deal on a time line and sends notifications to subscribers
-- spreadsheet will have following columns: deal name/title, link to deal, deal expiry, deal hash, and post. only required fields are deal name and post (post takes in YES, will trigger script) hash is generated automatically based on other fields. link and expiry are just for extra features/niceness
-- sheet script will run every time a cell is updated, and will take the bottom most (newest) row and check if the post column says yes. if so, it takes the fields for the deal and sends to server
-- server first checks hash of new deal to make sure no duplicates /double post. if ok, it will post deal to nicely formatted time line and send notifications
-- time line will show deals in order, currently active deals (if expiry Is given, inactive deals will be greyed out). if link is included, will have link
-- page will also have a subscribe button, where users can opt in for emails and/or web push notifications 

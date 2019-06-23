@@ -1,6 +1,6 @@
 CREATE TABLE deals (
        id SERIAL PRIMARY KEY,
-       game_id INTEGER NOT NULL REFERENCES games,
+       game TEXT NOT NULL,
        title TEXT NOT NULL,
        start_time TIMESTAMP NOT NULL,
        end_time TIMESTAMP,
