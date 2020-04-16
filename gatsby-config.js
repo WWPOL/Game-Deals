@@ -1,5 +1,5 @@
 require('dotenv').config();
-console.log(process.env.TEST)
+console.log("O SHIT BOI U GOT ME", process.env.TEST)
 
 module.exports = {
   siteMetadata: {
