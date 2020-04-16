@@ -1,0 +1,27 @@
+import React from "react"
+import { Link } from "gatsby"
+
+import Layout from "../components/layout"
+import Image from "../components/image"
+import Button from 'react-bootstrap/Button';
+import SEO from "../components/seo"
+
+const IndexPage = () => (
+  <Layout>
+    <SEO title="Home" />
+    <h1>OLLLY GGG</h1>
+    <h2>{process.env.TEST}</h2>
+    <p>Welcome to your new Gatsby site.</p>
+    <p>Now go build something great.</p>
+    <div style={{ maxWidth: `300px`, marginBottom: `1.45rem` }}>
+      <Image />
+    </div>
+    <Link to="/page-2/">
+      <Button>
+        Go to page 2
+      </Button>
+    </Link>
+  </Layout>
+)
+
+export default IndexPage

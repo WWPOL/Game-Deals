@@ -1,8 +1,0 @@
-[Server]
-ExternalURL = "http://localhost:8000"
-
-[Authentication]
-Secret = "signingsecret"
-
-[Firebase]
-ServiceAccountFile = "firebase-service-account.json"
