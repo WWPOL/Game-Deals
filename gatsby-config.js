@@ -1,5 +1,3 @@
-require('dotenv').config();
-
 module.exports = {
   siteMetadata: {
     title: `Gatsby Default Starter`,
@@ -31,16 +29,17 @@ module.exports = {
       },
     },
     {
-      resolve: "gatsby-plugin-firebase",
+      resolve: `gatsby-plugin-firebase`,
       options: {
         credentials: {
-          apiKey: process.env.FIREBASE_API_KEY,
-          authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-          databaseURL: process.env.FIREBASE_DATABASE_URL,
-          projectId: process.env.FIREBASE_PROJECT_ID,
-          storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-          messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
-          appId: process.env.FIREBASE_APP_ID
+          apiKey: `AIzaSyDq5wAcRBdbfqkArvq7WIIzC8yf8FjiSHQ`,
+          authDomain: `game-deals-bb2bc.firebaseapp.com`,
+          databaseURL: `https://game-deals-bb2bc.firebaseio.com`,
+          projectId: `game-deals-bb2bc`,
+          storageBucket: `game-deals-bb2bc.appspot.com`,
+          messagingSenderId: `479706586867`,
+          appId: `1:479706586867:web:a94fb444712cfbde27a186`,
+          measurementId: `G-9ZM2TP0T1D`,
         }
       }
     }
