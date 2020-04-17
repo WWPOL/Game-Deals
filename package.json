@@ -24,6 +24,8 @@
     "react-helmet": "^6.0.0"
   },
   "devDependencies": {
+    "gatsby-cli": "^2.11.10",
+    "gh-pages": "^2.2.0",
     "prettier": "2.0.4"
   },
   "keywords": [
@@ -37,7 +39,7 @@
     "start": "npm run develop",
     "serve": "gatsby serve",
     "clean": "gatsby clean",
-    "test": "echo \"Write tests! -> https://gatsby.dev/unit-testing\" && exit 1"
+    "deploy": "gatsby build && gh-pages -d public"
   },
   "repository": {
     "type": "git",

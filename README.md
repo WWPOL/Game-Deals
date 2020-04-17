@@ -9,4 +9,4 @@ Stuff we're using:
 - https://react-bootstrap.github.io/
 
 ## Development
-Make sure you have the latest versions of Node and Yarn. Install Gatsby CLI with `npm install -g gatsby-cli`. Install dependencies with `yarn install`. Run `gatsby develop` to get going! Whenever a push/PR into master happens, a GitHub Action will inject our environment variables, run `gatsby build`, and push the site to gh-pages.
+Make sure you have the latest versions of [Node](https://nodejs.org/en/download/) and [Yarn](https://classic.yarnpkg.com/en/docs/install/). Install dependencies with `yarn install`. Start development with `yarn start` or `yarn develop`. Preview a production build with `yarn build && yarn serve`. When ready to deploy, use `yarn deploy`.
