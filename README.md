@@ -25,13 +25,13 @@ Install dependencies:
 yarn install
 ```
 
-Start development:
+Start the auto-reloading development server:
 
 ```
-yarn start
-# Or
 yarn develop
 ```
+
+Then navigate to [localhost:8000](http://localhost:8000).  
 
 Preview a production build:
 
