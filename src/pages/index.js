@@ -20,12 +20,15 @@ const DealWrapper = styled.div`
 
 const IndexPage = () => {
   //const now = new Date();
-  const [deals, loading, error] = useCollectionData(
-    firebase
-      .firestore()
-      .collection("deals")
-      .orderBy("expires", "desc")
-  ); //.where("expires", "<=", now) this causes an error with the hook :(
+  let [deals, loading, error] = [null, true, null];
+  if (typeof window !== "undefined") {
+    [deals, loading, error] = useCollectionData(
+      firebase
+        .firestore()
+        .collection("deals")
+        .orderBy("expires", "desc")
+    ); //.where("expires", "<=", now) this causes an error with the hook :(
+  }
 
   if (loading) return <Loader />;
 

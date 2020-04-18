@@ -11,4 +11,4 @@ Stuff we're using:
 
 ## Development
 
-Make sure you have the latest versions of [Node](https://nodejs.org/en/download/) and [Yarn](https://classic.yarnpkg.com/en/docs/install/). Install dependencies with `yarn install`. Start development with `yarn start` or `yarn develop`. Preview a production build with `yarn build && yarn serve`. When ready to deploy, use `yarn deploy`.
+Make sure you have the latest versions of [Node](https://nodejs.org/en/download/) and [Yarn](https://classic.yarnpkg.com/en/docs/install/). Install dependencies with `yarn install`. Start development with `yarn start` or `yarn develop`. Preview a production build with `yarn build && yarn serve`. When ready to deploy (make sure to test the production build locally first!), use `yarn deploy`.

@@ -26,9 +26,12 @@ const FixedToast = styled(Toast)`
   right: 25px;
 `;
 
-const db = firebase.firestore();
 const AdminPage = () => {
-  const [user, initialising, error] = useAuthState(firebase.auth());
+  let [user, initialising, error] = [null, true, null];
+  if (typeof window !== "undefined") {
+    [user, initialising, error] = useAuthState(firebase.auth());
+  }
+
   const [validated, setValidated] = useState(false);
   const [gameName, setGameName] = useState("");
   const [gamePrice, setGamePrice] = useState("");
@@ -46,6 +49,7 @@ const AdminPage = () => {
     if (form.checkValidity() === false) {
       event.stopPropagation();
     } else {
+      const db = firebase.firestore();
       db.collection("deals")
         .add({
           name: gameName,
