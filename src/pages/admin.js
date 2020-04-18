@@ -29,17 +29,19 @@ class AdminPage extends React.Component {
     loading: true,
     error: null,
     validated: false,
-    gameName: '',
-    gamePrice: '',
+    gameName: "",
+    gamePrice: "",
     gameIsFree: false,
     gameExpires: new Date(),
-    gameLink: '',
+    gameLink: "",
     showToast: false,
-    submittedDocRef: '',
-  }
+    submittedDocRef: ""
+  };
 
   componentDidMount() {
-    firebase.auth().onAuthStateChanged(user => this.setState({ user, loading: false }));
+    firebase
+      .auth()
+      .onAuthStateChanged(user => this.setState({ user, loading: false }));
   }
 
   login = () => {
@@ -71,7 +73,7 @@ class AdminPage extends React.Component {
         gamePrice,
         gameIsFree,
         gameExpires,
-        gameLink,
+        gameLink
       } = this.state;
 
       const db = firebase.firestore();
@@ -83,16 +85,18 @@ class AdminPage extends React.Component {
           expires: gameExpires,
           link: gameLink
         })
-        .then(docRef => this.setState({
-          submittedDocRef: docRef.id,
-          showToast: true,
-          gameName: '',
-          gamePrice: '',
-          gameIsFree: false,
-          gameExpires: new Date(),
-          gameLink: '',
-          validated: false
-        }))
+        .then(docRef =>
+          this.setState({
+            submittedDocRef: docRef.id,
+            showToast: true,
+            gameName: "",
+            gamePrice: "",
+            gameIsFree: false,
+            gameExpires: new Date(),
+            gameLink: "",
+            validated: false
+          })
+        )
         .catch(error => console.error("Error adding document: ", error));
     }
   };
@@ -109,13 +113,16 @@ class AdminPage extends React.Component {
       gameExpires,
       gameLink,
       showToast,
-      submittedDocRef,
+      submittedDocRef
     } = this.state;
 
     if (loading) return <Loader />;
 
     const Datepicker = () => (
-      <DatePicker selected={gameExpires} onChange={gameExpires => this.setState({ gameExpires })} />
+      <DatePicker
+        selected={gameExpires}
+        onChange={gameExpires => this.setState({ gameExpires })}
+      />
     );
 
     return (
@@ -161,7 +168,9 @@ class AdminPage extends React.Component {
                 <Form.Check
                   type="checkbox"
                   label={gameIsFree ? "FREE!" : "Free?"}
-                  onChange={e => this.setState({ gameIsFree: e.target.checked })}
+                  onChange={e =>
+                    this.setState({ gameIsFree: e.target.checked })
+                  }
                   checked={gameIsFree}
                 />
               </Form.Group>
@@ -205,6 +214,6 @@ class AdminPage extends React.Component {
       </Layout>
     );
   }
-};
+}
 
 export default AdminPage;

@@ -22,7 +22,7 @@ class IndexPage extends React.Component {
     deals: [],
     loading: true,
     error: null
-  }
+  };
 
   componentDidMount() {
     const now = new Date();
@@ -32,19 +32,19 @@ class IndexPage extends React.Component {
       .where("expires", ">=", now)
       .orderBy("expires", "asc")
       .get()
-      .then(querySnapshot => this.setState({
-        deals: querySnapshot.docs.map(doc => doc.data()),
-        loading: false
-      }))
+      .then(querySnapshot =>
+        this.setState({
+          deals: querySnapshot.docs.map(doc => doc.data()),
+          loading: false
+        })
+      )
       .catch(function(error) {
-          console.log("Error getting documents: ", error);
+        console.log("Error getting documents: ", error);
       });
-
   }
 
-
   render() {
-    const {deals, loading, error} = this.state;
+    const { deals, loading, error } = this.state;
 
     if (loading) return <Loader />;
 
@@ -63,6 +63,6 @@ class IndexPage extends React.Component {
       </Layout>
     );
   }
-};
+}
 
 export default IndexPage;
