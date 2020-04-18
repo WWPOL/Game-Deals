@@ -1,6 +1,6 @@
-import React from "react"
-import styled from 'styled-components'
-import Spinner from 'react-bootstrap/Spinner';
+import React from "react";
+import styled from "styled-components";
+import Spinner from "react-bootstrap/Spinner";
 
 const SpinnerContainer = styled.div`
   position: absolute;

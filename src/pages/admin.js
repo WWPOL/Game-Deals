@@ -1,14 +1,14 @@
-import React, {useState} from "react"
-import styled from 'styled-components'
-import firebase from "gatsby-plugin-firebase"
-import { useAuthState } from 'react-firebase-hooks/auth';
+import React, { useState } from "react";
+import styled from "styled-components";
+import firebase from "gatsby-plugin-firebase";
+import { useAuthState } from "react-firebase-hooks/auth";
 
-import Layout from "../components/Layout"
-import SEO from "../components/SEO"
-import Loader from '../components/Loader';
-import Button from 'react-bootstrap/Button';
-import Form from 'react-bootstrap/Form';
-import Toast from 'react-bootstrap/Toast';
+import Layout from "../components/Layout";
+import SEO from "../components/SEO";
+import Loader from "../components/Loader";
+import Button from "react-bootstrap/Button";
+import Form from "react-bootstrap/Form";
+import Toast from "react-bootstrap/Toast";
 
 import DatePicker from "react-datepicker";
 
@@ -30,15 +30,15 @@ const db = firebase.firestore();
 const AdminPage = () => {
   const [user, initialising, error] = useAuthState(firebase.auth());
   const [validated, setValidated] = useState(false);
-  const [gameName, setGameName] = useState('');
-  const [gamePrice, setGamePrice] = useState('');
+  const [gameName, setGameName] = useState("");
+  const [gamePrice, setGamePrice] = useState("");
   const [gameIsFree, setGameIsFree] = useState(false);
   const [gameExpires, setGameExpires] = useState(new Date());
-  const [gameLink, setGameLink] = useState('');
+  const [gameLink, setGameLink] = useState("");
   const [showToast, setShowToast] = useState(false);
-  const [submittedDocRef, setSubmittedDocRef] = useState('');
+  const [submittedDocRef, setSubmittedDocRef] = useState("");
 
-  const handleSubmit = (event) => {
+  const handleSubmit = event => {
     event.preventDefault();
     setValidated(true);
 
@@ -46,36 +46,39 @@ const AdminPage = () => {
     if (form.checkValidity() === false) {
       event.stopPropagation();
     } else {
-      db.collection("deals").add({
+      db.collection("deals")
+        .add({
           name: gameName,
           price: gameIsFree ? 0 : gamePrice,
           isFree: gameIsFree,
           expires: gameExpires,
           link: gameLink
-      })
-      .then(docRef => {
-          setSubmittedDocRef(docRef.id)
+        })
+        .then(docRef => {
+          setSubmittedDocRef(docRef.id);
           setShowToast(true);
-          setGameName('');
-          setGamePrice('');
+          setGameName("");
+          setGamePrice("");
           setGameIsFree(false);
           setGameExpires(new Date());
-          setGameLink('');
+          setGameLink("");
           setValidated(false);
-      })
-      .catch(error => console.error("Error adding document: ", error));
-    }    
+        })
+        .catch(error => console.error("Error adding document: ", error));
+    }
   };
-
 
   const login = () => {
     const provider = new firebase.auth.GoogleAuthProvider();
-    firebase.auth().signInWithPopup(provider).catch(error => {
-      const errorCode = error.code;
-      const errorMessage = error.message;
-      console.error("Login error", errorCode, errorMessage);
-    });
-  }
+    firebase
+      .auth()
+      .signInWithPopup(provider)
+      .catch(error => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.error("Login error", errorCode, errorMessage);
+      });
+  };
 
   const logout = () => {
     firebase.auth().signOut();
@@ -84,10 +87,7 @@ const AdminPage = () => {
   if (initialising) return <Loader />;
 
   const Datepicker = () => (
-    <DatePicker
-      selected={gameExpires}
-      onChange={setGameExpires}
-    />
+    <DatePicker selected={gameExpires} onChange={setGameExpires} />
   );
 
   return (
@@ -121,16 +121,18 @@ const AdminPage = () => {
 
             <Form.Group controlId="formPrice">
               <Form.Label>Price</Form.Label>
-              {!gameIsFree && <Form.Control
-                required
-                type="number"
-                placeholder="4.99"
-                onChange={e => setGamePrice(e.target.value)}
-                value={gamePrice}
-              />}
+              {!gameIsFree && (
+                <Form.Control
+                  required
+                  type="number"
+                  placeholder="4.99"
+                  onChange={e => setGamePrice(e.target.value)}
+                  value={gamePrice}
+                />
+              )}
               <Form.Check
                 type="checkbox"
-                label={gameIsFree ? 'FREE!' : 'Free?'}
+                label={gameIsFree ? "FREE!" : "Free?"}
                 onChange={e => setGameIsFree(e.target.checked)}
                 checked={gameIsFree}
               />
@@ -138,11 +140,8 @@ const AdminPage = () => {
 
             <Form.Group controlId="formLink">
               <Form.Label>Expires</Form.Label>
-              <br/>
-              <Form.Control
-                required
-                as={Datepicker}
-              />
+              <br />
+              <Form.Control required as={Datepicker} />
             </Form.Group>
 
             <Form.Group controlId="formLink">
@@ -161,7 +160,11 @@ const AdminPage = () => {
             </Button>
           </Form>
 
-          <FixedToast show={showToast} onClose={() => setShowToast(false)} autohide>
+          <FixedToast
+            show={showToast}
+            onClose={() => setShowToast(false)}
+            autohide
+          >
             <Toast.Header>
               <strong className="mr-auto">Deal Submitted!</strong>
             </Toast.Header>
@@ -173,6 +176,6 @@ const AdminPage = () => {
       )}
     </Layout>
   );
-}
+};
 
-export default AdminPage
+export default AdminPage;

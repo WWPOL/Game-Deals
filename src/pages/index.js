@@ -1,13 +1,12 @@
-import React from "react"
-import styled from 'styled-components'
-import firebase from "gatsby-plugin-firebase"
-import { useCollectionData } from 'react-firebase-hooks/firestore';
+import React from "react";
+import styled from "styled-components";
+import firebase from "gatsby-plugin-firebase";
+import { useCollectionData } from "react-firebase-hooks/firestore";
 
-
-import Layout from "../components/Layout"
-import SEO from "../components/SEO"
-import DealCard from "../components/DealCard"
-import Loader from '../components/Loader';
+import Layout from "../components/Layout";
+import SEO from "../components/SEO";
+import DealCard from "../components/DealCard";
+import Loader from "../components/Loader";
 
 const DealWrapper = styled.div`
   display: flex;
@@ -21,7 +20,12 @@ const DealWrapper = styled.div`
 
 const IndexPage = () => {
   //const now = new Date();
-  const [deals, loading, error] = useCollectionData(firebase.firestore().collection('deals').orderBy('expires', 'desc')); //.where("expires", "<=", now) this causes an error with the hook :(
+  const [deals, loading, error] = useCollectionData(
+    firebase
+      .firestore()
+      .collection("deals")
+      .orderBy("expires", "desc")
+  ); //.where("expires", "<=", now) this causes an error with the hook :(
 
   if (loading) return <Loader />;
 
@@ -38,7 +42,7 @@ const IndexPage = () => {
         {deals && deals.map((deal, i) => <DealCard key={i} {...deal} />)}
       </DealWrapper>
     </Layout>
-    )
-}
+  );
+};
 
-export default IndexPage
+export default IndexPage;
