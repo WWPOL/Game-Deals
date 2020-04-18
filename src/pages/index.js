@@ -1,27 +1,44 @@
 import React from "react"
-import { Link } from "gatsby"
+import styled from 'styled-components'
+import firebase from "gatsby-plugin-firebase"
+import { useCollectionData } from 'react-firebase-hooks/firestore';
 
-import Layout from "../components/layout"
-import Image from "../components/image"
-import SEO from "../components/seo"
 
-const IndexPage = () => (
-  <Layout>
-    <SEO title="Home" />
-    <h1>OLLLY GGG</h1>
-    <p>Welcome to your new Gatsby site.</p>
-    <p>Now go build something great.</p>
-    <div style={{ maxWidth: `300px`, marginBottom: `1.45rem` }}>
-      <Image />
-    </div>
-    <Link to="/page-2">
-        Go to page 2
-    </Link>
-    <br/>
-    <Link to="/login">
-        Go to login
-    </Link>
-  </Layout>
-)
+import Layout from "../components/Layout"
+import SEO from "../components/SEO"
+import DealCard from "../components/DealCard"
+import Loader from '../components/Loader';
+
+const DealWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  & > .card {
+    margin: 15px 0;
+  }
+`;
+
+const IndexPage = () => {
+  //const now = new Date();
+  const [deals, loading, error] = useCollectionData(firebase.firestore().collection('deals').orderBy('expires', 'desc')); //.where("expires", "<=", now) this causes an error with the hook :(
+
+  if (loading) return <Loader />;
+
+  return (
+    <Layout>
+      <SEO title="Home" />
+      {error && (
+        <React.Fragment>
+          <h1>Uh oh!</h1>
+          <p>{error.toString()}</p>
+        </React.Fragment>
+      )}
+      <DealWrapper>
+        {deals && deals.map((deal, i) => <DealCard key={i} {...deal} />)}
+      </DealWrapper>
+    </Layout>
+    )
+}
 
 export default IndexPage

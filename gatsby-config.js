@@ -1,8 +1,8 @@
 module.exports = {
   siteMetadata: {
-    title: `Gatsby Default Starter`,
-    description: `Kick off your next, great Gatsby project with this default starter. This barebones starter ships with the main Gatsby configuration files you might need.`,
-    author: `@gatsbyjs`,
+    title: `Olly G's Game Deals`,
+    description: `Find all the best game deals here, brought to you by the one and only Olly G.`,
+    author: `Rudhra Raveendran and Noah Huppert`,
   },
   plugins: [
     `gatsby-plugin-offline`,
