@@ -6,7 +6,6 @@ Stuff we're using:
 
 - https://www.gatsbyjs.org/
 - https://www.gatsbyjs.org/packages/gatsby-plugin-firebase/
-- https://github.com/CSFrequency/react-firebase-hooks
 - https://react-bootstrap.github.io/
 
 ## Development

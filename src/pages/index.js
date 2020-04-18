@@ -1,7 +1,6 @@
 import React from "react";
 import styled from "styled-components";
 import firebase from "gatsby-plugin-firebase";
-import { useCollectionData } from "react-firebase-hooks/firestore";
 
 import Layout from "../components/Layout";
 import SEO from "../components/SEO";
@@ -18,34 +17,52 @@ const DealWrapper = styled.div`
   }
 `;
 
-const IndexPage = () => {
-  //const now = new Date();
-  let [deals, loading, error] = [null, true, null];
-  if (typeof window !== "undefined") {
-    [deals, loading, error] = useCollectionData(
-      firebase
-        .firestore()
-        .collection("deals")
-        .orderBy("expires", "desc")
-    ); //.where("expires", "<=", now) this causes an error with the hook :(
+class IndexPage extends React.Component {
+  state = {
+    deals: [],
+    loading: true,
+    error: null
   }
 
-  if (loading) return <Loader />;
+  componentDidMount() {
+    const now = new Date();
+    firebase
+      .firestore()
+      .collection("deals")
+      .where("expires", ">=", now)
+      .orderBy("expires", "asc")
+      .get()
+      .then(querySnapshot => this.setState({
+        deals: querySnapshot.docs.map(doc => doc.data()),
+        loading: false
+      }))
+      .catch(function(error) {
+          console.log("Error getting documents: ", error);
+      });
 
-  return (
-    <Layout>
-      <SEO title="Home" />
-      {error && (
-        <React.Fragment>
-          <h1>Uh oh!</h1>
-          <p>{error.toString()}</p>
-        </React.Fragment>
-      )}
-      <DealWrapper>
-        {deals && deals.map((deal, i) => <DealCard key={i} {...deal} />)}
-      </DealWrapper>
-    </Layout>
-  );
+  }
+
+
+  render() {
+    const {deals, loading, error} = this.state;
+
+    if (loading) return <Loader />;
+
+    return (
+      <Layout>
+        <SEO title="Home" />
+        {error && (
+          <React.Fragment>
+            <h1>Uh oh!</h1>
+            <p>{error.toString()}</p>
+          </React.Fragment>
+        )}
+        <DealWrapper>
+          {deals && deals.map((deal, i) => <DealCard key={i} {...deal} />)}
+        </DealWrapper>
+      </Layout>
+    );
+  }
 };
 
 export default IndexPage;
