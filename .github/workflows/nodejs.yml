@@ -11,15 +11,16 @@ jobs:
     runs-on: ubuntu-18.04
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout branch 📥
+      uses: actions/checkout@v2
       
-    - name: Install dependencies
+    - name: Install dependencies 🗄️
       run: yarn install
     
-    - name: Build
+    - name: Build 🛠️
       run: yarn build
 
-    - name: Install SSH Client
+    - name: Install SSH Client 📞
       uses: webfactory/ssh-agent@v0.2.0
       with:
         ssh-private-key: ${{ secrets.DEPLOY_KEY }}
