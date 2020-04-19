@@ -21,7 +21,7 @@ const ContentWrapper = styled(Container)`
   margin-top: 25px;
 `;
 
-const Layout = ({ children }) => {
+const Layout = ({ children, fluid }) => {
   const data = useStaticQuery(graphql`
     query SiteTitleQuery {
       site {
@@ -36,7 +36,7 @@ const Layout = ({ children }) => {
     <>
       <GlobalStyle />
       <Header siteTitle={data.site.siteMetadata.title} />
-      <ContentWrapper>{children}</ContentWrapper>
+      <ContentWrapper fluid={fluid}>{children}</ContentWrapper>
       <Footer />
     </>
   );

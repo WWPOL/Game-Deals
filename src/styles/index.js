@@ -9,4 +9,8 @@ export const GlobalStyle = createGlobalStyle`
   html, body, #___gatsby, #gatsby-focus-wrapper {
     height: 100%; 
   }
+
+  .container-fluid {
+    padding: 0;
+  }
 `;
