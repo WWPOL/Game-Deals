@@ -48,11 +48,7 @@ yarn build && yarn serve
 Then navigate to [localhost:9000](http://localhost:9000).  
 
 When ready to deploy (make sure to test the production build locally 
-first!), use:
-
-```
-yarn deploy
-```
+first!) push to master and GitHub actions will take care of the rest.
 
 # Deployment
 GitHub actions is used to automatically deploy the master branch to 
