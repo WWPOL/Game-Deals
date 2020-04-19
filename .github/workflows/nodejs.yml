@@ -1,0 +1,23 @@
+# Builds and deploys the master branch.
+
+name: Continuous Deploymeny
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-18.04
+
+    steps:
+    - uses: actions/checkout@v2
+      
+    - name: Install dependencies
+      run: yarn install
+    
+    - name: Build
+      run: yarn build
+      
+    - name: Deploy
+      run: yarn gh-pages -d public
