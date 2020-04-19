@@ -28,7 +28,7 @@ const Header = ({ siteTitle }) => (
             marginLeft: "1rem",
           }}
         >
-          {siteTitle}(FOOBAR)
+          {siteTitle}
         </span>
       </Navbar.Brand>
     </Link>
