@@ -21,7 +21,7 @@ class IndexPage extends React.Component {
   state = {
     deals: [],
     loading: true,
-    error: null
+    error: null,
   };
 
   componentDidMount() {
@@ -35,10 +35,10 @@ class IndexPage extends React.Component {
       .then(querySnapshot =>
         this.setState({
           deals: querySnapshot.docs.map(doc => doc.data()),
-          loading: false
+          loading: false,
         })
       )
-      .catch(function(error) {
+      .catch(function (error) {
         console.log("Error getting documents: ", error);
       });
   }

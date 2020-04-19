@@ -11,33 +11,36 @@ const Header = ({ siteTitle }) => (
       background: `rebeccapurple`,
     }}
   >
-	 <Navbar.Brand
-		style={{
-		    color: 'white',
-		}}>
-		<img
-		    src={icon}
-		    style={{
-			   width: '2rem',
-		    }}
-		/>
-		<span
-		    style={{
-			   'margin-left': '1rem',
-		    }}
-		>
-		    {siteTitle}
-		</span>
-	 </Navbar.Brand>
+    <Link to="/">
+      <Navbar.Brand
+        style={{
+          color: "white",
+        }}
+      >
+        <img
+          src={icon}
+          style={{
+            width: "2rem",
+          }}
+        />
+        <span
+          style={{
+            marginLeft: "1rem",
+          }}
+        >
+          {siteTitle}
+        </span>
+      </Navbar.Brand>
+    </Link>
   </Navbar>
 );
 
 Header.propTypes = {
-  siteTitle: PropTypes.string
+  siteTitle: PropTypes.string,
 };
 
 Header.defaultProps = {
-  siteTitle: ``
+  siteTitle: ``,
 };
 
 export default Header;

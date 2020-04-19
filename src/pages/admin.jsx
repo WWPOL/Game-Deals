@@ -19,7 +19,7 @@ const FormContainer = styled.div`
   display: flex;
   justify-content: center;
   flex: 1;
-`
+`;
 
 const GreetingContainer = styled.div`
   display: flex;
@@ -37,10 +37,6 @@ const RecordList = styled.ul`
   }
 `;
 
-const CustomForm = styled(Form)`
-  width: 25rem;
-`;
-
 const FixedToast = styled(Toast)`
   position: fixed;
   top: 25px;
@@ -54,7 +50,7 @@ const EMPTY_FORM_STATE = {
   gameExpires: new Date(),
   gameLink: "",
   selectedDealId: null,
-}
+};
 
 class AdminPage extends React.Component {
   state = {
@@ -65,36 +61,35 @@ class AdminPage extends React.Component {
     showToast: false,
     submittedDocRef: "",
     allDeals: [],
-    ...EMPTY_FORM_STATE
+    ...EMPTY_FORM_STATE,
   };
 
   componentDidMount() {
-    firebase
-      .auth()
-      .onAuthStateChanged(user => {
-        const db = firebase.firestore();
-        
-        db.collection("admins")
-          .get()
-          .then(() =>
-            this.setState({ user, error: null, loading: false })
-          )
-          .catch(() =>
-            this.setState({ user: null, error: "Holup, you're not Olly G!", loading: false })
-          );
+    firebase.auth().onAuthStateChanged(user => {
+      const db = firebase.firestore();
 
-        db.collection("deals")
-          .onSnapshot(querySnapshot => {
-            const allDeals = querySnapshot.docs.map(doc => {
-              return {
-                id: doc.id,
-                ...doc.data()
-              };
-            });
+      db.collection("admins")
+        .get()
+        .then(() => this.setState({ user, error: null, loading: false }))
+        .catch(() =>
+          this.setState({
+            user: null,
+            error: "Holup, you're not Olly G!",
+            loading: false,
+          })
+        );
 
-            this.setState({ allDeals });
-          });
+      db.collection("deals").onSnapshot(querySnapshot => {
+        const allDeals = querySnapshot.docs.map(doc => {
+          return {
+            id: doc.id,
+            ...doc.data(),
+          };
+        });
+
+        this.setState({ allDeals });
       });
+    });
   }
 
   login = () => {
@@ -126,23 +121,25 @@ class AdminPage extends React.Component {
         gamePrice,
         gameIsFree,
         gameExpires,
-        gameLink
+        gameLink,
       } = this.state;
 
-      firebase.firestore().collection("deals")
+      firebase
+        .firestore()
+        .collection("deals")
         .add({
           name: gameName,
           price: gameIsFree ? 0 : gamePrice,
           isFree: gameIsFree,
           expires: gameExpires,
-          link: gameLink
+          link: gameLink,
         })
         .then(docRef =>
           this.setState({
             submittedDocRef: docRef.id,
             showToast: true,
             validated: false,
-            ...EMPTY_FORM_STATE
+            ...EMPTY_FORM_STATE,
           })
         )
         .catch(error => console.error("Error adding document: ", error));
@@ -150,7 +147,7 @@ class AdminPage extends React.Component {
   };
 
   selectExistingDeal = deal => {
-    const {name, price, isFree, expires, link, id} = deal;
+    const { name, price, isFree, expires, link, id } = deal;
     this.setState({
       gameName: name,
       gamePrice: price,
@@ -159,7 +156,7 @@ class AdminPage extends React.Component {
       gameLink: link,
       selectedDealId: id,
     });
-  }
+  };
 
   render() {
     const {
@@ -175,7 +172,7 @@ class AdminPage extends React.Component {
       showToast,
       submittedDocRef,
       allDeals,
-      selectedDealId
+      selectedDealId,
     } = this.state;
 
     if (loading) return <Loader />;
@@ -198,90 +195,115 @@ class AdminPage extends React.Component {
 
         {user ? (
           <>
-          <AdminContainer>
-            <RecordList>
-              <h3>Existing Records</h3>
-              {allDeals.map(deal => (
-                <li key={deal.id} onClick={() => this.selectExistingDeal(deal)}>{deal.name}</li>
-              ))}
-            </RecordList>
+            <AdminContainer>
+              <RecordList>
+                <h3>Existing Records</h3>
+                {allDeals.map(deal => (
+                  <li
+                    key={deal.id}
+                    onClick={() => this.selectExistingDeal(deal)}
+                  >
+                    {deal.name}
+                  </li>
+                ))}
+              </RecordList>
 
-            <FormContainer>
-              <CustomForm noValidate validated={validated} onSubmit={this.handleSubmit}>
-                <h3>{selectedDealId ? 'Edit Existing Game Deal' : 'Add New Game Deal'}</h3>
-                <Form.Group controlId="formGame">
-                  <Form.Label>Game</Form.Label>
-                  <Form.Control
-                    required
-                    type="text"
-                    placeholder="Duke Nukem Forever"
-                    onChange={e => this.setState({ gameName: e.target.value })}
-                    value={gameName}
-                  />
-                </Form.Group>
-
-                <Form.Group controlId="formPrice">
-                  <Form.Label>Price</Form.Label>
-                  {!gameIsFree && (
+              <FormContainer>
+                <Form
+                  noValidate
+                  validated={validated}
+                  onSubmit={this.handleSubmit}
+                >
+                  <h3>
+                    {selectedDealId
+                      ? "Edit Existing Game Deal"
+                      : "Add New Game Deal"}
+                  </h3>
+                  <Form.Group controlId="formGame">
+                    <Form.Label>Game</Form.Label>
                     <Form.Control
                       required
-                      type="number"
-                      placeholder="4.99"
-                      onChange={e => this.setState({ gamePrice: e.target.value })}
-                      value={gamePrice}
+                      type="text"
+                      placeholder="Duke Nukem Forever"
+                      onChange={e =>
+                        this.setState({ gameName: e.target.value })
+                      }
+                      value={gameName}
                     />
+                  </Form.Group>
+
+                  <Form.Group controlId="formPrice">
+                    <Form.Label>Price</Form.Label>
+                    {!gameIsFree && (
+                      <Form.Control
+                        required
+                        type="number"
+                        placeholder="4.99"
+                        onChange={e =>
+                          this.setState({ gamePrice: e.target.value })
+                        }
+                        value={gamePrice}
+                      />
+                    )}
+                    <Form.Check
+                      type="checkbox"
+                      label={gameIsFree ? "FREE!" : "Free?"}
+                      onChange={e =>
+                        this.setState({ gameIsFree: e.target.checked })
+                      }
+                      checked={gameIsFree}
+                    />
+                  </Form.Group>
+
+                  <Form.Group controlId="formLink">
+                    <Form.Label>Expires</Form.Label>
+                    <br />
+                    <Form.Control required as={Datepicker} />
+                  </Form.Group>
+
+                  <Form.Group controlId="formLink">
+                    <Form.Label>Link</Form.Label>
+                    <Form.Control
+                      required
+                      type="text"
+                      placeholder="https://store.steampowered.com/app/57900/Duke_Nukem_Forever/"
+                      onChange={e =>
+                        this.setState({ gameLink: e.target.value })
+                      }
+                      value={gameLink}
+                    />
+                  </Form.Group>
+
+                  <Button variant="primary" type="submit">
+                    {selectedDealId ? "Save" : "Submit"}
+                  </Button>
+                  {selectedDealId && (
+                    <Button
+                      variant="secondary"
+                      onClick={() => this.setState(EMPTY_FORM_STATE)}
+                    >
+                      Cancel
+                    </Button>
                   )}
-                  <Form.Check
-                    type="checkbox"
-                    label={gameIsFree ? "FREE!" : "Free?"}
-                    onChange={e =>
-                      this.setState({ gameIsFree: e.target.checked })
-                    }
-                    checked={gameIsFree}
-                  />
-                </Form.Group>
+                </Form>
+              </FormContainer>
 
-                <Form.Group controlId="formLink">
-                  <Form.Label>Expires</Form.Label>
-                  <br />
-                  <Form.Control required as={Datepicker} />
-                </Form.Group>
-
-                <Form.Group controlId="formLink">
-                  <Form.Label>Link</Form.Label>
-                  <Form.Control
-                    required
-                    type="text"
-                    placeholder="https://store.steampowered.com/app/57900/Duke_Nukem_Forever/"
-                    onChange={e => this.setState({ gameLink: e.target.value })}
-                    value={gameLink}
-                  />
-                </Form.Group>
-
-                <Button variant="primary" type="submit">
-                  {selectedDealId ? 'Save' : 'Submit'}
-                </Button>
-                {selectedDealId && <Button variant="secondary" onClick={() => this.setState(EMPTY_FORM_STATE)}>Cancel</Button>}
-              </CustomForm>
-            </FormContainer>
-              
-
-            <FixedToast
-              show={showToast}
-              onClose={() => this.setState({ showToast: false })}
-              autohide
-            >
-              <Toast.Header>
-                <strong className="mr-auto">Deal Submitted!</strong>
-              </Toast.Header>
-              <Toast.Body>Record saved as {submittedDocRef}</Toast.Body>
-            </FixedToast>
-          </AdminContainer>
-          <GreetingContainer>
+              <FixedToast
+                show={showToast}
+                onClose={() => this.setState({ showToast: false })}
+                autohide
+              >
+                <Toast.Header>
+                  <strong className="mr-auto">Deal Submitted!</strong>
+                </Toast.Header>
+                <Toast.Body>Record saved as {submittedDocRef}</Toast.Body>
+              </FixedToast>
+            </AdminContainer>
+            <GreetingContainer>
               <h1>Welcome, {user.displayName}!</h1>
               <Button onClick={this.logout}>Log out</Button>
             </GreetingContainer>
-            </>
+          </>
         ) : (
           <Button onClick={this.login}>Log in</Button>
         )}
@@ -289,5 +311,5 @@ class AdminPage extends React.Component {
     );
   }
 }
-
+// move logout to header
 export default AdminPage;
