@@ -45,3 +45,17 @@ jobs:
           args: deploy --only functions --force
       env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+  Firestore:
+    runs-on: ubuntu-18.04
+
+    steps:
+    - name: Checkout Branch 📥
+      uses: actions/checkout@v2
+
+    - name: Deploy Firestore 🔥
+      uses: w9jds/firebase-action@v1.3.0
+      with:
+          args: deploy --only firestore --force
+      env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}

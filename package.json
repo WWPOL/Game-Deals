@@ -3,7 +3,7 @@
   "private": true,
   "description": "The best place to get your game deals",
   "version": "1.0.0",
-  "author": "Rudhra Raveendran <rooday@bu.edu>, Noah Huppert <noahhuppert@gmail.com>",
+  "author": "Rudhra Raveendran <rooday@bu.edu>, Noah Huppert <contact@noahh.io>",
   "dependencies": {
     "bootstrap": "^4.4.1",
     "firebase": "^7.14.0",
@@ -45,7 +45,8 @@
     "serve": "gatsby serve -p 8000",
     "clean": "gatsby clean",
     "deploy-website": "gatsby build && gh-pages -d public",
-    "deploy-functions": "cd functions && yarn --ignore-engines deploy"
+    "deploy-functions": "cd functions && yarn --ignore-engines deploy",
+    "deploy-rules": "yarn firebase deploy --only firestore"
   },
   "repository": {
     "type": "git",

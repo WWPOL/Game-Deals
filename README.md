@@ -45,6 +45,16 @@ Then navigate to [localhost:8000](http://localhost:8000).
 
 Functions are located in [`./functions/index.js`](./functions/index.js).
 
+If you would like to run any of the `package.json` scripts in this directory the
+`--ignore-engines` option must be passed due to the fact that the `package.json`
+file defines the `engines` key for the sake of Firebase.
+
+## Firestore
+
+Firestore indexes are defined in `firestore.indexes.json`.  
+
+Firestore rules are defined in `firestores.rules`.
+
 # Deployment
 ## Instructions
 
@@ -77,6 +87,14 @@ Run:
 
 ```
 yarn deploy-functions
+```
+
+**Firestore**:
+
+Run:
+
+```
+yarn deploy-firestore
 ```
 
 ## Deployment Implementation Details

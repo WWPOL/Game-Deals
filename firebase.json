@@ -2,6 +2,11 @@
   "functions": {
     "predeploy": [
       "cd \"$RESOURCE_DIR\" && yarn --ignore-engines lint"
-    ]
+    ],
+    "source": "functions"
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
   }
 }
