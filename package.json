@@ -44,7 +44,8 @@
     "start": "npm run develop",
     "serve": "gatsby serve -p 8000",
     "clean": "gatsby clean",
-    "deploy": "gatsby build && gh-pages -d public"
+    "deploy-website": "gatsby build && gh-pages -d public",
+    "deploy-functions": "firebase deploy --only functions"
   },
   "repository": {
     "type": "git",

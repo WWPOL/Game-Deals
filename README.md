@@ -53,6 +53,26 @@ Then navigate to [localhost:9000](http://localhost:9000).
 When ready to deploy (make sure to test the production build locally 
 first!) push to master and GitHub actions will take care of the rest.
 
+## Manual Instructions
+
+If you would like to deploy manually follow these instructions.
+
+**Website**:
+
+Run:
+
+```
+yarn deploy-website
+```
+
+**Functions**:
+
+Run:
+
+```
+yarn deploy-functions
+```
+
 ## Deployment Implementation Details
 ### Website
 
