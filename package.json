@@ -45,7 +45,7 @@
     "serve": "gatsby serve -p 8000",
     "clean": "gatsby clean",
     "deploy-website": "gatsby build && gh-pages -d public",
-    "deploy-functions": "firebase deploy --only functions"
+    "deploy-functions": "cd functions && yarn --ignore-engines deploy"
   },
   "repository": {
     "type": "git",
