@@ -54,7 +54,7 @@ Preview a production build:
 yarn build && yarn serve
 ```
 
-Then navigate to [localhost:9000](http://localhost:9000).  
+Then navigate to [localhost:8000](http://localhost:8000).  
 
 When ready to deploy (make sure to test the production build locally 
 first!) push to master and GitHub actions will take care of the rest.
