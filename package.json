@@ -28,6 +28,7 @@
     "styled-components": "^5.1.0"
   },
   "devDependencies": {
+    "firebase-tools": "^8.1.1",
     "gatsby-cli": "^2.11.10",
     "gh-pages": "^2.2.0",
     "prettier": "2.0.4"

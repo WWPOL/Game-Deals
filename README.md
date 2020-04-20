@@ -53,7 +53,8 @@ Then navigate to [localhost:9000](http://localhost:9000).
 When ready to deploy (make sure to test the production build locally 
 first!) push to master and GitHub actions will take care of the rest.
 
-## Implementation Details
+## Deployment Implementation Details
+### Website
 
 GitHub actions is used to automatically deploy the master branch to 
 GitHub Pages.
@@ -75,3 +76,16 @@ Then copy the contents of the `deploy-key` file and add a secret named
 `DEPLOY_KEY` to this repository.
 
 Finally delete both the `deploy-key` and `deploy-key.pub` files.
+
+### Firebase Functions
+
+The [Firebase GitHub Action](https://github.com/marketplace/actions/github-action-for-firebase)
+is used to deploy functions. 
+
+Get a Firebase contiguous integration authentication token:
+
+```
+yarn firebase login:ci
+```
+
+Set this value as the `FIREBASE_TOKEN` secret to the repository.

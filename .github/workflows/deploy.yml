@@ -7,14 +7,14 @@ on:
     branches: [ master ]
 
 jobs:
-  build_and_deploy:
+  Website:
     runs-on: ubuntu-18.04
 
     steps:
-    - name: Checkout branch 📥
+    - name: Checkout Branch 📥
       uses: actions/checkout@v2
       
-    - name: Install dependencies 🗄️
+    - name: Install Dependencies 🗄️
       run: yarn install
     
     - name: Build 🛠️
@@ -25,9 +25,23 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.DEPLOY_KEY }}
       
-    - name: Deploy 🚀
+    - name: Deploy Website 🚀
       uses: JamesIves/github-pages-deploy-action@releases/v3
       with:
         SSH: true
         BRANCH: gh-pages
         FOLDER: public
+      
+  Functions:
+    runs-on: ubuntu-18.04
+
+    steps:
+    - name: Checkout Branch 📥
+      uses: actions/checkout@v2
+
+    - name: Deploy Firebase Functions 🔥
+      uses: w9jds/firebase-action@v1.3.0
+      with:
+          args: deploy --only functions
+      env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
