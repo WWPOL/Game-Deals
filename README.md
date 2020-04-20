@@ -121,12 +121,12 @@ Then copy the contents of the `deploy-key` file and add a secret named
 
 Finally delete both the `deploy-key` and `deploy-key.pub` files.
 
-### Firebase Functions
+### Firebase
 
 The [Firebase GitHub Action](https://github.com/marketplace/actions/github-action-for-firebase)
-is used to deploy functions. 
+is used to deploy functions and firestore. 
 
-Get a Firebase contiguous integration authentication token:
+Get a Firebase continuous integration authentication token:
 
 ```
 yarn firebase login:ci
