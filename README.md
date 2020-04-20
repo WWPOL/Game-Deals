@@ -25,6 +25,8 @@ Make sure you have the latest versions of
 [NodeJS](https://nodejs.org/en/download/)
 and [Yarn](https://classic.yarnpkg.com/en/docs/install/).
 
+## Website
+
 Install dependencies:
 
 ```
@@ -38,6 +40,10 @@ yarn develop
 ```
 
 Then navigate to [localhost:8000](http://localhost:8000).
+
+## Functions
+
+Functions are located in [`./functions/index.js`](./functions/index.js).
 
 # Deployment
 ## Instructions
