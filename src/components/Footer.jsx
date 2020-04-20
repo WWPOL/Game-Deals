@@ -1,16 +1,7 @@
 import React from "react";
-import styled from "styled-components";
 
 import megaphoneIcon from "../images/megaphone.png";
-
-const CustomFooter = styled.footer`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: rebeccapurple;
-  color: white;
-  padding: 10px;
-`;
+import errorIcon from "../images/error.png";
 
 const Footer = () => (
   <div
@@ -18,7 +9,7 @@ const Footer = () => (
       'background': 'rebeccapurple',
       'color': 'white',
       'padding': '1rem',
-      'text-align': 'center',
+      'textAlign': 'center',
     }}
   >
     <div>
@@ -26,16 +17,32 @@ const Footer = () => (
     </div>
 
     <div>
-      Megaphone (
+      Icons
+      (
       <img
         src={megaphoneIcon}
-        alt="Megaphone Icon"
+        alt="Megaphone icon"
+        style={{
+          width: '1.5rem',
+        }}
+      />,
+      <img
+        src={errorIcon}
+        alt="Error icon"
         style={{
           width: '1.5rem',
         }}
       />
-      ) icon from
-      <a href="https://icons8.com"> Icons8</a>
+      )
+      from &nbsp;
+      <a
+        href="https://icons8.com"
+        style={{
+          color: 'white',
+        }}
+      >
+        Icons8
+      </a>
     </div>
   </div>
 );

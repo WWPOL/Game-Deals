@@ -19,6 +19,7 @@ const Header = ({ siteTitle }) => (
       >
         <img
           src={icon}
+          alt="Oliver's face"
           style={{
             width: "2rem",
           }}

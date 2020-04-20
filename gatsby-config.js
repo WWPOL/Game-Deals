@@ -1,3 +1,14 @@
+const firebaseCreds = {
+  apiKey: `AIzaSyDq5wAcRBdbfqkArvq7WIIzC8yf8FjiSHQ`,
+  authDomain: `game-deals-bb2bc.firebaseapp.com`,
+  databaseURL: `https://game-deals-bb2bc.firebaseio.com`,
+  projectId: `game-deals-bb2bc`,
+  storageBucket: `game-deals-bb2bc.appspot.com`,
+  messagingSenderId: `479706586867`,
+  appId: `1:479706586867:web:a94fb444712cfbde27a186`,
+  measurementId: `G-9ZM2TP0T1D`,
+};
+
 module.exports = {
   siteMetadata: {
     title: `Olly G's Game Deals`,
@@ -5,8 +16,8 @@ module.exports = {
     author: `Rudhra Raveendran and Noah Huppert`,
   },
   plugins: [
-    `gatsby-plugin-offline`,
     `gatsby-plugin-react-helmet`,
+    `gatsby-plugin-sass`,
     {
       resolve: `gatsby-source-filesystem`,
       options: {
@@ -31,16 +42,16 @@ module.exports = {
     {
       resolve: `gatsby-plugin-firebase`,
       options: {
-        credentials: {
-          apiKey: `AIzaSyDq5wAcRBdbfqkArvq7WIIzC8yf8FjiSHQ`,
-          authDomain: `game-deals-bb2bc.firebaseapp.com`,
-          databaseURL: `https://game-deals-bb2bc.firebaseio.com`,
-          projectId: `game-deals-bb2bc`,
-          storageBucket: `game-deals-bb2bc.appspot.com`,
-          messagingSenderId: `479706586867`,
-          appId: `1:479706586867:web:a94fb444712cfbde27a186`,
-          measurementId: `G-9ZM2TP0T1D`,
-        },
+        credentials: firebaseCreds,
+      },
+    },
+    `gatsby-plugin-offline`, // Should be after gatsby-plugin-manifest
+    {
+      resolve: `gatsby-plugin-firebase-messaging`,
+      options: {
+        config: firebaseCreds,
+        disableDevelopment: false, //disables development service worker
+        removeFirebaseServiceWorker: false, //tells plugin to help unregistering/removing
       },
     },
   ],
