@@ -1,11 +1,10 @@
 import React from "react";
 import axios from "axios";
 import firebase from "gatsby-plugin-firebase";
+
 import Spinner from "react-bootstrap/Spinner";
-import OverlayTrigger from "react-bootstrap/OverlayTrigger";
-import Tooltip from "react-bootstrap/Tooltip";
-import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
+import Button from "react-bootstrap/Button";
 import InputGroup from "react-bootstrap/InputGroup";
 import Toast from "react-bootstrap/Toast";
 import DatePicker from "react-datepicker";
@@ -14,6 +13,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import Layout from "../components/Layout";
 import SEO from "../components/SEO";
 import Loader from "../components/Loader";
+import DealCard from "../components/DealCard";
 import {
   AdminContainer,
   FormContainer,
@@ -40,7 +40,7 @@ class AdminPage extends React.Component {
     error: null,
     validated: false,
     showToast: false,
-    submittedDocRef: "",
+    toastMsg: "",
     allDeals: [],
     ...EMPTY_FORM_STATE,
   };
@@ -87,6 +87,14 @@ class AdminPage extends React.Component {
       });
   };
 
+  resetForm = msg =>
+    this.setState({
+      toastMsg: msg,
+      showToast: true,
+      validated: false,
+      ...EMPTY_FORM_STATE,
+    });
+
   handleSubmit = event => {
     event.preventDefault();
     this.setState({ validated: true });
@@ -114,28 +122,20 @@ class AdminPage extends React.Component {
         link: gameLink,
       };
 
-      const resetForm = id =>
-        this.setState({
-          submittedDocRef: id,
-          showToast: true,
-          validated: false,
-          ...EMPTY_FORM_STATE,
-        });
-
       if (selectedDealId) {
         firebase
           .firestore()
           .collection("deals")
           .doc(selectedDealId)
           .update(gameData)
-          .then(() => resetForm(selectedDealId))
+          .then(() => this.resetForm(`Deal updated: ${gameName}`))
           .catch(error => console.error("Error adding document: ", error));
       } else {
         firebase
           .firestore()
           .collection("deals")
           .add(gameData)
-          .then(docRef => resetForm(docRef.id))
+          .then(docRef => this.resetForm(`${gameName} saved as ${docRef.id}`))
           .catch(error => console.error("Error adding document: ", error));
       }
     }
@@ -152,6 +152,21 @@ class AdminPage extends React.Component {
       gameLink: link,
       selectedDealId: id,
     });
+  };
+
+  deleteRecord = () => {
+    const { gameName, selectedDealId } = this.state;
+    if (!selectedDealId) return;
+
+    firebase
+      .firestore()
+      .collection("deals")
+      .doc(selectedDealId)
+      .delete()
+      .then(() =>
+        this.resetForm(`Record deleted: ${selectedDealId} (${gameName})`)
+      )
+      .catch(error => console.error("Error deleting document: ", error));
   };
 
   suggestImage = query => {
@@ -203,7 +218,7 @@ class AdminPage extends React.Component {
       gameImage,
       gameLink,
       showToast,
-      submittedDocRef,
+      toastMsg,
       allDeals,
       selectedDealId,
     } = this.state;
@@ -333,33 +348,6 @@ class AdminPage extends React.Component {
                         value={gameImage}
                         disabled={searching}
                       />
-                      {gameImage && (
-                        <OverlayTrigger
-                          placement="top"
-                          overlay={
-                            <Tooltip>
-                              <div
-                                style={{
-                                  backgroundImage: `url("${gameImage}")`,
-                                  width: "300px",
-                                  height: "200px",
-                                  backgroundSize: "cover",
-                                  backgroundRepeat: "no-repeat",
-                                  backgroundPosition: "center",
-                                }}
-                              />
-                            </Tooltip>
-                          }
-                        >
-                          <InputGroup.Append>
-                            <InputGroup.Text>
-                              <span role="img" aria-label="view image">
-                                🖼️
-                              </span>
-                            </InputGroup.Text>
-                          </InputGroup.Append>
-                        </OverlayTrigger>
-                      )}
                     </InputGroup>
                   </Form.Group>
 
@@ -383,15 +371,29 @@ class AdminPage extends React.Component {
                       {selectedDealId ? "Save" : "Submit"}
                     </Button>
                     {selectedDealId && (
-                      <Button
-                        variant="secondary"
-                        onClick={() => this.setState(EMPTY_FORM_STATE)}
-                      >
-                        Cancel
-                      </Button>
+                      <React.Fragment>
+                        <Button variant="danger" onClick={this.deleteRecord}>
+                          Delete
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          onClick={() => this.setState(EMPTY_FORM_STATE)}
+                        >
+                          Cancel
+                        </Button>
+                      </React.Fragment>
                     )}
                   </div>
                 </Form>
+
+                <DealCard
+                  name={gameName}
+                  price={gamePrice}
+                  isFree={gameIsFree}
+                  expires={gameExpires}
+                  image={gameImage}
+                  link={gameLink}
+                />
               </FormContainer>
 
               <FixedToast
@@ -402,7 +404,7 @@ class AdminPage extends React.Component {
                 <Toast.Header>
                   <strong className="mr-auto">Deal Submitted!</strong>
                 </Toast.Header>
-                <Toast.Body>Record saved as {submittedDocRef}</Toast.Body>
+                <Toast.Body>{toastMsg}</Toast.Body>
               </FixedToast>
             </AdminContainer>
           </React.Fragment>

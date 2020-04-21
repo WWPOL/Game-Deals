@@ -15,7 +15,7 @@ const DealCard = ({ name, price, isFree, expires, image, link }) => {
           <React.Fragment>Until {expires.toDateString()}</React.Fragment>
         )}
       </Card.Header>
-      <a href={link}>
+      <a href={link} rel="noopener noreferrer" target="_blank">
         <div
           className="card-img-top"
           style={{
@@ -28,7 +28,9 @@ const DealCard = ({ name, price, isFree, expires, image, link }) => {
         <Card.Subtitle className="mb-2 text-muted">
           {isFree ? "FREE!" : `$${price}`}
         </Card.Subtitle>
-        <a href={link}>Get it!</a>
+        <a href={link} rel="noopener noreferrer" target="_blank">
+          Get it!
+        </a>
       </Card.Body>
     </Card>
   );

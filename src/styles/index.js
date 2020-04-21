@@ -27,8 +27,23 @@ export const AdminContainer = styled.div`
 
 export const FormContainer = styled.div`
   display: flex;
-  justify-content: center;
+  justify-content: space-around;
   flex: 1;
+
+  & .card {
+    height: fit-content;
+  }
+
+  @media only screen and (max-width: 768px) {
+    & {
+      flex-direction: column-reverse;
+      align-items: center;
+    }
+
+    & .card {
+      margin-bottom: 25px;
+    }
+  }
 `;
 
 export const RecordList = styled.div`
