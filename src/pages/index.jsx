@@ -1,21 +1,11 @@
 import React from "react";
-import styled from "styled-components";
 import firebase from "gatsby-plugin-firebase";
 
 import Layout from "../components/Layout";
 import SEO from "../components/SEO";
 import DealCard from "../components/DealCard";
 import Loader from "../components/Loader";
-
-const DealWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  & > .card {
-    margin: 15px 0;
-  }
-`;
+import { DealWrapper } from "../styles";
 
 class IndexPage extends React.Component {
   state = {
@@ -25,22 +15,26 @@ class IndexPage extends React.Component {
   };
 
   componentDidMount() {
-    const now = new Date();
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 7);
     firebase
       .firestore()
       .collection("deals")
-      .where("expires", ">=", now)
+      .where("expires", ">=", cutoff)
       .orderBy("expires", "asc")
-      .get()
-      .then(querySnapshot =>
+      .onSnapshot(querySnapshot =>
         this.setState({
-          deals: querySnapshot.docs.map(doc => doc.data()),
+          deals: querySnapshot.docs
+            .map(doc => doc.data())
+            .map(deal => {
+              return {
+                ...deal,
+                expires: deal.expires.toDate(),
+              };
+            }),
           loading: false,
         })
-      )
-      .catch(function (error) {
-        console.log("Error getting documents: ", error);
-      });
+      );
   }
 
   render() {

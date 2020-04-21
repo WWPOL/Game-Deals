@@ -8,7 +8,6 @@
 import React from "react";
 import PropTypes from "prop-types";
 import styled from "styled-components";
-import { useStaticQuery, graphql } from "gatsby";
 import Container from "react-bootstrap/Container";
 
 import Header from "./Header";
@@ -21,26 +20,14 @@ const ContentWrapper = styled(Container)`
   margin-top: 25px;
 `;
 
-const Layout = ({ children, fluid }) => {
-  const data = useStaticQuery(graphql`
-    query SiteTitleQuery {
-      site {
-        siteMetadata {
-          title
-        }
-      }
-    }
-  `);
-
-  return (
-    <>
-      <GlobalStyle />
-      <Header siteTitle={data.site.siteMetadata.title} />
-      <ContentWrapper fluid={fluid}>{children}</ContentWrapper>
-      <Footer />
-    </>
-  );
-};
+const Layout = ({ children, fluid }) => (
+  <React.Fragment>
+    <GlobalStyle />
+    <Header />
+    <ContentWrapper fluid={fluid}>{children}</ContentWrapper>
+    <Footer />
+  </React.Fragment>
+);
 
 Layout.propTypes = {
   children: PropTypes.node.isRequired,

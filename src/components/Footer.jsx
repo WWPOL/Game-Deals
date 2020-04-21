@@ -8,6 +8,15 @@ const CustomFooter = styled.footer`
   background: rebeccapurple;
   color: white;
   padding: 10px;
+
+  @media only screen and (max-width: 768px) {
+    & {
+      -moz-box-shadow: 0 0 10px #000;
+      -webkit-box-shadow: 0 0 10px #000;
+      box-shadow: 0 0 10px #000;
+      z-index: 9;
+    }
+  }
 `;
 
 const Footer = () => (
