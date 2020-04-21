@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import firebase from "gatsby-plugin-firebase";
 
 import Spinner from "react-bootstrap/Spinner";
@@ -38,45 +38,55 @@ const NotificationButton = () => {
                 "Subscribe To Deal Alerts";
   }
 
-  // Try to get FCM token
-  if (fcmToken === null) {
-    messaging.getToken().then((token) => {
-      // If token retrieved
-      if (token !== null) {
-        setFCMToken(token);
-      } else {
-        // If no token retrieved make to set subscription status to false
-        setFCMToken(null);
-        setSubscribed(false);
-      }
-    }).catch((err) => {
-      setError(["Failed to get game deals subscription details", err]);
-    });
-  } else {
-    // Determine (and maybe update) subscription status
-    var localSubscribed = localStorage.getItem("subscribed") === "true";
 
-    if (localSubscribed !== subscribed) {
-      setSubscribed(localSubscribed);
-    }
-    
-    // Handle FCM token refreshes if we have a token
-    messaging.onTokenRefresh(() => {
-      // Get new token
-      messaging.getToken().catch((err) => {
-        setError(["Failed to get game deals subscription details", err]);
-      }).then((token) => {
-        return functions.httpsCallable("subscribe")();
+  useEffect(() => {
+    // Try to get FCM token
+    if (fcmToken === null) {
+      messaging.getToken().then((token) => {
+        // If token retrieved
+        if (token !== null) {
+          setFCMToken(token);
+
+          // Determine (and maybe update) subscription status
+          var localSubscribed = localStorage.getItem("subscribed") === "true";
+
+          if (localSubscribed !== subscribed) {
+            setSubscribed(localSubscribed);
+          }
+        } else {
+          // If no token retrieved make to set subscription status to false
+          setFCMToken(null);
+          setSubscribed(false);
+        }
       }).catch((err) => {
-        setError(["Failed to renew subscription to deals", err]);
+        setError(["Failed to get game deals subscription details", err]);
       });
-    });
-  }
+    } else {
+      // Determine (and maybe update) subscription status
+      var localSubscribed = localStorage.getItem("subscribed") === "true";
 
-  messaging.onMessage = (payload) => {
-    // Run when a notification comes in and the user is on the web page
-    console.log("FCM received while user is on the page", payload);
-  };
+      if (localSubscribed !== subscribed) {
+        setSubscribed(localSubscribed);
+      }
+      
+      // Handle FCM token refreshes if we have a token
+      messaging.onTokenRefresh(() => {
+        // Get new token
+        messaging.getToken().catch((err) => {
+          setError(["Failed to get game deals subscription details", err]);
+        }).then((token) => {
+          return functions.httpsCallable("subscribe")();
+        }).catch((err) => {
+          setError(["Failed to renew subscription to deals", err]);
+        });
+      });
+    }
+
+    messaging.onMessage = (payload) => {
+      // Run when a notification comes in and the user is on the web page
+      console.log("FCM received while user is on the page", payload);
+    };
+  }, []);
 
   const onSubscribeClick = () => {
     setLoading(true);

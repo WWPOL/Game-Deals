@@ -41,8 +41,13 @@ const Header = ({ siteTitle }) => (
 
 const Header = () => {
   const [user, setUser] = useState(null);
+
   useEffect(() => {
-    firebase.auth().onAuthStateChanged(user => setUser(user));
+    firebase.auth().onAuthStateChanged(newUser => {
+      if (JSON.stringify(user) !== JSON.stringify(newUser)) {
+        setUser(newUser);
+      }
+    });
   }, []);
 
   const logout = () => {
