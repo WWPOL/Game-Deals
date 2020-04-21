@@ -20,9 +20,9 @@ jobs:
       run: yarn install
     
     - name: Build 🛠️
-      run: yarn build
-      with:
+      env:
         GATSBY_RAPID_API_KEY: ${{ secrets.RAPID_API_KEY }}
+      run: yarn build
 
     - name: Install SSH Client 🛰️
       uses: webfactory/ssh-agent@v0.2.0
