@@ -66,7 +66,7 @@ yarn build && yarn serve
 
 Then navigate to [localhost:8000](http://localhost:8000).  
 
-When ready to deploy (make sure to test the production build locally 
+When ready to deploy (make sure to test the production build locally
 first!) push to master and GitHub actions will take care of the rest.
 
 ## Manual Instructions
@@ -103,20 +103,20 @@ yarn deploy-firestore
 GitHub actions is used to automatically deploy the master branch to 
 GitHub Pages.
 
-This uses GitHub Deploy Keys to authenticate the job runner. See the 
+This uses GitHub Deploy Keys to authenticate the job runner. See the
 [JamesIves/github-pages-deploy-action](https://github.com/JamesIves/github-pages-deploy-action/tree/dev#using-an-ssh-deploy-key-)
 documentation for details about how this key is used.
 
-To set it up generate an SSH key with no password: 
+To set it up generate an SSH key with no password:
 
 ```
 ssh-keygen -t ed25519 -f ./deploy_key
 ```
 
-Then copy the contents of the `deploy-key.pub` file and add it as a deploy key 
+Then copy the contents of the `deploy-key.pub` file and add it as a deploy key
 with write access for this repository.
 
-Then copy the contents of the `deploy-key` file and add a secret named 
+Then copy the contents of the `deploy-key` file and add a secret named
 `DEPLOY_KEY` to this repository.
 
 Finally delete both the `deploy-key` and `deploy-key.pub` files.

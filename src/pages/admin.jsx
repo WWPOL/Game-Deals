@@ -1,8 +1,11 @@
 import React from "react";
-import styled from "styled-components";
+import axios from "axios";
 import firebase from "gatsby-plugin-firebase";
-import Button from "react-bootstrap/Button";
+
+import Spinner from "react-bootstrap/Spinner";
 import Form from "react-bootstrap/Form";
+import Button from "react-bootstrap/Button";
+import InputGroup from "react-bootstrap/InputGroup";
 import Toast from "react-bootstrap/Toast";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -10,44 +13,21 @@ import "react-datepicker/dist/react-datepicker.css";
 import Layout from "../components/Layout";
 import SEO from "../components/SEO";
 import Loader from "../components/Loader";
-
-const AdminContainer = styled.div`
-  display: flex;
-`;
-
-const FormContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  flex: 1;
-`;
-
-const GreetingContainer = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
-
-const RecordList = styled.ul`
-  background: rebeccapurple;
-  color: white;
-  padding: 10px;
-
-  & > li {
-    cursor: pointer;
-  }
-`;
-
-const FixedToast = styled(Toast)`
-  position: fixed;
-  top: 25px;
-  right: 25px;
-`;
+import DealCard from "../components/DealCard";
+import {
+  AdminContainer,
+  FormContainer,
+  RecordList,
+  GhostButton,
+  FixedToast,
+} from "../styles";
 
 const EMPTY_FORM_STATE = {
   gameName: "",
   gamePrice: "",
   gameIsFree: false,
   gameExpires: new Date(),
+  gameImage: "",
   gameLink: "",
   selectedDealId: null,
 };
@@ -56,10 +36,11 @@ class AdminPage extends React.Component {
   state = {
     user: null,
     loading: true,
+    searching: false,
     error: null,
     validated: false,
     showToast: false,
-    submittedDocRef: "",
+    toastMsg: "",
     allDeals: [],
     ...EMPTY_FORM_STATE,
   };
@@ -79,16 +60,18 @@ class AdminPage extends React.Component {
           })
         );
 
-      db.collection("deals").onSnapshot(querySnapshot => {
-        const allDeals = querySnapshot.docs.map(doc => {
-          return {
-            id: doc.id,
-            ...doc.data(),
-          };
-        });
+      db.collection("deals")
+        .orderBy("expires", "desc")
+        .onSnapshot(querySnapshot => {
+          const allDeals = querySnapshot.docs.map(doc => {
+            return {
+              id: doc.id,
+              ...doc.data(),
+            };
+          });
 
-        this.setState({ allDeals });
-      });
+          this.setState({ allDeals });
+        });
     });
   }
 
@@ -104,9 +87,13 @@ class AdminPage extends React.Component {
       });
   };
 
-  logout = () => {
-    firebase.auth().signOut();
-  };
+  resetForm = msg =>
+    this.setState({
+      toastMsg: msg,
+      showToast: true,
+      validated: false,
+      ...EMPTY_FORM_STATE,
+    });
 
   handleSubmit = event => {
     event.preventDefault();
@@ -121,56 +108,117 @@ class AdminPage extends React.Component {
         gamePrice,
         gameIsFree,
         gameExpires,
+        gameImage,
         gameLink,
+        selectedDealId,
       } = this.state;
 
-      firebase
-        .firestore()
-        .collection("deals")
-        .add({
-          name: gameName,
-          price: gameIsFree ? 0 : gamePrice,
-          isFree: gameIsFree,
-          expires: gameExpires,
-          link: gameLink,
-        })
-        .then(docRef =>
-          this.setState({
-            submittedDocRef: docRef.id,
-            showToast: true,
-            validated: false,
-            ...EMPTY_FORM_STATE,
-          })
-        )
-        .catch(error => console.error("Error adding document: ", error));
+      const gameData = {
+        name: gameName,
+        price: gameIsFree ? 0 : gamePrice,
+        isFree: gameIsFree,
+        expires: gameExpires,
+        image: gameImage,
+        link: gameLink,
+      };
+
+      if (selectedDealId) {
+        firebase
+          .firestore()
+          .collection("deals")
+          .doc(selectedDealId)
+          .update(gameData)
+          .then(() => this.resetForm(`Deal updated: ${gameName}`))
+          .catch(error => console.error("Error adding document: ", error));
+      } else {
+        firebase
+          .firestore()
+          .collection("deals")
+          .add(gameData)
+          .then(docRef => this.resetForm(`${gameName} saved as ${docRef.id}`))
+          .catch(error => console.error("Error adding document: ", error));
+      }
     }
   };
 
   selectExistingDeal = deal => {
-    const { name, price, isFree, expires, link, id } = deal;
+    const { name, price, isFree, expires, image, link, id } = deal;
     this.setState({
       gameName: name,
       gamePrice: price,
       gameIsFree: isFree,
       gameExpires: expires.toDate(),
+      gameImage: image,
       gameLink: link,
       selectedDealId: id,
     });
+  };
+
+  deleteRecord = () => {
+    const { gameName, selectedDealId } = this.state;
+    if (!selectedDealId) return;
+
+    firebase
+      .firestore()
+      .collection("deals")
+      .doc(selectedDealId)
+      .delete()
+      .then(() =>
+        this.resetForm(`Record deleted: ${selectedDealId} (${gameName})`)
+      )
+      .catch(error => console.error("Error deleting document: ", error));
+  };
+
+  suggestImage = query => {
+    if (!query) {
+      this.nameInput.focus();
+      return;
+    } else if (this.state.searching) {
+      return;
+    } else if (this.state.gameImage) {
+      this.imageInput.focus();
+      return;
+    }
+
+    this.setState({ searching: true });
+    axios({
+      method: "GET",
+      url:
+        "https://contextualwebsearch-websearch-v1.p.rapidapi.com/api/Search/ImageSearchAPI",
+      headers: {
+        "content-type": "application/octet-stream",
+        "x-rapidapi-host": "contextualwebsearch-websearch-v1.p.rapidapi.com",
+        "x-rapidapi-key": process.env.GATSBY_RAPID_API_KEY,
+      },
+      params: {
+        autoCorrect: "false",
+        pageNumber: "1",
+        pageSize: "1",
+        q: query,
+        safeSearch: "true",
+      },
+    })
+      .then(res =>
+        this.setState({ gameImage: res.data.value[0].url, searching: false })
+      )
+      .catch(error => console.error(error));
   };
 
   render() {
     const {
       user,
       loading,
+      searching,
       error,
       validated,
       gameName,
       gamePrice,
       gameIsFree,
       gameExpires,
+      gameImage,
       gameLink,
       showToast,
-      submittedDocRef,
+      toastMsg,
       allDeals,
       selectedDealId,
     } = this.state;
@@ -194,18 +242,21 @@ class AdminPage extends React.Component {
         )}
 
         {user ? (
-          <>
+          <React.Fragment>
             <AdminContainer>
               <RecordList>
                 <h3>Existing Records</h3>
-                {allDeals.map(deal => (
-                  <li
-                    key={deal.id}
-                    onClick={() => this.selectExistingDeal(deal)}
-                  >
-                    {deal.name}
-                  </li>
-                ))}
+                <ul>
+                  {allDeals.map(deal => (
+                    <li key={deal.id}>
+                      <GhostButton
+                        onClick={() => this.selectExistingDeal(deal)}
+                      >
+                        {deal.name}
+                      </GhostButton>
+                    </li>
+                  ))}
+                </ul>
               </RecordList>
 
               <FormContainer>
@@ -223,6 +274,7 @@ class AdminPage extends React.Component {
                     <Form.Label>Game</Form.Label>
                     <Form.Control
                       required
+                      ref={input => (this.nameInput = input)}
                       type="text"
                       placeholder="Duke Nukem Forever"
                       onChange={e =>
@@ -261,6 +313,44 @@ class AdminPage extends React.Component {
                     <Form.Control required as={Datepicker} />
                   </Form.Group>
 
+                  <Form.Group controlId="formImage">
+                    <Form.Label>Image</Form.Label>
+                    <InputGroup>
+                      <InputGroup.Prepend
+                        className="clickable"
+                        onClick={() => this.suggestImage(gameName)}
+                      >
+                        <InputGroup.Text>
+                          {searching ? (
+                            <Spinner
+                              animation="grow"
+                              role="status"
+                              variant="primary"
+                              size="sm"
+                            >
+                              <span className="sr-only">Loading...</span>
+                            </Spinner>
+                          ) : (
+                            <span role="img" aria-label="suggest image">
+                              🔍
+                            </span>
+                          )}
+                        </InputGroup.Text>
+                      </InputGroup.Prepend>
+                      <Form.Control
+                        required
+                        ref={input => (this.imageInput = input)}
+                        type="text"
+                        placeholder="https://media.gamestop.com/i/gamestop/10084187/Duke-Nukem-Forever"
+                        onChange={e =>
+                          this.setState({ gameImage: e.target.value })
+                        }
+                        value={gameImage}
+                        disabled={searching}
+                      />
+                    </InputGroup>
+                  </Form.Group>
+
                   <Form.Group controlId="formLink">
                     <Form.Label>Link</Form.Label>
                     <Form.Control
@@ -274,18 +364,36 @@ class AdminPage extends React.Component {
                     />
                   </Form.Group>
 
-                  <Button variant="primary" type="submit">
-                    {selectedDealId ? "Save" : "Submit"}
-                  </Button>
-                  {selectedDealId && (
-                    <Button
-                      variant="secondary"
-                      onClick={() => this.setState(EMPTY_FORM_STATE)}
-                    >
-                      Cancel
+                  <div
+                    style={{ display: "flex", justifyContent: "space-between" }}
+                  >
+                    <Button variant="primary" type="submit">
+                      {selectedDealId ? "Save" : "Submit"}
                     </Button>
-                  )}
+                    {selectedDealId && (
+                      <React.Fragment>
+                        <Button variant="danger" onClick={this.deleteRecord}>
+                          Delete
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          onClick={() => this.setState(EMPTY_FORM_STATE)}
+                        >
+                          Cancel
+                        </Button>
+                      </React.Fragment>
+                    )}
+                  </div>
                 </Form>
+
+                <DealCard
+                  name={gameName}
+                  price={gamePrice}
+                  isFree={gameIsFree}
+                  expires={gameExpires}
+                  image={gameImage}
+                  link={gameLink}
+                />
               </FormContainer>
 
               <FixedToast
@@ -296,14 +404,10 @@ class AdminPage extends React.Component {
                 <Toast.Header>
                   <strong className="mr-auto">Deal Submitted!</strong>
                 </Toast.Header>
-                <Toast.Body>Record saved as {submittedDocRef}</Toast.Body>
+                <Toast.Body>{toastMsg}</Toast.Body>
               </FixedToast>
             </AdminContainer>
-            <GreetingContainer>
-              <h1>Welcome, {user.displayName}!</h1>
-              <Button onClick={this.logout}>Log out</Button>
-            </GreetingContainer>
-          </>
+          </React.Fragment>
         ) : (
           <Button onClick={this.login}>Log in</Button>
         )}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
+
 import firebase from "gatsby-plugin-firebase";
 
 import Toast from "react-bootstrap/Toast";
@@ -13,15 +14,7 @@ import NotificationButton from "../components/NotificationButton";
 import errorIcon from "../images/error.png";
 import "./index.scss";
 
-const DealWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  & > .card {
-    margin: 15px 0;
-  }
-`;
+import { DealWrapper } from "../styles";
 
 const ErrorContext = React.createContext(() => {});
 
@@ -73,22 +66,24 @@ const IndexPage = () => {
 
   useEffect(() => {
     // Get deals
-    const now = new Date();
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 7);
     firebase
       .firestore()
       .collection("deals")
-      .where("expires", ">=", now)
+      .where("expires", ">=", cutoff)
       .orderBy("expires", "asc")
-      .get()
-      .then((querySnapshot) => {
-        let deals = querySnapshot.docs.map(doc => doc.data());
-        setDeals(deals);
+      .onSnapshot(querySnapshot => {
         setLoading(false);
-      })
-      .catch((error) => {
-        setError(["Error getting deals", error]);
+        
+        setDeals(querySnapshot.docs.map(doc => doc.data()).map(deal => {
+          return {
+            ...deal,
+            expires: deal.expires.toDate(),
+          };
+        }));
       });
-  }, []);
+  });
 
   if (loading) return <Loader />;
 
