@@ -16,7 +16,6 @@ class IndexPage extends React.Component {
 
   componentDidMount() {
     const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - 7);
     firebase
       .firestore()
       .collection("deals")
