@@ -39,12 +39,11 @@
   ],
   "license": "MIT",
   "scripts": {
-    "build": "gatsby build",
-    "develop": "gatsby develop -p 8000",
+    "website": "gatsby develop",
+    "preview-deploy-website": "gatsby build && gatsby develop -p 8000",
     "format": "prettier --write \"**/*.{js,jsx,json,md}\"",
-    "start": "npm run develop",
-    "serve": "gatsby serve -p 8000",
     "clean": "gatsby clean",
+    "emulate-firebase": "yarn firebase emulators:start",
     "deploy-website": "gatsby build && gh-pages -d public",
     "deploy-functions": "cd functions && yarn --ignore-engines deploy",
     "deploy-rules": "yarn firebase deploy --only firestore"

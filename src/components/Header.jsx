@@ -1,59 +1,76 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useContext } from "react";
+
 import { Link } from "gatsby";
-import firebase from "gatsby-plugin-firebase";
+
+import styled from "styled-components";
+
 import Navbar from "react-bootstrap/Navbar";
+import Dropdown from "react-bootstrap/Dropdown";
 
-import { GhostButton } from "../styles";
 import icon from "../images/icon.png";
+import defaultProfilePic from "../images/default-profile-picture.png";
 
-/*
-const Header = ({ siteTitle }) => (
-  <Navbar
-    style={{
-      background: `rebeccapurple`,
-    }}
-  >
-    <Link to="/">
-      <Navbar.Brand
-        style={{
-          color: "white",
-        }}
-      >
-        <img
-          src={icon}
-          alt="Oliver's face"
-          style={{
-            width: "2rem",
-          }}
-        />
-        <span
-          style={{
-            marginLeft: "1rem",
-          }}
-        >
-          {siteTitle}
-        </span>
-      </Navbar.Brand>
-    </Link>
-  </Navbar>
-);
-*/
+import { UserContext, FirebaseContext } from "../pages/index.jsx";
 
-const Header = () => {
-  const [user, setUser] = useState(null);
+const UserMenuDropdown = styled(Dropdown)`
+.dropdown-menu {
+  width: 14rem;
+  left: -1.7rem;
+}
+`;
+
+const UserMenu = () => {
+  const [user, setUser] = useContext(UserContext);
+  const firebase = useContext(FirebaseContext);
 
   useEffect(() => {
-    firebase.auth().onAuthStateChanged(newUser => {
-      if (JSON.stringify(user) !== JSON.stringify(newUser)) {
-        setUser(newUser);
-      }
+    firebase.auth.onAuthStateChanged(newUser => {
+      setUser(newUser);
     });
-  }, []);
+  }, [firebase.auth, setUser]);
 
   const logout = () => {
-    firebase.auth().signOut();
+    firebase.auth.signOut();
   };
 
+  if (!user) {
+    return null;
+  }
+  
+  return (
+    <UserMenuDropdown>
+      <Dropdown.Toggle>
+        <span
+          style={{
+            color: 'white',
+          }}
+        >
+          {user.displayName || "Logged in"}
+        </span>
+
+        <img
+          src={user.photoURL || defaultProfilePic}
+          alt="Profile"
+          style={{
+            width: '2rem',
+            marginLeft: '1rem',
+            marginRight: '0.5rem', 
+            borderRadius: '2rem',
+            border: '1px solid white',
+          }}
+        />
+      </Dropdown.Toggle>
+
+      <Dropdown.Menu>
+        <Dropdown.Item onClick={logout} as="button">
+          Logout
+        </Dropdown.Item>
+          </Dropdown.Menu>
+    </UserMenuDropdown>
+  );
+};
+
+const Header = () => {
   return (
     <Navbar>
       <Navbar.Brand className="mr-auto">
@@ -62,7 +79,8 @@ const Header = () => {
           <span>Olly G's Game Deals</span>
         </Link>
       </Navbar.Brand>
-      {user && <GhostButton onClick={logout}>Logout</GhostButton>}
+
+      <UserMenu />
     </Navbar>
   );
 };

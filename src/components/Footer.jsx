@@ -2,49 +2,58 @@ import React from "react";
 
 import megaphoneIcon from "../images/megaphone.png";
 import errorIcon from "../images/error.png";
+import defaultProfilePicture from "../images/default-profile-picture.png";
+import checkedIcon from "../images/checked.png";
+import uncheckedIcon from "../images/unchecked.png";
 
-const Footer = () => (
-  <div
-    style={{
-      'background': 'rebeccapurple',
-      'color': 'white',
-      'padding': '1rem',
-      'textAlign': 'center',
-    }}
-  >
-    <div>
-      © {new Date().getFullYear()}, Olly G Inc.
-    </div>
+const icons = [
+  [megaphoneIcon, "Megaphone icon"],
+  [errorIcon, "Warning triangle icon"],
+  [defaultProfilePicture, "Cat + pig combined icon"],
+  [checkedIcon, "Checked check box"],
+  [uncheckedIcon, "Unchecked check box"],
+];
 
-    <div>
-      Icons
-      (
-      <img
-        src={megaphoneIcon}
-        alt="Megaphone icon"
-        style={{
-          width: '1.5rem',
-        }}
-      />,
-      <img
-        src={errorIcon}
-        alt="Error icon"
-        style={{
-          width: '1.5rem',
-        }}
-      />
-      )
-      from &nbsp;
-      <a
-        href="https://icons8.com"
-        style={{
-          color: 'white',
-        }}
-      >
-        Icons8
-      </a>
+const Footer = () => {
+  return (
+    <div
+      style={{
+        'background': 'rebeccapurple',
+        'color': 'white',
+        'padding': '1rem',
+        'textAlign': 'center',
+      }}
+    >
+      <div>
+        © {new Date().getFullYear()}, Olly G Inc.
+      </div>
+
+      <div>
+        Icons
+        (
+        {icons.map(icon => (
+          <img
+            key={icon[1]}
+            src={icon[0]}
+            alt={icon[1]}
+            style={{
+              width: '1.5rem',
+            }}
+          />
+        ))}
+        )
+        from &nbsp;
+        <a
+          href="https://icons8.com"
+          style={{
+            color: 'white',
+          }}
+        >
+          Icons8
+        </a>
+      </div>
     </div>
-  </div>
-);
+  );
+}
 
 export default Footer;

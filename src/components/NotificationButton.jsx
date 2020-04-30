@@ -1,15 +1,20 @@
 import React, { useState, useContext, useEffect } from "react";
-import firebase from "gatsby-plugin-firebase";
+
+import styled from "styled-components";
 
 import Spinner from "react-bootstrap/Spinner";
 
 import megaphoneIcon from "../images/megaphone.png";
-import { ErrorContext } from "../pages/index";
+import { ErrorContext, FirebaseContext } from "../pages/index";
 
 import "./NotificationButton.scss";
 
 const megaphoneIconEl = <img src={megaphoneIcon} alt="Megaphone icon" />;
 const loadingEl = <Spinner animation="grow"></Spinner>;
+
+const SubscribeButton = styled.button`
+border: none;
+`;
 
 const NotificationButton = () => {
   // State
@@ -24,8 +29,9 @@ const NotificationButton = () => {
   const [loading, setLoading] = useState(false);
 
   // Firebase
-  const messaging = firebase.messaging();
-  const functions = firebase.functions();
+  const firebase = useContext(FirebaseContext);
+  const messaging = firebase.messaging;
+  const functions = firebase.functions;
 
   // Set button content conditionally
   var buttonTxt = "";
@@ -86,7 +92,7 @@ const NotificationButton = () => {
       // Run when a notification comes in and the user is on the web page
       console.log("FCM received while user is on the page", payload);
     };
-  }, []);
+  }, [fcmToken, functions, messaging, setError, subscribed]);
 
   const onSubscribeClick = () => {
     setLoading(true);
@@ -120,15 +126,15 @@ const NotificationButton = () => {
       });
     }
   };
-  
+
   return (
-    <div
+    <SubscribeButton
       className="subscribe-button"
       onClick={onSubscribeClick}
     >
       {leftEl}
       <span>{buttonTxt}</span>
-    </div>
+    </SubscribeButton>
   );
 };
 

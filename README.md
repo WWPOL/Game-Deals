@@ -36,10 +36,22 @@ yarn install
 Start the auto-reloading development server:
 
 ```
-yarn develop
+yarn website
 ```
 
 Then navigate to [localhost:8000](http://localhost:8000).
+
+To make the website use a locally emulated version of Firebase run:
+
+```
+yarn emulate-firebase
+```
+
+Then run:
+
+```
+EMULATE_FIREBASE=true yarn website
+```
 
 ## Functions
 
@@ -61,7 +73,7 @@ Firestore rules are defined in `firestores.rules`.
 Preview a production build:
 
 ```
-yarn build && yarn serve
+yarn preview-deploy-website
 ```
 
 Then navigate to [localhost:8000](http://localhost:8000).  
