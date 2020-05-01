@@ -7,11 +7,12 @@
   "dependencies": {
     "axios": "^0.19.2",
     "bootstrap": "^4.4.1",
+    "color": "^3.1.2",
     "firebase": "^7.14.0",
     "gatsby": "^2.20.12",
     "gatsby-image": "^2.3.1",
     "gatsby-plugin-firebase": "^0.2.0-beta.4",
-    "gatsby-plugin-firebase-messaging": "^1.0.0",
+    "gatsby-plugin-firebase-messaging": "^1.0.1",
     "gatsby-plugin-manifest": "^2.3.3",
     "gatsby-plugin-offline": "^3.1.4",
     "gatsby-plugin-react-helmet": "^3.2.2",
@@ -43,7 +44,7 @@
     "preview-deploy-website": "gatsby build && gatsby develop -p 8000",
     "format": "prettier --write \"**/*.{js,jsx,json,md}\"",
     "clean": "gatsby clean",
-    "emulate-firebase": "yarn firebase emulators:start",
+    "emulate-firebase": "FIREBASE_EMULATED=true GOOGLE_APPLICATION_CREDENTIALS=../firebase-service-account.json yarn firebase emulators:start",
     "deploy-website": "gatsby build && gh-pages -d public",
     "deploy-functions": "cd functions && yarn --ignore-engines deploy",
     "deploy-rules": "yarn firebase deploy --only firestore"

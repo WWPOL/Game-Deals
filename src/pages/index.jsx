@@ -1,10 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 
-import firebase from "gatsby-plugin-firebase";
-import { useStaticQuery, graphql } from "gatsby";
 import styled from "styled-components";
-
-import Toast from "react-bootstrap/Toast";
 
 import Layout from "../components/Layout";
 import SEO from "../components/SEO";
@@ -12,16 +8,12 @@ import DealCard from "../components/DealCard";
 import Loader from "../components/Loader";
 import NotificationButton from "../components/NotificationButton";
 
-import errorIcon from "../images/error.png";
 import sadIcon from "../images/sad.png";
 
-import "./index.scss";
-
 import { DealWrapper } from "../styles";
-
-const ErrorContext = React.createContext(() => {});
-const UserContext = React.createContext([{}, ()  => {}]);
-const FirebaseContext = React.createContext({});
+import Error, { ErrorContext } from "../components/Error";
+import { FirebaseContext } from "../components/FirebaseProvider";
+import Providers from "../components/Providers";
 
 const NoDeals = styled.div`
   margin-top: 2rem;
@@ -50,86 +42,18 @@ const NoDealsP = styled.p`
   margin-left: 5rem;
 `;
 
-const Error = (props) => {
-  const [error, setError] = props.error;
-
-  if (error !== null) {
-	  console.error("App error. User message:", error[0],
-                  "Internal message:", error[1]);
-
-	  // Convert error into string, ensure first letter is uppercase, ends in period
-	  var strError = String(error[0]);
-	  strError = strError.charAt(0).toUpperCase() + strError.slice(1);
-    if (strError[strError.length - 1] !== ".") {
-      strError += ".";
-    }
-	  
-	  const doClose = () => {
-		  setError(null);
-	  };
-
-	  return (
-		  <Toast id="error-toast"
-			  onClose={doClose}>
-			  <Toast.Header>
-				  <img src={errorIcon}
-				    id="error-icon"
-				    className="rounded mr-2"
-				    alt="Error icon" />
-				  
-				  <strong className="mr-auto">
-				    Error
-				  </strong>
-			  </Toast.Header>
-			  <Toast.Body>
-				  {strError}
-			  </Toast.Body>
-		  </Toast>
-	  );
-  }
-  
-  return null;
-};
-
 const IndexPage = () => {
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [user, setUser] = useState(null);
+  const [error, setError] = useContext(ErrorContext);
 
-  const { site } = useStaticQuery(
-    graphql`
-      query {
-        site {
-          siteMetadata {
-            emulateFirebase
-          }
-        }
-      }
-    `
-  );
-
-  const emulateFirebase = site.siteMetadata.emulateFirebase;
-
-  const firestore = firebase.firestore();
-  const functions = firebase.functions();
-  const auth = firebase.auth();
-  const messaging = firebase.messaging();
-
-  if (emulateFirebase === true) {
-    firestore.settings({
-      host: "localhost:8080",
-      ssl: false,
-    });
-    
-    functions.useFunctionsEmulator("http://localhost:5001");
-  }
+  const firebase = useContext(FirebaseContext);
 
   useEffect(() => {
     // Get deals
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - 7);
-    firestore
+    firebase.firestore
       .collection("deals")
       .where("expires", ">=", cutoff)
       .orderBy("expires", "asc")
@@ -143,53 +67,49 @@ const IndexPage = () => {
           };
         }));
       });
-  }, [firestore]);
+  }, [firebase.firestore]);
 
   if (loading) return <Loader />;
 
   return (
-    <ErrorContext.Provider value={setError}>
-      <UserContext.Provider value={[user, setUser]}>
-        <FirebaseContext.Provider value={{
-          functions: functions,
-          firestore: firestore,
-          auth: auth,
-          messaging: messaging,
-        }}>
-          <Error error={[error, setError]} />
-          
-          <Layout>
-            <SEO title="Home" />
+    <Layout>
+      <Error error={[error, setError]} />
+      
+      <SEO title="Home" />
 
-            <DealWrapper>
-              {deals.length > 0 ?
-                              deals.map((deal, i) =>
-                                <DealCard key={i} {...deal} />)
-              :
-                              <NoDeals>
-                                <NoDealsHeader>
-                                  <NoDealsImg
-                                    src={sadIcon}
-                                    alt="Sad face" />
-                                  <NoDealsH3>
-                                    Sorry, There Are No Deals Right Now
-                                  </NoDealsH3>
-                                </NoDealsHeader>
-                                <NoDealsP>
-                                  Subscribe to deal alerts to receive a 
-                                  notification when there is a new deal.
-                                </NoDealsP>
-                              </NoDeals>
-              }
-            </DealWrapper>
+      <DealWrapper>
+        {deals.length > 0 ?
+                        deals.map((deal, i) =>
+                          <DealCard key={i} {...deal} />)
+        :
+                        <NoDeals>
+                          <NoDealsHeader>
+                            <NoDealsImg
+                              src={sadIcon}
+                              alt="Sad face" />
+                            <NoDealsH3>
+                              Sorry, There Are No Deals Right Now
+                            </NoDealsH3>
+                          </NoDealsHeader>
+                          <NoDealsP>
+                            Subscribe to deal alerts to receive a 
+                            notification when there is a new deal.
+                          </NoDealsP>
+                        </NoDeals>
+        }
+      </DealWrapper>
 
-            <NotificationButton />
-          </Layout>
-        </FirebaseContext.Provider>
-      </UserContext.Provider>
-    </ErrorContext.Provider>
+      <NotificationButton />
+    </Layout>
   );
 };
 
-export default IndexPage;
-export { ErrorContext, UserContext, FirebaseContext };
+const WrappedIndexPage = () => {
+  return (
+    <Providers>
+      <IndexPage />
+    </Providers>
+  );
+};
+
+export default WrappedIndexPage;

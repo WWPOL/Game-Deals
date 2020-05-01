@@ -41,13 +41,15 @@ yarn website
 
 Then navigate to [localhost:8000](http://localhost:8000).
 
-To make the website use a locally emulated version of Firebase run:
+To make the website use a locally emulated version of Firebase create a 
+Firebase service account and download the credentials JSON file, rename it
+to `firebase-service-account.json`.
 
 ```
 yarn emulate-firebase
 ```
 
-Then run:
+Finally run:
 
 ```
 EMULATE_FIREBASE=true yarn website

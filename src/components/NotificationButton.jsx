@@ -1,19 +1,39 @@
 import React, { useState, useContext, useEffect } from "react";
-
 import styled from "styled-components";
+import Color from "color";
 
 import Spinner from "react-bootstrap/Spinner";
 
 import megaphoneIcon from "../images/megaphone.png";
-import { ErrorContext, FirebaseContext } from "../pages/index";
-
-import "./NotificationButton.scss";
+import { ErrorContext } from "../components/Error";
+import { FirebaseContext } from "../components/FirebaseProvider";
 
 const megaphoneIconEl = <img src={megaphoneIcon} alt="Megaphone icon" />;
 const loadingEl = <Spinner animation="grow"></Spinner>;
 
 const SubscribeButton = styled.button`
-border: none;
+  border: none;
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem;
+  padding-right: 1rem;
+  background: pink;
+  border-radius: 2rem;
+  cursor: pointer;
+
+  &:hover {
+    box-shadow: 0.1rem 0.1rem ${Color("pink").darken(0.1)};
+    bottom: 1.1rem;
+    right: 1.1rem;
+  }
+
+  img {
+    width: 2rem;
+  }
 `;
 
 const NotificationButton = () => {
@@ -65,7 +85,8 @@ const NotificationButton = () => {
           setSubscribed(false);
         }
       }).catch((err) => {
-        setError(["Failed to get game deals subscription details", err]);
+        setError("Failed to get subscription details");
+        console.error(err);
       });
     } else {
       // Determine (and maybe update) subscription status
@@ -79,11 +100,13 @@ const NotificationButton = () => {
       messaging.onTokenRefresh(() => {
         // Get new token
         messaging.getToken().catch((err) => {
-          setError(["Failed to get game deals subscription details", err]);
+          setError("Failed to get game deals subscription details")
+          console.error(err);
         }).then((token) => {
           return functions.httpsCallable("subscribe")();
         }).catch((err) => {
-          setError(["Failed to renew subscription to deals", err]);
+          setError("Failed to renew subscription to deals")
+          console.error(err);
         });
       });
     }
@@ -103,7 +126,7 @@ const NotificationButton = () => {
         setSubscribed(false);
         setLoading(false);
       }).catch((err) => {
-        setError([err.userError, err.internalError]);
+        setError(err);
         setLoading(false);
       });
     } else {
@@ -112,13 +135,14 @@ const NotificationButton = () => {
       // 2. Get the user's FCM token
       // 3. Call the subscribe Firebase Function
       messaging.requestPermission().catch((err) => {
-        setError(["Cannot subscribe to deal alerts without " +
-                  "notification permissions", err]);
+        setError("Cannot subscribe to deal alerts without " +
+                 "notification permissions");
+        console.error(err);
         setLoading(false);
       }).then(() => {
         return functions.httpsCallable("subscribe")();
       }).catch((err) => {
-        setError([err.userError, err.internalErr]);
+        setError(err);
         setLoading(false);
       }).then(() => {
         setLoading(false);
@@ -128,10 +152,7 @@ const NotificationButton = () => {
   };
 
   return (
-    <SubscribeButton
-      className="subscribe-button"
-      onClick={onSubscribeClick}
-    >
+    <SubscribeButton onClick={onSubscribeClick}>
       {leftEl}
       <span>{buttonTxt}</span>
     </SubscribeButton>
