@@ -52,7 +52,7 @@ const IndexPage = () => {
   useEffect(() => {
     // Get deals
     const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - 7);
+
     firebase.firestore
       .collection("deals")
       .where("expires", ">=", cutoff)
