@@ -2,58 +2,54 @@ import React from "react";
 import { useStaticQuery, graphql } from "gatsby";
 
 import firebase from "gatsby-plugin-firebase";
+import { isNode } from "@firebase/util";
 
 const FirebaseContext = React.createContext({});
 
-class FirebaseProvider extends React.Component {
-  constructor () {
-    super();
-    const { site } = useStaticQuery(
-      graphql`
-        query {
-          site {
-            siteMetadata {
-              emulateFirebase
-            }
+const FirebaseProvider = ({children}) => {
+  const { site } = useStaticQuery(
+    graphql`
+      query {
+        site {
+          siteMetadata {
+            emulateFirebase
           }
         }
-      `
-    );
+      }
+    `
+  );
 
-    this.emulateFirebase = site.siteMetadata.emulateFirebase;
-    this.dealsTopic = this.emulateFirebase === true ? "deals" : "deals-dev";
+  if (isNode() === true) {
+    return children;
   }
 
-  componentDidMount() {
-    this.firestore = firebase.firestore();
-    this.functions = firebase.functions();
-    this.auth = firebase.auth();
-    this.messaging = firebase.messaging();
-   
-    if (emulateFirebase === true) {
-      this.firestore.settings({
-        host: "localhost:8080",
-        ssl: false,
-      });
-      
-      this.functions.useFunctionsEmulator("http://localhost:5001");
-    }
-  }
+  const emulateFirebase = site.siteMetadata.emulateFirebase;
+  
+  const firestore = firebase.firestore();
+  const functions = firebase.functions();
+  const auth = firebase.auth();
+  const messaging = firebase.messaging();
 
-  render() {
-    return (
-      <FirebaseContext.Provider value={{
-        functions: this.functions,
-        firestore: this.firestore,
-        auth: this.auth,
-        messaging: this.messaging,
-        dealsTopic: this.dealsTopic,
-        emulated: this.emulateFirebase,
-      }}>
-        {this.props.children}
-      </FirebaseContext.Provider>
-    );
+  if (emulateFirebase) {
+    firestore.settings({
+      host: "localhost:8080",
+      ssl: false,
+    });
+    
+    functions.useFunctionsEmulator("http://localhost:5001");
   }
+  
+  return (
+    <FirebaseContext.Provider value={{
+      emulated: emulateFirebase,
+      firestore: firestore,
+      functions: functions,
+      auth: auth,
+      messaging: messaging,
+    }}>
+      {children}
+    </FirebaseContext.Provider>
+  );
 };
 
 export default FirebaseProvider;
