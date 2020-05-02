@@ -36,7 +36,10 @@ const SubscribeButton = styled.button`
   }
 `;
 
-const NotificationButton = () => {
+const NotificationButton = (props) => {
+  if (props.disabled === true) {
+    return null;
+  }
   // State
   const setError = useContext(ErrorContext)[1];
 

@@ -99,7 +99,7 @@ const IndexPage = () => {
         }
       </DealWrapper>
 
-      <NotificationButton />
+      <NotificationButton disabled={true} />
     </Layout>
   );
 };
