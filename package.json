@@ -9,7 +9,7 @@
     "bootstrap": "^4.4.1",
     "color": "^3.1.2",
     "firebase": "^7.14.0",
-    "gatsby": "^2.20.12",
+    "gatsby": "^2.21.9",
     "gatsby-image": "^2.3.1",
     "gatsby-plugin-firebase": "^0.2.0-beta.4",
     "gatsby-plugin-firebase-messaging": "^1.0.1",
@@ -25,13 +25,13 @@
     "react": "^16.12.0",
     "react-bootstrap": "^1.0.0",
     "react-datepicker": "^2.14.1",
-    "react-dom": "^16.12.0",
+    "react-dom": "^16.13.1",
     "react-helmet": "^6.0.0",
     "styled-components": "^5.1.0"
   },
   "devDependencies": {
     "firebase-tools": "^8.1.1",
-    "gatsby-cli": "^2.11.10",
+    "gatsby-cli": "^2.12.7",
     "gh-pages": "^2.2.0",
     "prettier": "2.0.4"
   },
@@ -41,7 +41,7 @@
   "license": "MIT",
   "scripts": {
     "website": "gatsby develop",
-    "preview-deploy-website": "gatsby build && gatsby develop -p 8000",
+    "preview-deploy-website": "gatsby build && gatsby serve -p 8000",
     "format": "prettier --write \"**/*.{js,jsx,json,md}\"",
     "clean": "gatsby clean",
     "emulate-firebase": "FIREBASE_EMULATED=true GOOGLE_APPLICATION_CREDENTIALS=../firebase-service-account.json yarn firebase emulators:start",
