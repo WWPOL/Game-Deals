@@ -1,61 +1,115 @@
-import React from "react";
-import firebase from "gatsby-plugin-firebase";
+import React, { useState, useEffect, useContext } from "react";
+
+import styled from "styled-components";
 
 import Layout from "../components/Layout";
 import SEO from "../components/SEO";
 import DealCard from "../components/DealCard";
 import Loader from "../components/Loader";
+import NotificationButton from "../components/NotificationButton";
+
+import sadIcon from "../images/sad.png";
+
 import { DealWrapper } from "../styles";
+import Error, { ErrorContext } from "../components/Error";
+import { FirebaseContext } from "../components/FirebaseProvider";
+import Providers from "../components/Providers";
 
-class IndexPage extends React.Component {
-  state = {
-    deals: [],
-    loading: true,
-    error: null,
-  };
+const NoDeals = styled.div`
+  margin-top: 2rem;
+`;
 
-  componentDidMount() {
+const NoDealsHeader = styled.div`
+  display: flex;
+  align-items: center;
+`;
+
+const NoDealsImg = styled.img`
+  width: 4rem;
+  height: 4rem;
+  flex-grow: 0;
+  flex-shrink: 0;
+`;
+
+const NoDealsH3 = styled.h3`
+  display: inline-block;
+  margin-left: 1rem;
+`;
+
+const NoDealsP = styled.p`
+  padding: 1rem;
+  padding-left: 0;
+  margin-left: 5rem;
+`;
+
+const IndexPage = () => {
+  const [deals, setDeals] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useContext(ErrorContext);
+
+  const firebase = useContext(FirebaseContext);
+
+  useEffect(() => {
+    // Get deals
     const cutoff = new Date();
-    firebase
-      .firestore()
+
+    firebase.firestore
       .collection("deals")
       .where("expires", ">=", cutoff)
       .orderBy("expires", "asc")
-      .onSnapshot(querySnapshot =>
-        this.setState({
-          deals: querySnapshot.docs
-            .map(doc => doc.data())
-            .map(deal => {
-              return {
-                ...deal,
-                expires: deal.expires.toDate(),
-              };
-            }),
-          loading: false,
-        })
-      );
-  }
+      .onSnapshot(querySnapshot => {
+        setLoading(false);
+        
+        setDeals(querySnapshot.docs.map(doc => doc.data()).map(deal => {
+          return {
+            ...deal,
+            expires: deal.expires.toDate(),
+          };
+        }));
+      });
+  }, [firebase.firestore]);
 
-  render() {
-    const { deals, loading, error } = this.state;
+  if (loading) return <Loader />;
 
-    if (loading) return <Loader />;
+  return (
+    <Layout>
+      <Error error={[error, setError]} />
+      
+      <SEO title="Home" />
 
-    return (
-      <Layout>
-        <SEO title="Home" />
-        {error && (
-          <React.Fragment>
-            <h1>Uh oh!</h1>
-            <p>{error.toString()}</p>
-          </React.Fragment>
-        )}
-        <DealWrapper>
-          {deals && deals.map((deal, i) => <DealCard key={i} {...deal} />)}
-        </DealWrapper>
-      </Layout>
-    );
-  }
-}
+      <DealWrapper>
+        {deals.length > 0 ?
+                        deals.map((deal, i) =>
+                          <DealCard key={i} {...deal} />)
+        :
+                        <NoDeals>
+                          <NoDealsHeader>
+                            <NoDealsImg
+                              src={sadIcon}
+                              alt="Sad face" />
+                            <NoDealsH3>
+                              Sorry, There Are No Deals Right Now
+                            </NoDealsH3>
+                          </NoDealsHeader>
+                          <NoDealsP>
+                            Subscribe to deal alerts to receive a 
+                            notification when there is a new deal.
+                          </NoDealsP>
+                        </NoDeals>
+        }
+      </DealWrapper>
 
-export default IndexPage;
+      <NotificationButton />
+    </Layout>
+  );
+};
+
+const WrappedIndexPage = () => {
+  return (
+    <Providers>
+      <IndexPage />
+    </Providers>
+  );
+};
+
+export default WrappedIndexPage;

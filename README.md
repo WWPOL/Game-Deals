@@ -25,6 +25,8 @@ Make sure you have the latest versions of
 [NodeJS](https://nodejs.org/en/download/)
 and [Yarn](https://classic.yarnpkg.com/en/docs/install/).
 
+## Website
+
 Install dependencies:
 
 ```
@@ -34,25 +36,85 @@ yarn install
 Start the auto-reloading development server:
 
 ```
-yarn develop
+yarn website
 ```
 
 Then navigate to [localhost:8000](http://localhost:8000).
 
+To make the website use a locally emulated version of Firebase create a 
+Firebase service account and download the credentials JSON file, rename it
+to `firebase-service-account.json`.
+
+```
+yarn emulate-firebase
+```
+
+Finally run:
+
+```
+EMULATE_FIREBASE=true yarn website
+```
+
+## Functions
+
+Functions are located in [`./functions/index.js`](./functions/index.js).
+
+If you would like to run any of the `package.json` scripts in this directory the
+`--ignore-engines` option must be passed due to the fact that the `package.json`
+file defines the `engines` key for the sake of Firebase.
+
+## Firestore
+
+Firestore indexes are defined in `firestore.indexes.json`.  
+
+Firestore rules are defined in `firestores.rules`.
+
+# Deployment
+## Instructions
+
 Preview a production build:
 
 ```
-yarn build && yarn serve
+yarn preview-deploy-website
 ```
 
-Then navigate to [localhost:9000](http://localhost:9000).
+Then navigate to [localhost:9000](http://localhost:9000).  
 
 When ready to deploy (make sure to test the production build locally
 first!) push to master and GitHub actions will take care of the rest.
 
-# Deployment
+## Manual Instructions
 
-GitHub actions is used to automatically deploy the master branch to
+If you would like to deploy manually follow these instructions.
+
+**Website**:
+
+Run:
+
+```
+yarn deploy-website
+```
+
+**Functions**:
+
+Run:
+
+```
+yarn deploy-functions
+```
+
+**Firestore**:
+
+Run:
+
+```
+yarn deploy-firestore
+```
+
+## Deployment Implementation Details
+### Website
+
+GitHub actions is used to automatically deploy the master branch to 
 GitHub Pages.
 
 This uses GitHub Deploy Keys to authenticate the job runner. See the
@@ -72,3 +134,16 @@ Then copy the contents of the `deploy-key` file and add a secret named
 `DEPLOY_KEY` to this repository.
 
 Finally delete both the `deploy-key` and `deploy-key.pub` files.
+
+### Firebase
+
+The [Firebase GitHub Action](https://github.com/marketplace/actions/github-action-for-firebase)
+is used to deploy functions and firestore. 
+
+Get a Firebase continuous integration authentication token:
+
+```
+yarn firebase login:ci
+```
+
+Set this value as the `FIREBASE_TOKEN` secret to the repository.

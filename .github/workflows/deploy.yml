@@ -1,0 +1,61 @@
+# Builds and deploys the master branch.
+
+name: Continuous Deploymeny
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  Website:
+    runs-on: ubuntu-18.04
+
+    steps:
+    - name: Checkout Branch 📥
+      uses: actions/checkout@v2
+      
+    - name: Install Dependencies 🗄️
+      run: yarn install
+    
+    - name: Build 🛠️
+      run: yarn build
+
+    - name: Install SSH Client 🛰️
+      uses: webfactory/ssh-agent@v0.2.0
+      with:
+        ssh-private-key: ${{ secrets.DEPLOY_KEY }}
+      
+    - name: Deploy Website 🚀
+      uses: JamesIves/github-pages-deploy-action@releases/v3
+      with:
+        SSH: true
+        BRANCH: gh-pages
+        FOLDER: public
+      
+  Functions:
+    runs-on: ubuntu-18.04
+
+    steps:
+    - name: Checkout Branch 📥
+      uses: actions/checkout@v2
+
+    - name: Deploy Firebase Functions 🔥
+      uses: w9jds/firebase-action@v1.3.0
+      with:
+          args: deploy --only functions --force
+      env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+  Firestore:
+    runs-on: ubuntu-18.04
+
+    steps:
+    - name: Checkout Branch 📥
+      uses: actions/checkout@v2
+
+    - name: Deploy Firestore 🔥
+      uses: w9jds/firebase-action@v1.3.0
+      with:
+          args: deploy --only firestore --force
+      env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}

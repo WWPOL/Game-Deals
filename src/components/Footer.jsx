@@ -1,26 +1,59 @@
 import React from "react";
-import styled from "styled-components";
 
-const CustomFooter = styled.footer`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: rebeccapurple;
-  color: white;
-  padding: 10px;
+import megaphoneIcon from "../images/megaphone.png";
+import errorIcon from "../images/error.png";
+import defaultProfilePicture from "../images/default-profile-picture.png";
+import checkedIcon from "../images/checked.png";
+import uncheckedIcon from "../images/unchecked.png";
 
-  @media only screen and (max-width: 768px) {
-    & {
-      -moz-box-shadow: 0 0 10px #000;
-      -webkit-box-shadow: 0 0 10px #000;
-      box-shadow: 0 0 10px #000;
-      z-index: 9;
-    }
-  }
-`;
+const icons = [
+  [megaphoneIcon, "Megaphone icon"],
+  [errorIcon, "Warning triangle icon"],
+  [defaultProfilePicture, "Cat + pig combined icon"],
+  [checkedIcon, "Checked check box"],
+  [uncheckedIcon, "Unchecked check box"],
+];
 
-const Footer = () => (
-  <CustomFooter>© {new Date().getFullYear()}, Olly G Inc.</CustomFooter>
-);
+const Footer = () => {
+  return (
+    <div
+      style={{
+        'background': 'rebeccapurple',
+        'color': 'white',
+        'padding': '1rem',
+        'textAlign': 'center',
+      }}
+    >
+      <div>
+        © {new Date().getFullYear()}, Olly G Inc.
+      </div>
+
+      <div>
+        Icons
+        (
+        {icons.map(icon => (
+          <img
+            key={icon[1]}
+            src={icon[0]}
+            alt={icon[1]}
+            style={{
+              width: '1.5rem',
+            }}
+          />
+        ))}
+        )
+        from &nbsp;
+        <a
+          href="https://icons8.com"
+          style={{
+            color: 'white',
+          }}
+        >
+          Icons8
+        </a>
+      </div>
+    </div>
+  );
+}
 
 export default Footer;
