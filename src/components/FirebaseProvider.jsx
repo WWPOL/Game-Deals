@@ -2,7 +2,6 @@ import React from "react";
 import { useStaticQuery, graphql } from "gatsby";
 
 import firebase from "gatsby-plugin-firebase";
-import { isNode } from "@firebase/util";
 
 const FirebaseContext = React.createContext({});
 
