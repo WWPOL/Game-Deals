@@ -12,6 +12,7 @@
     "gatsby": "^2.21.9",
     "gatsby-image": "^2.3.1",
     "gatsby-plugin-firebase": "^0.2.0-beta.4",
+    "gatsby-plugin-firebase-messaging": "^1.0.1",
     "gatsby-plugin-manifest": "^2.3.3",
     "gatsby-plugin-offline": "^3.1.4",
     "gatsby-plugin-react-helmet": "^3.2.2",
@@ -40,7 +41,7 @@
   "license": "MIT",
   "scripts": {
     "website": "gatsby develop",
-    "prod-website": "gatsby build",
+    "prod-website": "yarn clean && mkdir public && gatsby build",
     "preview-prod-website": "yarn prod-website && gatsby serve -p 9000",
     "format": "prettier --write \"**/*.{js,jsx,json,md}\"",
     "clean": "gatsby clean",
