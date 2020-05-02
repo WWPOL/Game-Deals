@@ -41,7 +41,8 @@
   "license": "MIT",
   "scripts": {
     "website": "gatsby develop",
-    "preview-deploy-website": "gatsby build && gatsby serve -p 9000",
+    "prod-website": "gatsby build"
+    "preview-prod-website": "yarn prod-website && gatsby serve -p 9000",
     "format": "prettier --write \"**/*.{js,jsx,json,md}\"",
     "clean": "gatsby clean",
     "emulate-firebase": "FIREBASE_EMULATED=true GOOGLE_APPLICATION_CREDENTIALS=../firebase-service-account.json yarn firebase emulators:start",

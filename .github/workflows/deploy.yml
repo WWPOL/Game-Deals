@@ -1,6 +1,6 @@
 # Builds and deploys the master branch.
 
-name: Continuous Deploymeny
+name: Continuous Deployment
 
 on:
   push:
@@ -14,11 +14,11 @@ jobs:
     - name: Checkout Branch 📥
       uses: actions/checkout@v2
       
-    - name: Install Dependencies 🗄️
+    - name: Install Dependencies 📦
       run: yarn install
     
     - name: Build 🛠️
-      run: yarn build
+      run: yarn prod-website
 
     - name: Install SSH Client 🛰️
       uses: webfactory/ssh-agent@v0.2.0
@@ -38,6 +38,9 @@ jobs:
     steps:
     - name: Checkout Branch 📥
       uses: actions/checkout@v2
+
+    - name: Install Dependencies 📦
+      run: cd functions && yarn --ignore-engines install
 
     - name: Deploy Firebase Functions 🔥
       uses: w9jds/firebase-action@v1.3.0

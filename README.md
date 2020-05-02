@@ -75,7 +75,7 @@ Firestore rules are defined in `firestores.rules`.
 Preview a production build:
 
 ```
-yarn preview-deploy-website
+yarn preview-prod-website
 ```
 
 Then navigate to [localhost:9000](http://localhost:9000).  
