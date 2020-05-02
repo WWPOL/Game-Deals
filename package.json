@@ -41,7 +41,7 @@
   "license": "MIT",
   "scripts": {
     "website": "gatsby develop",
-    "prod-website": "gatsby build"
+    "prod-website": "gatsby build",
     "preview-prod-website": "yarn prod-website && gatsby serve -p 9000",
     "format": "prettier --write \"**/*.{js,jsx,json,md}\"",
     "clean": "gatsby clean",
