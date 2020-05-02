@@ -5,7 +5,7 @@ import Toast from "react-bootstrap/Toast";
 
 import errorIcon from "../images/error.png";
 
-const ErrorContext = React.createContext(() => {});
+const ErrorContext = React.createContext([null, () => {}]);
 
 const ErrorToast = styled(Toast)`
   position: fixed;

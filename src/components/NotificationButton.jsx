@@ -38,7 +38,7 @@ const SubscribeButton = styled.button`
 
 const NotificationButton = () => {
   // State
-  const setError = useContext(ErrorContext);
+  const setError = useContext(ErrorContext)[1];
 
   const [fcmToken, setFCMToken] = useState(null);
   const [subscribed, stateSetSubscribed] = useState(false);
@@ -64,10 +64,9 @@ const NotificationButton = () => {
                 "Subscribe To Deal Alerts";
   }
 
-
   useEffect(() => {
     // Try to get FCM token
-    if (fcmToken === null) {
+    if (fcmToken === null && Notification.permission === "granted") {
       messaging.getToken().then((token) => {
         // If token retrieved
         if (token !== null) {
@@ -121,6 +120,7 @@ const NotificationButton = () => {
     setLoading(true);
     
     if (subscribed === true) {
+      console.log("onSubscribeClick(): calling unsub, subscribed=", subscribed);
       // Unsubscribe
       functions.httpsCallable("unsubscribe")().then(() => {
         setSubscribed(false);

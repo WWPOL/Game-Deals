@@ -23,7 +23,7 @@ const topic = emulated === true ? "deals-dev" : "deals";
 exports.subscribe = functions.https.onCall((data, context) => {
   const fcmToken = context.instanceIdToken;
 
-  return admin.messaging().subscribeToTopic([fcmToken], topic)
+  return admin.messaging().subscribeToTopic(fcmToken, topic)
     .then((resp) => {
       return Promise.resolve({});
     }).catch((error) => {
@@ -39,7 +39,7 @@ exports.subscribe = functions.https.onCall((data, context) => {
 exports.unsubscribe = functions.https.onCall((data, context) => {
   const fcmToken = context.instanceIdToken;
 
-  return admin.messaging().unsubscribeFromTopic([fcmToken], topic)
+  return admin.messaging().unsubscribeFromTopic(fcmToken, topic)
     .then((resp) => {
       return Promise.resolve({});
     }).catch((error) => {
@@ -74,8 +74,15 @@ exports.notify = functions.https.onCall((data, context) => {
     });
 });
 
+// !!!FOR LOCAL DEVELOPMENT USE ONLY!!!
+// If firebase is being emulated expose some development utility functions
 if (emulated === true) {
-  exports.devMalnkeUserAdmin = functions.https.onCall((data, context) => {
+  /**
+   * Makes the current user an admin. Useful for setting up the local database with
+   * the correct admin users.
+   * Data must be the user's ID (uid).
+   */
+  exports.devMakeUserAdmin = functions.https.onCall((data, context) => {
     return admin.firestore().collection("admins").doc(data).set({
       admin: true,
     }).catch((error) => {
@@ -85,6 +92,11 @@ if (emulated === true) {
     });
   });
 
+  /**
+   * Removes admin status from the current user. Useful for testing how pages will
+   * behave for non-admin users.
+   * Data must be the user's ID (uid).
+   */
   exports.devRemoveUserAdmin = functions.https.onCall((data, context) => {
     return admin.firestore().collection("admins").doc(data).delete()
       .catch((error) => {
