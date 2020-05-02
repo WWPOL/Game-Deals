@@ -18,9 +18,7 @@ jobs:
       run: yarn install
     
     - name: Build 🛠️
-      run: |
-        yarn prod-website
-        ls public
+      run: yarn prod-website
 
     - name: Install SSH Client 🛰️
       uses: webfactory/ssh-agent@v0.2.0

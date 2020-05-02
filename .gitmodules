@@ -1,0 +1,3 @@
+[submodule "plugins/gatsby-plugin-firebase-messaging"]
+	path = plugins/gatsby-plugin-firebase-messaging
+	url = git@github.com:Noah-Huppert/gatsby-plugin-firebase-messaging.git
