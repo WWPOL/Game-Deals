@@ -1,4 +1,5 @@
 const url = require("url");
+const appUrl = "https://oliversgame.deals";
 const appIcon = "https://oliversgame.deals/icons/icon-192x192.png";
 
 // Setup Firebase SDK
@@ -148,6 +149,12 @@ exports.notify = functions.https.onCall((data, context) => {
           body: `${deal.name} is now available at ${dealLink.hostname} for ${dealPrice}`,
           icon: appIcon,
           image: deal.image,
+        },
+        webpush: {
+          fcm_options: {
+            link: appUrl,
+            analytics_label: `${dealId}-${channel}`,
+          },
         },
       }, {
         collapseKey: "new-deal",
