@@ -1,12 +1,10 @@
-import React, { useState, useContext, useEffect } from "react";
+import React from "react";
 import styled from "styled-components";
 import Color from "color";
 
 import Spinner from "react-bootstrap/Spinner";
 
 import megaphoneIcon from "../images/megaphone.png";
-import { ErrorContext } from "./Error";
-import { FirebaseContext } from "./FirebaseProvider";
 import NotificationSubscriber from "./NotificationSubscriber";
 
 const megaphoneIconEl = <img src={megaphoneIcon} alt="Megaphone icon" />;

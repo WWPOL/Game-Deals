@@ -8,17 +8,26 @@ import BootstrapNavbar from "react-bootstrap/Navbar";
 import Dropdown from "react-bootstrap/Dropdown";
 import Badge from "react-bootstrap/Badge";
 
-import icon from "../images/icon.png";
-import defaultProfilePic from "../images/default-profile-picture.png";
-
 import NotificationSubscriber from "./NotificationSubscriber";
 
 import { FirebaseContext } from "./FirebaseProvider";
 import { UserContext } from "./UserProvider";
 import { ErrorContext } from "./Error";
 
+import icon from "../images/icon.png";
+import defaultProfilePic from "../images/default-profile-picture.png";
+
 const Navbar = styled(BootstrapNavbar)`
 background: rebeccapurple;
+`;
+
+const NavbarCollapse = styled(Navbar.Collapse)`
+  display: flex;
+  justify-content: end;
+
+  & .collapse {
+    justify-content: center;    
+  }
 `;
 
 const UserMenuDropdown = styled(Dropdown)`
@@ -101,7 +110,7 @@ const Header = () => {
 
       <Navbar.Toggle aria-controls="toggle-navbar" />
 
-      <Navbar.Collapse id="toggle-navbar" className="justify-content-end">
+      <NavbarCollapse id="toggle-navbar">
         {firebase.emulated === true &&
          <FirebaseEmulatedBadge>Firebase Emulated</FirebaseEmulatedBadge>}
         {user && <UserMenuDropdown>
@@ -121,19 +130,21 @@ const Header = () => {
           </Dropdown.Toggle>
 
           <Dropdown.Menu>
-            {user.isAdmin === true && [
-              <Dropdown.Item key="admin-dashboard" as="a" href="/admin">
-                Admin Dashboard
-              </Dropdown.Item>,
-              
-              <Dropdown.Divider key="divider-1" />,
-              
-              <NotificationSubscriber key="test-notification" channel="test">
-                <TestNotificationsSubscribe />
-              </NotificationSubscriber>,
-              
-              <Dropdown.Divider key="divider-2" />
-            ]}
+            {user.isAdmin === true &&
+             <React.Fragment>
+               <Dropdown.Item key="admin-dashboard" as="a" href="/admin">
+                 Admin Dashboard
+               </Dropdown.Item>
+               
+               <Dropdown.Divider key="divider-1" />
+               
+               <NotificationSubscriber key="test-notification" channel="test">
+                 <TestNotificationsSubscribe />
+               </NotificationSubscriber>
+               
+               <Dropdown.Divider key="divider-2" />
+             </React.Fragment>
+            }
 
             {firebase.emulated === true &&
             <Dropdown.Item onClick={makeUserAdmin} as="button">
@@ -147,7 +158,7 @@ const Header = () => {
             </Dropdown.Item>
           </Dropdown.Menu>
         </UserMenuDropdown>}
-      </Navbar.Collapse>
+      </NavbarCollapse>
     </Navbar>
   );
 };

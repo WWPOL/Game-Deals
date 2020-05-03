@@ -3,6 +3,7 @@ import Button from "react-bootstrap/Button";
 import Toast from "react-bootstrap/Toast";
 
 const themeColor = "rebeccapurple";
+export const smallBreakpoint = "768px";
 
 export const DealWrapper = styled.div`
   display: flex;
@@ -11,38 +12,6 @@ export const DealWrapper = styled.div`
 
   & > .card {
     margin: 15px 0;
-  }
-`;
-
-export const AdminContainer = styled.div`
-  display: flex;
-  position: relative;
-
-  @media only screen and (max-width: 768px) {
-    & {
-      flex-direction: column-reverse;
-    }
-  }
-`;
-
-export const FormContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  flex-grow: 1;
-
-  @media only screen and (max-width: 768px) {
-    & {
-      flex-direction: column-reverse;
-      align-items: center;
-    }
-  }
-`;
-
-export const RecordList = styled.div`
-  @media only screen and (max-width: 768px) {
-    & {
-      margin-top: 25px;
-    }
   }
 `;
 

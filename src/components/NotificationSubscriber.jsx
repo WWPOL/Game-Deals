@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect, useCallback } from "react";
 import styled from "styled-components"
 
 import { ErrorContext } from "../components/Error";
@@ -21,10 +21,10 @@ const NotificationSubscriber = ({children, channel}) => {
 
   const [fcmToken, setFCMToken] = useState(null);
   const [subscribed, stateSetSubscribed] = useState(false);
-  const setSubscribed = (v) => {
+  const setSubscribed = useCallback((v) => {
     localStorage.setItem(localStorageKey, v);
     stateSetSubscribed(v);
-  };
+  }, [localStorageKey]);
   const [loading, setLoading] = useState(false);
 
   // Firebase

@@ -54,16 +54,14 @@ function ensureAdmin(context) {
  */
 exports.subscribe = functions.https.onCall((data, context) => {
   const fcmToken = context.instanceIdToken;
-
-  var subTopic = topic;
+  let channel = data && data.channel ? data.channel : CHANNEL_MAIN;
+  
+  const subTopic = `${topic}-${channel}`;
   var baseProm = Promise.resolve();
 
-  if (data && data.channel !== CHANNEL_MAIN) {
+  if (channel !== CHANNEL_MAIN) {
     baseProm = ensureAdmin(context);
-    subTopic += `-${data.channel}`;
   }
-
-  console.log("subscribing to", subTopic);
 
   return baseProm
     .then(() => admin.messaging().subscribeToTopic(fcmToken, subTopic))
@@ -80,16 +78,14 @@ exports.subscribe = functions.https.onCall((data, context) => {
  */
 exports.unsubscribe = functions.https.onCall((data, context) => {
   const fcmToken = context.instanceIdToken;
+  const channel = data && data.channel ? data.channel : CHANNEL_MAIN;
 
-  var unsubTopic = topic;
+  const unsubTopic = `${topic}-${channel}`;
   var baseProm = Promise.resolve();
 
-  if (data && data.channel !== CHANNEL_MAIN) {
+  if (channel !== CHANNEL_MAIN) {
     baseProm = ensureAdmin(context);
-    unsubTopic += `-${data.channel}`;
   }
-
-  console.log("unsubscribing from", unsubTopic);
 
   return baseProm
     .then(() => admin.messaging().unsubscribeFromTopic(fcmToken, unsubTopic))
@@ -108,20 +104,17 @@ exports.unsubscribe = functions.https.onCall((data, context) => {
  * to send the notification to.
  */
 exports.notify = functions.https.onCall((data, context) => {
-  var notifyTopic = topic;
+  const channel = data && data.channel ? data.channel : CHANNEL_MAIN;
+  const notifyTopic = `${topic}-${channel}`;
 
-  if (data && data.channel !== CHANNEL_MAIN) {
-    notifyTopic += `-${data.channel}`
-  }
+  const dealId = data.dealId;
+  const confirmResend = data.confirmResend || false;
   
   // Determine if admin
-  ensureAdmin(context)
+  return ensureAdmin(context)
     .then(() => {
 
       // Get deal from database
-      const dealId = data.dealId;
-      const confirmResend = data.confirmResend || false;
-  
       return admin.firestore().collection("deals").doc(dealId).get()
         .catch((error) => {
           console.error("Failed to get deal to send notification for", error);
@@ -129,8 +122,17 @@ exports.notify = functions.https.onCall((data, context) => {
                                                "Failed to retrieve deal");
         });
     })
-    .then((deal) => {
-      if (deal.notificationSent === true && confirmResend === false) {
+    .then((docRef) => {
+      if (docRef.exists === false) {
+        throw new functions.https.HttpsError("not-found",
+                                             "Deal does not exist");
+      }
+
+      const deal = docRef.data();
+      
+      const notificationSent = channel in deal.notificationSent ?
+            deal.notificationSent[channel] : false;
+      if (notificationSent === true && confirmResend === false) {
         throw new functions.https.HttpsError("already-exists",
                                              "Notification already sent for " +
                                              "this deal")
@@ -149,8 +151,11 @@ exports.notify = functions.https.onCall((data, context) => {
       }, {
         collapseKey: "new-deal",
       });
-
-      return Promise.resolve({});
+    }).then(() => {
+      // Record that notification was sent on channel
+      var sentUpdate = {};
+      sentUpdate[`notificationSent.${channel}`] = true;
+      return admin.firestore().collection("deals").doc(dealId).update(sentUpdate);
     });
 });
 
