@@ -338,6 +338,7 @@ const AdminPage = () => {
       console.error("Failed to send notification for deal", err);
       setError(`Failed to send notification for ${gameFormData.name} on ` +
                `the ${channel} channel: ${err}`);
+      setLoading(false);
     });
   };
 
