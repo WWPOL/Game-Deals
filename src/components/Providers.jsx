@@ -8,13 +8,15 @@ const Providers = ({children}) => {
   const [error, setError] = useState(null);
 
   return (
-    <ErrorContext.Provider value={[error, setError]}>
-      <FirebaseProvider>
+    <FirebaseProvider>
+      <ErrorContext.Provider value={[error, setError]}>
+
         <UserProvider>
           {children}
         </UserProvider>
-      </FirebaseProvider>
-    </ErrorContext.Provider>
+
+      </ErrorContext.Provider>
+    </FirebaseProvider>
   );
 };
 
