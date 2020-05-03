@@ -24,11 +24,28 @@ const FirebaseProvider = ({children}) => {
   }
 
   const emulateFirebase = site.siteMetadata.emulateFirebase;
+  const onLocalHost = window.location.host.indexOf("localhost") !== -1 ||
+                      window.location.host.indexOf("127.0.0.1") !== -1;
   
   const firestore = firebase.firestore();
   const functions = firebase.functions();
   const auth = firebase.auth();
   const messaging = firebase.messaging();
+
+  // Don't do any analytics or error reporting on localhost
+  if (onLocalHost === false) {
+    const analytics = firebase.analytics();
+
+    window.onerror = (msg, source, lineno, colno, error) => {
+      const event = { msg, source, lineno, colno, error: error.toString() };
+      
+      console.error("Analytics, caught error", event);
+
+      analytics.logEvent("error", event);
+    };
+  } else {
+    console.log("Analytics disabled on localhost");
+  }
 
   if (emulateFirebase) {
     firestore.settings({
