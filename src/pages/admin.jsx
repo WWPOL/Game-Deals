@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import axios from "axios";
 import firebase from "gatsby-plugin-firebase";
 import styled from "styled-components";
@@ -31,6 +31,8 @@ import { UserContext } from "../components/UserProvider";
 import Providers from "../components/Providers";
 
 import oliverIcon from "../images/icon.png";
+import checkedIcon from "../images/checked.png";
+import uncheckedIcon from "../images/unchecked.png";
 
 const dealsInfoBreakpoint = "1020px";
 
@@ -200,7 +202,9 @@ const AdminPage = () => {
   var nameInput;
   var imageInput;
 
-  const updateAllDeals = () => {
+  const updateAllDeals = useCallback(() => {
+    setLoading(true);
+    
     return firebaseClients.firestore
                    .collection("deals")
                    .orderBy("expires", "desc")
@@ -228,15 +232,14 @@ const AdminPage = () => {
                        }
                      }
                    })
-  };
+  }, [firebaseClients.firestore, setLoading, setAllDeals,
+      gameFormData.selectedDealId]);
 
   useEffect(() => {
     if (user && user.isAdmin === true) {
-      setLoading(true);
-
       updateAllDeals();
     }
-  }, [firebaseClients.firestore, user, setLoading, setError]);
+  }, [user, updateAllDeals]);
 
   const login = () => {
     const provider = new firebase.auth.GoogleAuthProvider();
@@ -557,6 +560,42 @@ const AdminPage = () => {
                          </Button>
                        </GameFormStorageButtons>
 
+                       <div
+                         style={{
+                           marginTop: "2rem",
+                         }}
+                       >
+                         <h5>Notifications</h5>
+                         
+                         {Object.keys(gameFormData.notificationSent).map((k) => {
+                           const channel = k[0].toUpperCase() + k.substring(1);
+                           const sent = gameFormData.notificationSent[k];
+                           const img =  sent === true ?
+                                        checkedIcon : uncheckedIcon;
+                           const imgAlt = sent === true ? "Check mark" :
+                                          "Empty check box";
+                           const txt = sent === true ? "Sent" : "Not sent";
+                           return (
+                             <div
+                               key={channel}
+                               style={{
+                                 display: "flex",
+                                 alignItems: "center",
+                               }}
+                             >
+                               <img
+                                 style={{
+                                   width: "1.5rem",
+                                 }}
+                                 src={img}
+                                 alt={imgAlt}
+                               />
+                               {channel} Notification {txt}
+                             </div>
+                           );
+                         })}
+                       </div>
+
                        <GameFormNotificationButtonContainer>
                          <Button
                            disabled={sendingNotification === true ? true : null}
@@ -571,7 +610,9 @@ const AdminPage = () => {
                               <Spinner size="sm" animation="border" />
                               &nbsp;&nbsp;Sending Notification
                             </React.Fragment> :
-                            <span>Send Notification</span>
+                            <span>
+                              {gameFormData.notificationSent[selectedNotificationChannel] === true ? "Resend" : "Send"} Notification
+                            </span>
                            }
                          </Button>
 
