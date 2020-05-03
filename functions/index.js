@@ -33,8 +33,9 @@ function ensureAdmin(context) {
 
   return admin.firestore().collection("admins").doc(uid).get()
     .catch((err) => {
-      throw new functions.https.HttpsError("internal", "Failed to determine " +
-                                           "login status");
+      console.error("Failed to get admins collection document", err);
+      throw new functions.https.HttpsError(
+        "internal", "Failed to determine admin status");
     })
     .then((docRef) => {
       if (docRef.exists === false) {
@@ -115,12 +116,12 @@ exports.notify = functions.https.onCall((data, context) => {
     .then(() => {
 
       // Get deal from database
-      return admin.firestore().collection("deals").doc(dealId).get()
-        .catch((error) => {
-          console.error("Failed to get deal to send notification for", error);
-          throw new functions.https.HttpsError("internal",
-                                               "Failed to retrieve deal");
-        });
+      return admin.firestore().collection("deals").doc(dealId).get();
+    })
+    .catch((error) => {
+      console.error("Failed to get deal to send notification for", error);
+      throw new functions.https.HttpsError("internal",
+                                           "Failed to retrieve deal");
     })
     .then((docRef) => {
       if (docRef.exists === false) {
