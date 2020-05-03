@@ -244,7 +244,7 @@ const AdminPage = () => {
             <RecordList>
               <AdminSectionTitle>Existing Game Deals</AdminSectionTitle>
               <ExistingGamesListGroup>
-                {allDeals.map(deal => (
+                {allDeals.length > 0 ? allDeals.map(deal => (
                   <ListGroup.Item
                     key={deal.id}
                     active={gameFormData.selectedDealId === deal.id}
@@ -253,7 +253,11 @@ const AdminPage = () => {
                     >
                     {deal.name}
                   </ListGroup.Item>
-                ))}
+                )) :
+                                   <ListGroup.Item disabled>
+                                     No existing game deals.
+                                   </ListGroup.Item>
+                }
               </ExistingGamesListGroup>
             </RecordList>
 

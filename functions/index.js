@@ -19,89 +19,139 @@ if (process.env.GOOGLE_APPLICATION_CREDENTIALS !== undefined) {
 
 const topic = emulated === true ? "deals-dev" : "deals";
 
-/**
- * Subscribe a client to the deals FCM topic.
- * Uses the request context to know the user's FCM token.
- */
-exports.subscribe = functions.https.onCall((data, context) => {
-  const fcmToken = context.instanceIdToken;
-
-  return admin.messaging().subscribeToTopic(fcmToken, topic)
-    .then((resp) => {
-      return Promise.resolve({});
-    }).catch((error) => {
-      console.error("Failed to subscribe client", error);
-      throw new functions.https.HttpsError("internal", "Failed to subscribe");
-    });
-});
+const CHANNEL_MAIN = "main";
 
 /**
- * Unsubscribe a client from the deals FCM topic.
- * Uses the request context to know the user's FCM token.
+ * Ensures the user who invoked the function is an admin.
  */
-exports.unsubscribe = functions.https.onCall((data, context) => {
-  const fcmToken = context.instanceIdToken;
-
-  return admin.messaging().unsubscribeFromTopic(fcmToken, topic)
-    .then((resp) => {
-      return Promise.resolve({});
-    }).catch((error) => {
-      console.error("Failed to unsubscribe client", error);
-      throw new functions.https.HttpsError("internal", "Failed to unsubscribe");
-    });
-});
-
-/**
- * Send a notification about a new game deal to clients subscribed to the 
- * deals topic.
- * Data must be { dealId: string, confirmResend: bool }, where dealId is the ID of 
- * the deals document and confirmResend is set to true if you want to send a 
- * notification for a deal which has already had a notification sent, this key
- * is optional.
- */
-exports.notify = functions.https.onCall((data, context) => {
-  // Determine if admin
+function ensureAdmin(context) {
   const uid = context.auth.uid;
 
   if (uid === null) {
     throw new functions.https.HttpsError("unauthenticated", "Not logged in");
   }
 
-  // Get deal from database
-  const dealId = data.dealId;
-  const confirmResend = data.confirmResend || false;
-  
-  admin.firestore().collection("deals").doc(dealId).get().catch((error) => {
-    console.error("Failed to get deal to send notification for", error);
-    throw new functions.https.HttpsError("internal",
-                                         "Failed to retrieve deal");
-  }).then((deal) => {
-    if (deal.notificationSent === true && confirmResend === false) {
-      throw new functions.https.HttpsError("already-exists",
-                                           "Notification already sent for " +
-                                           "this deal")
-    }
-    
-    const dealLink = url.parse(deal.link);
-    const dealPrice = deal.isFree === true ? "free" : deal.price;
-
-    return admin.messaging().sendToTopic(topic, {
-      notification: {
-        title: `Deal on ${deal.name} (${dealPrice})`,
-        body: `${deal.name} is now available at ${dealLink.hostname} for ${dealPrice}`,
-        icon: appIcon,
-        image: deal.image,
-      },
-    }, {
-      collapseKey: "new-deal",
+  return admin.firestore().collection("admins").doc(uid).get()
+    .catch((err) => {
+      throw new functions.https.HttpsError("internal", "Failed to determine " +
+                                           "login status");
+    })
+    .then((docRef) => {
+      if (docRef.exists === false) {
+        throw new functions.https.HttpsError("permission-denied",
+                                             "Not an admin");
+      }
+      
+      return Promise.resolve();
     });
-  }).then(() => {
-    return Promise.resolve({});
-  }).catch((error) => {
-    console.error("Failed to send notification message", error);
-    throw new functions.https.HttpsError("internal",
-                                         "Failed to send notification message");
-  });
+}
+
+/**
+ * Subscribe a client to the deals FCM topic.
+ * Uses the request context to know the user's FCM token.
+ * Data optionally { channel: string }, which can be used to augment which deals
+ * topic to subscribe to. Only allowed to be used by admins.
+ */
+exports.subscribe = functions.https.onCall((data, context) => {
+  const fcmToken = context.instanceIdToken;
+
+  var subTopic = topic;
+  var baseProm = Promise.resolve();
+
+  if (data && data.channel !== CHANNEL_MAIN) {
+    baseProm = ensureAdmin(context);
+    subTopic += `-${data.channel}`;
+  }
+
+  console.log("subscribing to", subTopic);
+
+  return baseProm
+    .then(() => admin.messaging().subscribeToTopic(fcmToken, subTopic))
+    .then((resp) => {
+      return Promise.resolve({});
+    });
+});
+
+/**
+ * Unsubscribe a client from the deals FCM topic.
+ * Uses the request context to know the user's FCM token.
+ * Data optionally { channel: string }, which can be used to augment which deals
+ * topic to unsubscribe from. Only allowed to be used by admins.
+ */
+exports.unsubscribe = functions.https.onCall((data, context) => {
+  const fcmToken = context.instanceIdToken;
+
+  var unsubTopic = topic;
+  var baseProm = Promise.resolve();
+
+  if (data && data.channel !== CHANNEL_MAIN) {
+    baseProm = ensureAdmin(context);
+    unsubTopic += `-${data.channel}`;
+  }
+
+  console.log("unsubscribing from", unsubTopic);
+
+  return baseProm
+    .then(() => admin.messaging().unsubscribeFromTopic(fcmToken, unsubTopic))
+    .then((resp) => {
+      return Promise.resolve({});
+    });
+});
+
+/**
+ * Send a notification about a new game deal to clients subscribed to the 
+ * deals topic.
+ * Data must be { dealId: string, confirmResend: bool, channel: string }, where 
+ * dealId is the ID of the deals document and confirmResend is set to true if you 
+ * want to send a notification for a deal which has already had a notification 
+ * sent, this key is optional. The channel key can be used to augment which topic
+ * to send the notification to.
+ */
+exports.notify = functions.https.onCall((data, context) => {
+  var notifyTopic = topic;
+
+  if (data && data.channel !== CHANNEL_MAIN) {
+    notifyTopic += `-${data.channel}`
+  }
+  
+  // Determine if admin
+  ensureAdmin(context)
+    .then(() => {
+
+      // Get deal from database
+      const dealId = data.dealId;
+      const confirmResend = data.confirmResend || false;
+  
+      return admin.firestore().collection("deals").doc(dealId).get()
+        .catch((error) => {
+          console.error("Failed to get deal to send notification for", error);
+          throw new functions.https.HttpsError("internal",
+                                               "Failed to retrieve deal");
+        });
+    })
+    .then((deal) => {
+      if (deal.notificationSent === true && confirmResend === false) {
+        throw new functions.https.HttpsError("already-exists",
+                                             "Notification already sent for " +
+                                             "this deal")
+      }
+      
+      const dealLink = url.parse(deal.link);
+      const dealPrice = deal.isFree === true ? "free" : deal.price;
+
+      return admin.messaging().sendToTopic(notifyTopic, {
+        notification: {
+          title: `Deal on ${deal.name} (${dealPrice})`,
+          body: `${deal.name} is now available at ${dealLink.hostname} for ${dealPrice}`,
+          icon: appIcon,
+          image: deal.image,
+        },
+      }, {
+        collapseKey: "new-deal",
+      });
+
+      return Promise.resolve({});
+    });
 });
 
 // !!!FOR LOCAL DEVELOPMENT USE ONLY!!!

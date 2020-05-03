@@ -11,6 +11,8 @@ import Badge from "react-bootstrap/Badge";
 import icon from "../images/icon.png";
 import defaultProfilePic from "../images/default-profile-picture.png";
 
+import NotificationSubscriber from "./NotificationSubscriber";
+
 import { FirebaseContext } from "./FirebaseProvider";
 import { UserContext } from "./UserProvider";
 import { ErrorContext } from "./Error";
@@ -39,6 +41,20 @@ margin: auto;
 background: #ffa712;
 padding: 0.75rem;
 `;
+
+const TestNotificationsSubscribe = ({loading, subscribed}) => {
+  return (
+    <Dropdown.Item style={{
+      whiteSpace: "normal",
+    }}>
+      {loading === true ?
+       (subscribed === true ? "Unsubscribing From " :
+        "Subscribing To ") :
+       (subscribed === true ? "Unsubscribe From " : "Subscribe To ")}
+      Test Notifications
+    </Dropdown.Item>
+  );
+};
 
 const Header = () => {
   const [user, setUser] = useContext(UserContext);
@@ -105,11 +121,19 @@ const Header = () => {
           </Dropdown.Toggle>
 
           <Dropdown.Menu>
-            <Dropdown.Item as="a" href="/admin">
-              Admin Dashboard
-            </Dropdown.Item>
-
-            <Dropdown.Divider />
+            {user.isAdmin === true && [
+              <Dropdown.Item key="admin-dashboard" as="a" href="/admin">
+                Admin Dashboard
+              </Dropdown.Item>,
+              
+              <Dropdown.Divider key="divider-1" />,
+              
+              <NotificationSubscriber key="test-notification" channel="test">
+                <TestNotificationsSubscribe />
+              </NotificationSubscriber>,
+              
+              <Dropdown.Divider key="divider-2" />
+            ]}
 
             {firebase.emulated === true &&
             <Dropdown.Item onClick={makeUserAdmin} as="button">
