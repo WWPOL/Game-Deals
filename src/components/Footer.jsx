@@ -5,13 +5,15 @@ import errorIcon from "../images/error.png";
 import defaultProfilePicture from "../images/default-profile-picture.png";
 import checkedIcon from "../images/checked.png";
 import uncheckedIcon from "../images/unchecked.png";
+import questionMarkIcon from "../images/question-mark.png";
 
 const icons = [
   [megaphoneIcon, "Megaphone icon"],
-  [errorIcon, "Warning triangle icon"],
-  [defaultProfilePicture, "Cat + pig combined icon"],
+  [errorIcon, "Warning triangle"],
+  [defaultProfilePicture, "Cat + pig combined"],
   [checkedIcon, "Checked check box"],
   [uncheckedIcon, "Unchecked check box"],
+  [questionMarkIcon, "Question mark"],
 ];
 
 const Footer = () => {

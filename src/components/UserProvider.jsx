@@ -10,15 +10,17 @@ const UserProvider = ({children}) => {
 
   useEffect(() => firebase.auth.onAuthStateChanged(newUser => {
     if (newUser === null) {
+      setUser(null);
       return;
     }
     
-    firebase.firestore.doc(`admins/${newUser.uid}`).get().then(() => {
+    firebase.firestore.doc(`admins/${newUser.uid}`).get().then((docRef) => {
       setUser({
         ...newUser,
-        isAdmin: true,
+        isAdmin: docRef.exists,
       });
     }).catch((err) => {
+      console.error("Failed to get user", err);
       setUser({
         ...newUser,
         isAdmin: false,

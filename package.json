@@ -26,6 +26,7 @@
     "react-bootstrap": "^1.0.0",
     "react-datepicker": "^2.14.1",
     "react-dom": "^16.13.1",
+    "react-google-button": "^0.7.1",
     "react-helmet": "^6.0.0",
     "styled-components": "^5.1.0"
   },
