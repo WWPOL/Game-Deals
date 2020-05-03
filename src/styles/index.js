@@ -27,60 +27,21 @@ export const AdminContainer = styled.div`
 
 export const FormContainer = styled.div`
   display: flex;
-  justify-content: space-around;
-  flex: 1;
-
-  & .card {
-    height: fit-content;
-  }
+  justify-content: center;
+  flex-grow: 1;
 
   @media only screen and (max-width: 768px) {
     & {
       flex-direction: column-reverse;
       align-items: center;
     }
-
-    & .card {
-      margin-bottom: 25px;
-    }
   }
 `;
 
 export const RecordList = styled.div`
-  background: ${themeColor};
-  color: white;
-  margin-bottom: 0;
-
-  & ul {
-    overflow-y: auto;
-    max-height: 500px;
-    padding: 30px;
-    margin-bottom: 0;
-  }
-
-  & ul > li {
-    margin: 5px 0;
-  }
-
-  & h3 {
-    padding: 20px;
-  }
-
   @media only screen and (max-width: 768px) {
     & {
       margin-top: 25px;
-    }
-
-    & h3 {
-      text-align: center;
-    }
-
-    & ul {
-      padding: 10px;
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
     }
   }
 `;

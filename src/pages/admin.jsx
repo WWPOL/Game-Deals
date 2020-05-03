@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import firebase from "gatsby-plugin-firebase";
+import styled from "styled-components";
 
 import Spinner from "react-bootstrap/Spinner";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import InputGroup from "react-bootstrap/InputGroup";
 import Toast from "react-bootstrap/Toast";
+import ListGroup from "react-bootstrap/ListGroup";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -14,6 +16,7 @@ import Layout from "../components/Layout";
 import SEO from "../components/SEO";
 import Loader from "../components/Loader";
 import DealCard from "../components/DealCard";
+import CheckInput from "../components/CheckInput";
 import {
   AdminContainer,
   FormContainer,
@@ -25,6 +28,27 @@ import Error, { ErrorContext } from "../components/Error";
 import { FirebaseContext } from "../components/FirebaseProvider";
 import { UserContext } from "../components/UserProvider";
 import Providers from "../components/Providers";
+
+const AdminSectionTitle = styled.div`
+  font-size: 1.3rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 1rem;
+`;
+
+const ExistingGamesListGroup = styled(ListGroup)`
+margin-right: 1rem;
+`;
+
+const DealPreviewContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin-left: 1rem;
+  margin-bottom: 1rem;
+  align-items: center;
+
+  flex-grow: 1;
+`;
 
 const EMPTY_FORM_STATE = {
   name: "",
@@ -48,6 +72,7 @@ const AdminPage = () => {
   const [toastMsg, setToastMsg] = useState(false);
   const [allDeals, setAllDeals] = useState([]);
   const [gameFormData, setGameFormData] = useState(EMPTY_FORM_STATE);
+  const [resendDealNotification, setResendDealNotification] = useState(false);
 
   var nameInput;
   var imageInput;
@@ -58,7 +83,7 @@ const AdminPage = () => {
 
       firebaseClients.firestore
       .collection("deals")
-      .orderBy("expires", "asc")
+      .orderBy("expires", "desc")
       .onSnapshot(querySnapshot => {
         setLoading(false);
 
@@ -110,12 +135,15 @@ const AdminPage = () => {
       } else {
         firebaseClients.firestore
           .collection("deals")
-          .add(gameFormData)
+          .add({
+            ...gameFormData,
+            notificationSent: false,
+          })
           .catch(error => setError("Error adding document: " + error))
           .then(docRef => {
             return firebaseClients.functions.httpsCallable("notify")({
-              title: `Deal On ${gameFormData.name} (${gameFormData.isFree === true ? "Free" : gameFormData.price})`,
-              image: gameFormData.image,
+              dealId: docRef.id,
+              confirmResend: resendDealNotification,
             });
           })
           .catch((err) => setError("Failed to notify users: " + err))
@@ -134,8 +162,12 @@ const AdminPage = () => {
       expires: deal.expires.toDate(),
       image: deal.image,
       link: deal.link,
+      notificationSent: deal.notificationSent,
       selectedDealId: deal.id,
     });
+  };
+
+  const manualSendNotification = deal => {
   };
 
   const deleteRecord = () => {
@@ -210,18 +242,19 @@ const AdminPage = () => {
         <React.Fragment>
           <AdminContainer>
             <RecordList>
-              <h3>Existing Records</h3>
-              <ul>
+              <AdminSectionTitle>Existing Game Deals</AdminSectionTitle>
+              <ExistingGamesListGroup>
                 {allDeals.map(deal => (
-                  <li key={deal.id}>
-                    <GhostButton
-                      onClick={() => selectExistingDeal(deal)}
+                  <ListGroup.Item
+                    key={deal.id}
+                    active={gameFormData.selectedDealId === deal.id}
+                    onClick={() => selectExistingDeal(deal)}
+                    action
                     >
-                      {deal.name}
-                    </GhostButton>
-                  </li>
+                    {deal.name}
+                  </ListGroup.Item>
                 ))}
-              </ul>
+              </ExistingGamesListGroup>
             </RecordList>
 
             <FormContainer>
@@ -230,11 +263,11 @@ const AdminPage = () => {
                 validated={validated}
                 onSubmit={handleSubmit}
               >
-                <h3>
+                <AdminSectionTitle>
                   {gameFormData.selectedDealId
                   ? "Edit Existing Game Deal"
                   : "Add New Game Deal"}
-                </h3>
+                </AdminSectionTitle>
                 <Form.Group controlId="formGame">
                   <Form.Label>Game</Form.Label>
                   <Form.Control
@@ -264,15 +297,13 @@ const AdminPage = () => {
                       value={gameFormData.price}
                     />
                   )}
-                  <Form.Check
-                    type="checkbox"
+                  <CheckInput
                     label={gameFormData.isFree ? "FREE!" : "Free?"}
-                    onChange={e => setGameFormData({
+                    value={gameFormData.isFree}
+                    onClick={() => setGameFormData({
                       ...gameFormData,
-                      isFree: e.target.checked
-                    })}
-                    checked={gameFormData.isFree}
-                  />
+                      isFree: !gameFormData.isFree,
+                    })}/>
                 </Form.Group>
 
                 <Form.Group controlId="formLink">
@@ -342,6 +373,9 @@ const AdminPage = () => {
                   </Button>
                   {gameFormData.selectedDealId && (
                     <React.Fragment>
+                      <Button onClick={() => manualSendNotification(gameFormData)}>
+                        Send Notification
+                      </Button>
                       <Button variant="danger" onClick={deleteRecord}>
                         Delete
                       </Button>
@@ -355,7 +389,10 @@ const AdminPage = () => {
                   )}
                 </div>
               </Form>
+            </FormContainer>
 
+            <DealPreviewContainer>
+              <AdminSectionTitle>Game Deal Preview</AdminSectionTitle>
               <DealCard
                 name={gameFormData.name}
                 price={gameFormData.price}
@@ -364,7 +401,7 @@ const AdminPage = () => {
                 image={gameFormData.image}
                 link={gameFormData.link}
               />
-            </FormContainer>
+            </DealPreviewContainer>
 
             <FixedToast
               show={showToast}

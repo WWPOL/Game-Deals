@@ -36,10 +36,7 @@ const SubscribeButton = styled.button`
   }
 `;
 
-const NotificationButton = (props) => {
-  if (props.disabled === true) {
-    return null;
-  }
+const NotificationButton = () => {
   // State
   const setError = useContext(ErrorContext)[1];
 
@@ -123,7 +120,6 @@ const NotificationButton = (props) => {
     setLoading(true);
     
     if (subscribed === true) {
-      console.log("onSubscribeClick(): calling unsub, subscribed=", subscribed);
       // Unsubscribe
       functions.httpsCallable("unsubscribe")().then(() => {
         setSubscribed(false);

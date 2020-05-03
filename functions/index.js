@@ -1,3 +1,6 @@
+const url = require("url");
+const appIcon = "https://oliversgame.deals/icons/icon-192x192.png";
+
 // Setup Firebase SDK
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
@@ -51,8 +54,10 @@ exports.unsubscribe = functions.https.onCall((data, context) => {
 /**
  * Send a notification about a new game deal to clients subscribed to the 
  * deals topic.
- * Data must be { title: string, body: string, image: string }, see reference:
- * https://firebase.google.com/docs/reference/admin/node/admin.messaging.NotificationMessagePayload
+ * Data must be { dealId: string, confirmResend: bool }, where dealId is the ID of 
+ * the deals document and confirmResend is set to true if you want to send a 
+ * notification for a deal which has already had a notification sent, this key
+ * is optional.
  */
 exports.notify = functions.https.onCall((data, context) => {
   // Determine if admin
@@ -62,16 +67,41 @@ exports.notify = functions.https.onCall((data, context) => {
     throw new functions.https.HttpsError("unauthenticated", "Not logged in");
   }
 
-  return admin.messaging().sendToTopic(topic, {
-    notification: data,
-  })
-    .then(() => {
-      return Promise.resolve({});
-    }).catch((error) => {
-      console.error("Failed to send notification message", error);
-      throw new functions.https.HttpsError("internal",
-                                           "Failed to send notification message");
+  // Get deal from database
+  const dealId = data.dealId;
+  const confirmResend = data.confirmResend || false;
+  
+  admin.firestore().collection("deals").doc(dealId).get().catch((error) => {
+    console.error("Failed to get deal to send notification for", error);
+    throw new functions.https.HttpsError("internal",
+                                         "Failed to retrieve deal");
+  }).then((deal) => {
+    if (deal.notificationSent === true && confirmResend === false) {
+      throw new functions.https.HttpsError("already-exists",
+                                           "Notification already sent for " +
+                                           "this deal")
+    }
+    
+    const dealLink = url.parse(deal.link);
+    const dealPrice = deal.isFree === true ? "free" : deal.price;
+
+    return admin.messaging().sendToTopic(topic, {
+      notification: {
+        title: `Deal on ${deal.name} (${dealPrice})`,
+        body: `${deal.name} is now available at ${dealLink.hostname} for ${dealPrice}`,
+        icon: appIcon,
+        image: deal.image,
+      },
+    }, {
+      collapseKey: "new-deal",
     });
+  }).then(() => {
+    return Promise.resolve({});
+  }).catch((error) => {
+    console.error("Failed to send notification message", error);
+    throw new functions.https.HttpsError("internal",
+                                         "Failed to send notification message");
+  });
 });
 
 // !!!FOR LOCAL DEVELOPMENT USE ONLY!!!
