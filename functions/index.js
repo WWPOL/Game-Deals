@@ -150,14 +150,14 @@ exports.notify = functions.https.onCall((data, context) => {
           icon: appIcon,
           image: deal.image,
         },
+      }, {
+        collapseKey: "new-deal",
         webpush: {
           fcm_options: {
             link: appUrl,
             analytics_label: `${dealId}-${channel}`,
           },
         },
-      }, {
-        collapseKey: "new-deal",
       });
     }).then(() => {
       // Record that notification was sent on channel
