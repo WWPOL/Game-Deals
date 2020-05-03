@@ -143,20 +143,23 @@ exports.notify = functions.https.onCall((data, context) => {
       const dealLink = url.parse(deal.link);
       const dealPrice = deal.isFree === true ? "free" : deal.price;
 
-      return admin.messaging().sendToTopic(notifyTopic, {
-        notification: {
-          title: `Deal on ${deal.name} (${dealPrice})`,
-          body: `${deal.name} is now available at ${dealLink.hostname} for ${dealPrice}`,
-          icon: appIcon,
-          image: deal.image,
-        },
-      }, {
-        collapseKey: "new-deal",
+      return admin.messaging().send({
+        topic: notifyTopic,
         webpush: {
-          fcm_options: {
-            link: appUrl,
-            analytics_label: `${dealId}-${channel}`,
+          notification: {
+            title: `Deal on ${deal.name} (${dealPrice})`,
+            body: `${deal.name} is now available at ` +
+                  `${dealLink.hostname} for ${dealPrice}`,
+            icon: appIcon,
+            image: deal.image,
+            requireInteraction: true,
           },
+          fcmOptions: {
+            link: appUrl,
+          },
+        },
+        fcmOptions: {
+          analyticsLabel: `${dealId}-${channel}`,
         },
       });
     }).then(() => {
