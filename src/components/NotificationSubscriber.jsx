@@ -10,10 +10,20 @@ background: none;
 text-align: inherit;
 margin: 0;
 padding: 0;
+
+&[disabled] {
+  color: black;
+}
 `;
 
-const NotificationSubscriber = ({children, channel}) => {
-  channel = channel || "main";
+const NotificationSubscriber = (props) => {
+  const children = props.children;
+  const channel = props.channel || "main";
+
+  var _props = {...props};
+  delete _props.children;
+  delete _props.channel;
+  
   const localStorageKey = `subscribed-${channel}`;
   
   // State
@@ -142,7 +152,8 @@ const NotificationSubscriber = ({children, channel}) => {
   return (
     <BlankButton
       onClick={onSubscribeClick}
-      disabled={loading}
+      disabled={loading || messaging === null}
+      {..._props}
     >
     {React.cloneElement(children, {
       subscribed: subscribed,
