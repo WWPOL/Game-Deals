@@ -13,6 +13,7 @@ const FirebaseProvider = ({children}) => {
         site {
           siteMetadata {
             emulateFirebase
+            fakeNoFCM
           }
         }
       }
@@ -24,6 +25,7 @@ const FirebaseProvider = ({children}) => {
   }
 
   const emulateFirebase = site.siteMetadata.emulateFirebase;
+  const fakeNoFCM = site.siteMetadata.fakeNoFCM;
   const onLocalHost = window.location.host.indexOf("localhost") !== -1 ||
                       window.location.host.indexOf("127.0.0.1") !== -1;
   
@@ -32,10 +34,12 @@ const FirebaseProvider = ({children}) => {
   const auth = firebase.auth();
   var messaging = null;
 
-  try {
-    messaging = firebase.messaging();
-  } catch (e) {
-    console.log("Failed to load FCM, assuming iOS and not supported", e);
+  if (fakeNoFCM !== true) {
+    try {
+      messaging = firebase.messaging();
+    } catch (e) {
+      console.log("Failed to load FCM, assuming iOS and not supported", e);
+    }
   }
 
   // Don't do any analytics or error reporting on localhost

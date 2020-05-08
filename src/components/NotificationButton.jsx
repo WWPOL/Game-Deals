@@ -48,13 +48,18 @@ const NotificationButton = ({subscribed, loading, fcmSupported}) => {
   }
 
   return (
-    <SubscribeButton disabled={fcmSupported === false ? true : null}>
+    <SubscribeButton>
       {fcmSupported === true ?
        <React.Fragment>
          {leftEl}
          <span>{buttonTxt}</span>
        </React.Fragment> :
-       <span>Notifications not supported on your device, try on desktop</span>
+       <span style={{
+         paddingLeft: "0.5rem",
+         textAlign: "center",
+       }}>
+         Notifications not supported on your device, try on desktop
+       </span>
       }
     </SubscribeButton>
   );

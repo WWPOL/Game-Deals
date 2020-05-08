@@ -15,6 +15,7 @@ module.exports = {
     description: `Find all the best game deals here, brought to you by the one and only Olly G.`,
     author: `Rudhra Raveendran and Noah Huppert`,
     emulateFirebase: process.env.EMULATE_FIREBASE === "true",
+    fakeNoFCM: process.env.FAKE_NO_FCM === "true",
   },
   plugins: [
     `gatsby-plugin-react-helmet`,
