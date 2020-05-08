@@ -33,6 +33,10 @@ const NotificationSubscriber = ({children, channel}) => {
   const functions = firebase.functions;
 
   useEffect(() => {
+    if (messaging === null) {
+      return null;
+    }
+    
     // Try to get FCM token
     if (fcmToken === null && Notification.permission === "granted") {
       messaging.getToken().then((token) => {
@@ -84,6 +88,10 @@ const NotificationSubscriber = ({children, channel}) => {
       localStorageKey]);
 
   const onSubscribeClick = () => {
+    if (messaging === null) {
+      return;
+    }
+    
     setLoading(true);
     
     if (subscribed === true) {
@@ -139,6 +147,7 @@ const NotificationSubscriber = ({children, channel}) => {
     {React.cloneElement(children, {
       subscribed: subscribed,
       loading: loading,
+      fcmSupported: messaging !== null,
     })}
     </BlankButton>
   );
