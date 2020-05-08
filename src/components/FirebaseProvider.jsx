@@ -30,7 +30,13 @@ const FirebaseProvider = ({children}) => {
   const firestore = firebase.firestore();
   const functions = firebase.functions();
   const auth = firebase.auth();
-  const messaging = firebase.messaging();
+  var messaging = null;
+
+  try {
+    messaging = firebase.messaging();
+  } catch (e) {
+    console.log("Failed to load FCM, assuming iOS and not supported", e);
+  }
 
   // Don't do any analytics or error reporting on localhost
   if (onLocalHost === false) {
