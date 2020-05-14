@@ -15,7 +15,13 @@ import { UserContext } from "./UserProvider";
 import { ErrorContext } from "./Error";
 
 import icon from "../images/icon.png";
+import birthdayIcon from "../images/icon-birthday.png";
+
 import defaultProfilePic from "../images/default-profile-picture.png";
+
+const LogoImg = styled.img`
+width: 2rem;
+`;
 
 const Navbar = styled(BootstrapNavbar)`
 background: rebeccapurple;
@@ -51,6 +57,30 @@ background: #ffa712;
 padding: 0.75rem;
 `;
 
+const BirthdayBadge = styled(Badge)`
+margin: auto;
+background: #ee0189;
+font-size: 1.5rem;
+color: white;
+animation: fun 2s infinite;
+
+@keyframes fun {
+  0% { 
+    color: #04ef9b;
+    transform: rotateX(0);
+  }
+
+  50% {
+    color: #663399;
+  }
+
+  100% {
+    color: #dede03;
+    transform: rotateX(360deg);
+  }
+}
+`;
+
 const TestNotificationsSubscribe = ({loading, subscribed, fcmSupported}) => {
   return (
     <Dropdown.Item style={{
@@ -72,6 +102,12 @@ const Header = () => {
   const [user, setUser] = useContext(UserContext);
   const firebase = useContext(FirebaseContext);
   const setError = useContext(ErrorContext)[1];
+
+  // getMonth() returns [0, 11], getDate() returns [1, 31]
+  const now = new Date();
+  const ollyBirthday = now.getDate() === 14 && now.getMonth() === 4;
+
+  const logoImg = ollyBirthday === true ? birthdayIcon : icon;
 
   const makeUserAdmin = () => {
     if (user.isAdmin === false) {
@@ -101,15 +137,20 @@ const Header = () => {
   const logout = () => {
     firebase.auth.signOut();
   };
-  
+
   return (
     <Navbar expand="sm">
       <Navbar.Brand className="mr-auto">
         <Link to="/">
-          <img src={icon} alt="Site Icon" />
+          <LogoImg src={logoImg} alt="Site Icon" />
           <span>Olly G's Game Deals</span>
         </Link>
       </Navbar.Brand>
+
+      {ollyBirthday === true &&
+       <BirthdayBadge>
+         HAPPY BIRTHDAY OLLY G
+       </BirthdayBadge>}
 
       {user &&
        <React.Fragment>
