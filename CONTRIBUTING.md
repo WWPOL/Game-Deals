@@ -1,4 +1,5 @@
 # Contributing
+
 We encourage open source contributions to Game Deals.
 
 All source code for the website is in this repository. Additionally instructions on how to emulate

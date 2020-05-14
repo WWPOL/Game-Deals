@@ -41,7 +41,7 @@ yarn website
 
 Then navigate to [localhost:8000](http://localhost:8000).
 
-To make the website use a locally emulated version of Firebase create a 
+To make the website use a locally emulated version of Firebase create a
 Firebase service account and download the credentials JSON file, rename it
 to `firebase-service-account.json`.
 
@@ -65,11 +65,12 @@ file defines the `engines` key for the sake of Firebase.
 
 ## Firestore
 
-Firestore indexes are defined in `firestore.indexes.json`.  
+Firestore indexes are defined in `firestore.indexes.json`.
 
 Firestore rules are defined in `firestores.rules`.
 
 # Deployment
+
 ## Instructions
 
 Preview a production build:
@@ -78,7 +79,7 @@ Preview a production build:
 yarn preview-prod-website
 ```
 
-Then navigate to [localhost:9000](http://localhost:9000).  
+Then navigate to [localhost:9000](http://localhost:9000).
 
 When ready to deploy (make sure to test the production build locally
 first!) push to master and GitHub actions will take care of the rest.
@@ -112,9 +113,10 @@ yarn deploy-firestore
 ```
 
 ## Deployment Implementation Details
+
 ### Website
 
-GitHub actions is used to automatically deploy the master branch to 
+GitHub actions is used to automatically deploy the master branch to
 GitHub Pages.
 
 This uses GitHub Deploy Keys to authenticate the job runner. See the
@@ -138,7 +140,7 @@ Finally delete both the `deploy-key` and `deploy-key.pub` files.
 ### Firebase
 
 The [Firebase GitHub Action](https://github.com/marketplace/actions/github-action-for-firebase)
-is used to deploy functions and firestore. 
+is used to deploy functions and firestore.
 
 Get a Firebase continuous integration authentication token:
 

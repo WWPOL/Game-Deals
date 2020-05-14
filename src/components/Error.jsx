@@ -21,42 +21,35 @@ const ErrorImg = styled.img`
   width: 2rem;
 `;
 
-const Error = (props) => {
+const Error = props => {
   const [error, setError] = props.error;
 
   if (error !== null) {
-	  console.error("App error:", error);
+    console.error("App error:", error);
 
-	  // Convert error into string, ensure first letter is uppercase, ends in period
+    // Convert error into string, ensure first letter is uppercase, ends in period
     var strError = String(error);
-	  strError = strError.charAt(0).toUpperCase() + strError.slice(1);
+    strError = strError.charAt(0).toUpperCase() + strError.slice(1);
     if (strError[strError.length - 1] !== ".") {
       strError += ".";
     }
-	  
-	  const doClose = () => {
-		  setError(null);
-	  };
 
-	  return (
-		  <ErrorToast onClose={doClose}>
-			  <Toast.Header>
-				  <ErrorImg
-            src={errorIcon}
-				    className="rounded mr-2"
-				    alt="Error icon" />
-				  
-				  <strong className="mr-auto">
-				    Error
-				  </strong>
-			  </Toast.Header>
-			  <Toast.Body>
-				  {strError}
-			  </Toast.Body>
-		  </ErrorToast>
-	  );
+    const doClose = () => {
+      setError(null);
+    };
+
+    return (
+      <ErrorToast onClose={doClose}>
+        <Toast.Header>
+          <ErrorImg src={errorIcon} className="rounded mr-2" alt="Error icon" />
+
+          <strong className="mr-auto">Error</strong>
+        </Toast.Header>
+        <Toast.Body>{strError}</Toast.Body>
+      </ErrorToast>
+    );
   }
-  
+
   return null;
 };
 
