@@ -157,6 +157,7 @@ const Header = () => {
 
       {ollyBirthday === true &&
        <div>
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions */}
          <span
            style={{
              fontSize: "2rem",
@@ -167,6 +168,8 @@ const Header = () => {
              setCandlesLit(true);
              setWishMade(false);
            }}
+           role="img"
+           aria-label="cake"
          >
            🎂
          </span>
@@ -190,6 +193,7 @@ const Header = () => {
                  maxWidth: "30rem",
                  margin: "auto",
                }}
+               alt="Changes for Modal"
              />
            </Modal.Body>
 
@@ -197,11 +201,11 @@ const Header = () => {
              {candlesLit === true ?
              <Button
                onClick={() => setCandlesLit(false)}>
-               🥳Blow Out The Candles 💨
+               <span role="img" aria-label="party face">🥳</span> Blow Out The Candles <span role="img" aria-label="wind">💨</span>
              </Button> : (wishMade === false &&
              <Button
                onClick={() => setWishMade(true)}>
-               🧞Make A Wish ✨
+               <span role="img" aria-label="genie">🧞</span> Make A Wish <span role="img" aria-label="sparkle">✨</span>
              </Button>)}
 
              <Button
