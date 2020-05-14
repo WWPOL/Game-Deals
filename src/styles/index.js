@@ -77,6 +77,10 @@ export const GlobalStyle = createGlobalStyle`
     margin-left: 1rem;
   }
 
+  .navbar-toggler {
+    margin-left: auto;
+  }
+
   div.card-img-top {
     height: 300px;
     background-size: cover;

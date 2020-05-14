@@ -30,11 +30,13 @@ width: 2rem;
 
 const Navbar = styled(BootstrapNavbar)`
 background: rebeccapurple;
+justify-content: space-between;
 `;
 
 const NavbarCollapse = styled(Navbar.Collapse)`
   display: flex;
-  justify-content: end;
+  justify-content: flex-end;
+  flex-grow: 0;
 
   & .collapse {
     justify-content: center;    
@@ -44,7 +46,6 @@ const NavbarCollapse = styled(Navbar.Collapse)`
 const UserMenuDropdown = styled(Dropdown)`
 .dropdown-menu {
   width: 14rem;
-  left: -1.7rem;
 }
 `;
 
@@ -147,7 +148,7 @@ const Header = () => {
 
   return (
     <Navbar expand="sm">
-      <Navbar.Brand className="mr-auto">
+      <Navbar.Brand>
         <Link to="/">
           <LogoImg src={logoImg} alt="Site Icon" />
           <span>Olly G's Game Deals</span>
@@ -155,7 +156,7 @@ const Header = () => {
       </Navbar.Brand>
 
       {ollyBirthday === true &&
-       <React.Fragment>
+       <div>
          <span
            style={{
              fontSize: "2rem",
@@ -209,7 +210,7 @@ const Header = () => {
              </Button>
            </Modal.Footer>
          </Modal>
-       </React.Fragment>
+       </div>
       }
 
       {user &&
@@ -234,7 +235,7 @@ const Header = () => {
                />
              </Dropdown.Toggle>
 
-             <Dropdown.Menu>
+             <Dropdown.Menu alignRight>
                {user.isAdmin === true &&
                 <React.Fragment>
                   <Dropdown.Item key="admin-dashboard" as="a" href="/admin">
