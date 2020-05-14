@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useState, useContext } from "react";
 
 import { Link } from "gatsby";
 
@@ -7,6 +7,8 @@ import styled from "styled-components";
 import BootstrapNavbar from "react-bootstrap/Navbar";
 import Dropdown from "react-bootstrap/Dropdown";
 import Badge from "react-bootstrap/Badge";
+import Modal from "react-bootstrap/Modal";
+import Button from "react-bootstrap/Button";
 
 import NotificationSubscriber from "./NotificationSubscriber";
 
@@ -16,6 +18,9 @@ import { ErrorContext } from "./Error";
 
 import icon from "../images/icon.png";
 import birthdayIcon from "../images/icon-birthday.png";
+import litBirthdayCake from "../images/lit-birthday-cake.jpg";
+import blowingOutCandles from "../images/blowing-out-candles.jpg";
+import believeInYourself from "../images/believe-in-yourself.jpg";
 
 import defaultProfilePic from "../images/default-profile-picture.png";
 
@@ -106,8 +111,10 @@ const Header = () => {
   // getMonth() returns [0, 11], getDate() returns [1, 31]
   const now = new Date();
   const ollyBirthday = now.getDate() === 14 && now.getMonth() === 4;
-
   const logoImg = ollyBirthday === true ? birthdayIcon : icon;
+  const [showBirthdayCake, setShowBirthdayCake] = useState(false);
+  const [candlesLit, setCandlesLit] = useState(true);
+  const [wishMade, setWishMade] = useState(false);
 
   const makeUserAdmin = () => {
     if (user.isAdmin === false) {
@@ -148,9 +155,62 @@ const Header = () => {
       </Navbar.Brand>
 
       {ollyBirthday === true &&
-       <BirthdayBadge>
-         HAPPY BIRTHDAY OLLY G
-       </BirthdayBadge>}
+       <React.Fragment>
+         <span
+           style={{
+             fontSize: "2rem",
+             cursor: "pointer",
+           }}
+           onClick={() => {
+             setShowBirthdayCake(true);
+             setCandlesLit(true);
+             setWishMade(false);
+           }}
+         >
+           🎂
+         </span>
+         <BirthdayBadge>
+           HAPPY BIRTHDAY OLLY G
+         </BirthdayBadge>
+
+         <Modal
+           show={showBirthdayCake}
+           onHide={() => setShowBirthdayCake(false)}>
+           <Modal.Header closeButton>
+             <Modal.Title>HAPPY BIRTHDAY OLLY</Modal.Title>
+           </Modal.Header>
+
+           <Modal.Body>
+             <img
+               src={candlesLit === true ?
+                    litBirthdayCake :
+                    (wishMade === true ? believeInYourself : blowingOutCandles)}
+               style={{
+                 maxWidth: "30rem",
+                 margin: "auto",
+               }}
+             />
+           </Modal.Body>
+
+           <Modal.Footer>
+             {candlesLit === true ?
+             <Button
+               onClick={() => setCandlesLit(false)}>
+               🥳Blow Out The Candles 💨
+             </Button> : (wishMade === false &&
+             <Button
+               onClick={() => setWishMade(true)}>
+               🧞Make A Wish ✨
+             </Button>)}
+
+             <Button
+               onClick={() => setShowBirthdayCake(false)}>
+               Throw The Cake On The Ground
+             </Button>
+           </Modal.Footer>
+         </Modal>
+       </React.Fragment>
+      }
 
       {user &&
        <React.Fragment>
