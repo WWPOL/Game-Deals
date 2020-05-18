@@ -10,16 +10,28 @@ Video game deal aggregation site.
 
 # Overview
 
-A Gatsby/React app with a Firebase backend so Olly G can give us the all juicy
-game deals.
+Friendly website which provides those interested in gaming with notifications about the latest video games deals.
+
+**Commitments**:
+
+- We will never post affiliate links to the site
+- We will never place ads on the site
+
+**FAQ**  
+
+- **Why?**: For many years one of our friend's named Oliver (aka Olly G) has been sending us deals on games which he finds on the internet. We thought it was about time he have a nice official place to put these deals. So that everyone in the world can benefit from his kindness. 
+- **So how are you making money?**: We are not, this is and always will be purely a hobby site. Everyone involved has comfortable jobs which provide our living wages. We do not feel the need to make money off of this side project.
+- **I have an idea of how to improve the site, can I contribute?**: Sure! We would love your help. See the [Contributing](./CONTRIBUTING.md) documentation on how to get started.
+
+# Development
+
+A Gatsby/React app with a Firebase backend.
 
 Stuff we're using:
 
 - [Gatsby](https://www.gatsbyjs.org/)
 - [Gatsby Firebase Plugin](https://www.gatsbyjs.org/packages/gatsby-plugin-firebase/)
 - [React Bootstrap](https://react-bootstrap.github.io/)
-
-# Development
 
 Make sure you have the latest versions of
 [NodeJS](https://nodejs.org/en/download/)
