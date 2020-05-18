@@ -32,6 +32,8 @@ Friendly website which provides those interested in gaming with notifications ab
   maintainer will review your deal as soon as possible.
 - **I have an idea of how to improve the site, can I contribute?**: Sure! We would love your help. See the [Contributing](./CONTRIBUTING.md) documentation on how to get started.
 
+[This project was made possible by our contributors](./CONTRIBUTORS.md). Want to help out? See [`CONTRIBUTING.md`](./CONTRIBUTING.md).
+
 # Development
 
 A Gatsby/React app with a Firebase backend.
