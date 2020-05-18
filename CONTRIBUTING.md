@@ -1,6 +1,6 @@
 # Contributing
 
-We encourage open source contributions to Game Deals.
+We encourage open source contributions to Game Deals. While working here please follow our [Code Of Conduct](./CODE-OF-CONDUCT.md).
 
 All source code for the website is in this repository. Additionally instructions on how to emulate
 the backend services which our website uses are provided.
