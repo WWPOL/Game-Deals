@@ -408,7 +408,10 @@ const AdminPage = () => {
         });
         setSearching(false);
       })
-      .catch(error => setError(error));
+      .catch(error => {
+        setError(error);
+        setSearching(false);
+      });
   };
 
   if (loading) return <Loader />;
