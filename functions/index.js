@@ -6,6 +6,9 @@ const appIcon = "https://oliversgame.deals/icons/icon-192x192.png";
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 
+const axios = require("axios");
+const cors = require('cors')({ origin: true });
+
 let emulated = process.env.FIREBASE_EMULATED === "true";
 
 if (process.env.GOOGLE_APPLICATION_CREDENTIALS !== undefined) {
@@ -133,7 +136,7 @@ exports.notify = functions.https.onCall((data, context) => {
         "Failed to retrieve deal"
       );
     })
-    .then(docRef => {
+    .then(async docRef => {
       if (docRef.exists === false) {
         throw new functions.https.HttpsError(
           "not-found",
@@ -156,6 +159,30 @@ exports.notify = functions.https.onCall((data, context) => {
 
       const dealLink = url.parse(deal.link);
       const dealPrice = deal.isFree === true ? "free" : deal.price;
+
+      const webhookData = {
+        "content": "Hi there, it's me, totally not anti-Semitic Oliver, bringing you a brand new game deal!",
+        "embeds": [
+          {
+            "title": deal.name,
+            "type": "rich",
+            "description": `${dealPrice === "free" ? "FREE" : "$" + dealPrice}! (click the title above to get the game)\nExpires ${deal.expires.toDate().toDateString()}`,
+            "url": deal.link,
+          }
+        ]
+      }
+
+      if (deal.image) {
+        webhookData.image = {
+          "url": "https://i.ytimg.com/vi/RCFYr1ytS9I/maxresdefault.jpg",
+          "height": 300,
+          "width": 300
+        }
+      }
+
+      // eslint-disable-next-line promise/no-nesting
+      await axios.post('https://discordapp.com/api/webhooks/728307328235077652/g_IwAn8u0ltB4mKKYMMjFhe9ANkJUHox8sVgHSM7rZ1lrxBxwoMNPP3aGhC0ZT36BnMi', webhookData)
+      .catch(error => console.error(error));
 
       return admin.messaging().send({
         topic: notifyTopic,
