@@ -173,15 +173,15 @@ exports.notify = functions.https.onCall((data, context) => {
       }
 
       if (deal.image) {
-        webhookData.image = {
-          "url": "https://i.ytimg.com/vi/RCFYr1ytS9I/maxresdefault.jpg",
-          "height": 300,
-          "width": 300
+        webhookData.embeds[0].image = {
+          "url": deal.image,
+          "height": 100,
+          "width": 100
         }
       }
 
       // eslint-disable-next-line promise/no-nesting
-      await axios.post('https://discordapp.com/api/webhooks/728307328235077652/g_IwAn8u0ltB4mKKYMMjFhe9ANkJUHox8sVgHSM7rZ1lrxBxwoMNPP3aGhC0ZT36BnMi', webhookData)
+      await axios.post(functions.config().discord.webhook, webhookData)
       .catch(error => console.error(error));
 
       return admin.messaging().send({
