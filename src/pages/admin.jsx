@@ -169,6 +169,11 @@ const DealPreviewContainer = styled.div`
   flex-grow: 1;
 `;
 
+const MaxHeightListGroup = styled(ListGroup)`
+  max-height: 500px;
+  overflow-y: auto;
+`;
+
 const EMPTY_FORM_STATE = {
   name: "",
   price: "",
@@ -403,7 +408,10 @@ const AdminPage = () => {
         });
         setSearching(false);
       })
-      .catch(error => setError(error));
+      .catch(error => {
+        setError(error);
+        setSearching(false);
+      });
   };
 
   if (loading) return <Loader />;
@@ -429,7 +437,7 @@ const AdminPage = () => {
           <AdminContainer>
             <ExistingDealsList>
               <AdminSectionTitle>Existing Game Deals</AdminSectionTitle>
-              <ListGroup>
+              <MaxHeightListGroup>
                 {allDeals.length > 0 ? (
                   allDeals.map(deal => (
                     <ListGroup.Item
@@ -446,7 +454,7 @@ const AdminPage = () => {
                     No existing game deals.
                   </ListGroup.Item>
                 )}
-              </ListGroup>
+              </MaxHeightListGroup>
             </ExistingDealsList>
 
             <SingleDealInfoContainer>

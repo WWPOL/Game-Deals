@@ -9,7 +9,6 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { GlobalStyle } from "../styles";
 
 const ContentWrapper = styled(Container)`
-  min-height: 100%;
   flex: 1 0 auto;
   margin-top: 25px;
 `;
