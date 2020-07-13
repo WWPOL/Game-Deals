@@ -1,5 +1,5 @@
 const firebaseCreds = {
-  apiKey: `AIzaSyDq5wAcRBdbfqkArvq7WIIzC8yf8FjiSHQ`,
+  apiKey: `AIzaSyBbVfTBkaDSsGOskoV1wHcFNHcR_kk_1K8`,
   authDomain: `game-deals-bb2bc.firebaseapp.com`,
   databaseURL: `https://game-deals-bb2bc.firebaseio.com`,
   projectId: `game-deals-bb2bc`,
