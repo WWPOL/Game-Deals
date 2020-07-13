@@ -20,35 +20,31 @@ const Footer = () => {
   return (
     <div
       style={{
-        'background': 'rebeccapurple',
-        'color': 'white',
-        'padding': '1rem',
-        'textAlign': 'center',
+        background: "rebeccapurple",
+        color: "white",
+        padding: "1rem",
+        textAlign: "center",
       }}
     >
-      <div>
-        © {new Date().getFullYear()}, Olly G Inc.
-      </div>
+      <div>© {new Date().getFullYear()}, Olly G Inc.</div>
 
       <div>
-        Icons
-        (
+        Icons (
         {icons.map(icon => (
           <img
             key={icon[1]}
             src={icon[0]}
             alt={icon[1]}
             style={{
-              width: '1.5rem',
+              width: "1.5rem",
             }}
           />
         ))}
-        )
-        from &nbsp;
+        ) from &nbsp;
         <a
           href="https://icons8.com"
           style={{
-            color: 'white',
+            color: "white",
           }}
         >
           Icons8
@@ -56,6 +52,6 @@ const Footer = () => {
       </div>
     </div>
   );
-}
+};
 
 export default Footer;

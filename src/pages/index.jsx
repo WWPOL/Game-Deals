@@ -59,13 +59,17 @@ const IndexPage = () => {
       .orderBy("expires", "asc")
       .onSnapshot(querySnapshot => {
         setLoading(false);
-        
-        setDeals(querySnapshot.docs.map(doc => doc.data()).map(deal => {
-          return {
-            ...deal,
-            expires: deal.expires.toDate(),
-          };
-        }));
+
+        setDeals(
+          querySnapshot.docs
+            .map(doc => doc.data())
+            .map(deal => {
+              return {
+                ...deal,
+                expires: deal.expires.toDate(),
+              };
+            })
+        );
       });
   }, [firebase.firestore]);
 
@@ -74,29 +78,24 @@ const IndexPage = () => {
   return (
     <Layout>
       <Error error={[error, setError]} />
-      
+
       <SEO title="Home" />
 
       <DealWrapper>
-        {deals.length > 0 ?
-                        deals.map((deal, i) =>
-                          <DealCard key={i} {...deal} />)
-        :
-                        <NoDeals>
-                          <NoDealsHeader>
-                            <NoDealsImg
-                              src={sadIcon}
-                              alt="Sad face" />
-                            <NoDealsH3>
-                              Sorry, There Are No Deals Right Now
-                            </NoDealsH3>
-                          </NoDealsHeader>
-                          <NoDealsP>
-                            Subscribe to deal alerts to receive a 
-                            notification when there is a new deal.
-                          </NoDealsP>
-                        </NoDeals>
-        }
+        {deals.length > 0 ? (
+          deals.map((deal, i) => <DealCard key={i} {...deal} />)
+        ) : (
+          <NoDeals>
+            <NoDealsHeader>
+              <NoDealsImg src={sadIcon} alt="Sad face" />
+              <NoDealsH3>Sorry, There Are No Deals Right Now</NoDealsH3>
+            </NoDealsHeader>
+            <NoDealsP>
+              Subscribe to deal alerts to receive a notification when there is a
+              new deal.
+            </NoDealsP>
+          </NoDeals>
+        )}
       </DealWrapper>
 
       <NotificationButton />

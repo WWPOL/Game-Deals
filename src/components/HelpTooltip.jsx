@@ -26,36 +26,38 @@ const HelpOverlayTooltip = styled(Tooltip)`
   }
 `;
 
-const HelpOverlay = (props) => {
+const HelpOverlay = props => {
   const message = props.message;
-  
-  var childProps = {...props};
+
+  var childProps = { ...props };
   delete childProps.message;
-  
+
   return (
     <HelpOverlayTooltip
       {...childProps}
       placement="bottom"
       arrowProps={{
-        style: { display: "none" }
-      }}>
+        style: { display: "none" },
+      }}
+    >
       {message}
     </HelpOverlayTooltip>
   );
 };
 
-const HelpTooltip = (props) => {
+const HelpTooltip = props => {
   const message = props.message;
   const tooltipRef = useRef(null);
-  
-  var childProps = {...props};
+
+  var childProps = { ...props };
   delete childProps.message;
 
   return (
     <div {...childProps} ref={tooltipRef}>
       <OverlayTrigger
         container={tooltipRef.current}
-        overlay={() => <HelpOverlay message={message} />}>
+        overlay={() => <HelpOverlay message={message} />}
+      >
         <HelpButton type="button">
           <img src={questionMarkIcon} alt="Question mark" />
         </HelpButton>

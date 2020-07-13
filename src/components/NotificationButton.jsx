@@ -35,7 +35,7 @@ const SubscribeButton = styled.div`
   }
 `;
 
-const NotificationButton = ({subscribed, loading, fcmSupported}) => {
+const NotificationButton = ({ subscribed, loading, fcmSupported }) => {
   // Set button content conditionally
   var buttonTxt = "";
   const leftEl = loading === true ? loadingEl : megaphoneIconEl;
@@ -43,24 +43,29 @@ const NotificationButton = ({subscribed, loading, fcmSupported}) => {
   if (loading) {
     buttonTxt = subscribed === true ? "Unsubscribing" : "Subscribing";
   } else {
-    buttonTxt = subscribed === true ? "Unsubscribe From Deal Alerts" :
-                "Subscribe To Deal Alerts";
+    buttonTxt =
+      subscribed === true
+        ? "Unsubscribe From Deal Alerts"
+        : "Subscribe To Deal Alerts";
   }
 
   return (
     <SubscribeButton>
-      {fcmSupported === true ?
-       <React.Fragment>
-         {leftEl}
-         <span>{buttonTxt}</span>
-       </React.Fragment> :
-       <span style={{
-         paddingLeft: "0.5rem",
-         textAlign: "center",
-       }}>
-         Notifications not supported on your device, try on desktop
-       </span>
-      }
+      {fcmSupported === true ? (
+        <React.Fragment>
+          {leftEl}
+          <span>{buttonTxt}</span>
+        </React.Fragment>
+      ) : (
+        <span
+          style={{
+            paddingLeft: "0.5rem",
+            textAlign: "center",
+          }}
+        >
+          Notifications not supported on your device, try on desktop
+        </span>
+      )}
     </SubscribeButton>
   );
 };
