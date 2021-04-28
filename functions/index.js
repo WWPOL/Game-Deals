@@ -146,6 +146,7 @@ exports.notify = functions.https.onCall((data, context) => {
 
       const deal = docRef.data();
 
+      // Check if we are okay to resend the notification
       const notificationSent =
         channel in deal.notificationSent
           ? deal.notificationSent[channel]
@@ -157,6 +158,7 @@ exports.notify = functions.https.onCall((data, context) => {
         );
       }
 
+      // Send a Discord message
       const dealLink = url.parse(deal.link);
       const dealPrice = deal.isFree === true ? "free" : deal.price;
 
@@ -184,6 +186,7 @@ exports.notify = functions.https.onCall((data, context) => {
       await axios.post(functions.config().discord.webhook, webhookData)
       .catch(error => console.error(error));
 
+      // Send notification to clients who subscribe
       return admin.messaging().send({
         topic: notifyTopic,
         webpush: {
