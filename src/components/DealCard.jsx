@@ -1,12 +1,28 @@
 import React from "react";
-import Card from "react-bootstrap/Card";
+import styled from "styled-components";
+
+const Item = styled.div`
+width: 100%;
+`;
+
+const Expires = styled.div`
+`;
+
+const Details = styled.div`
+`;
+
+const Name = styled.div`
+`;
+
+const Price = styled.div`
+`;
 
 const DealCard = ({ name, price, isFree, expires, image, link }) => {
   const now = new Date();
 
   return (
-    <Card style={{ width: "18rem" }} className={expires < now && "expired"}>
-      <Card.Header>
+    <Item className={expires < now && "expired"}>
+      <Expires>
         {expires < now ? (
           <strong>
             <em>Expired {expires.toDateString()}</em>
@@ -14,25 +30,26 @@ const DealCard = ({ name, price, isFree, expires, image, link }) => {
         ) : (
           <React.Fragment>Until {expires.toDateString()}</React.Fragment>
         )}
-      </Card.Header>
-      <a href={link} rel="noopener noreferrer" target="_blank">
-        <div
-          className="card-img-top"
-          style={{
-            backgroundImage: `url("${image}")`,
-          }}
+      </Expires>
+      <a
+        href={link}
+        rel="noopener noreferrer"
+        target="_blank">
+        <img
+          rel="Game image"
+          src={image}
         />
       </a>
-      <Card.Body>
-        <Card.Title>{name}</Card.Title>
-        <Card.Subtitle className="mb-2 text-muted">
+      <Details>
+        <Name>{name}</Name>
+        <Price className="mb-2 text-muted">
           {isFree ? "FREE!" : `$${price}`}
-        </Card.Subtitle>
+        </Price>
         <a href={link} rel="noopener noreferrer" target="_blank">
           Get it!
         </a>
-      </Card.Body>
-    </Card>
+      </Details>
+    </Item>
   );
 };
 
