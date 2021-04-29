@@ -2,7 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const MongoClient = require("mongodb").MongoClient;
+const mongo = require("mongodb");
 const Ajv = require("ajv");
 const ajv = new Ajv();
 
@@ -30,11 +30,6 @@ const BCRYPT_SALT_ROUNDS = 10;
  * Error codes returned by the API.
  */
 const ERROR_CODES = {
-  /**
-   * Indicates the API client submitted a malformed request.
-   */
-  bad_request: "bad_request",
-
   /**
    * Indicates the API client must reset their password before continuing.
    */
@@ -172,8 +167,15 @@ const GAME_DEAL_SCHEMA = {
 /**
  * Game Deals HTTP server.
  * 
+ * # Frontend
  * The web frontend is server under path /.
- * The HTTP API is server under path /api/v0/. API requests use URL query parameters and JSON encoded bodies. API responses use JSON encoded bodies. If an API error occurs the "error" response field will contain a user friendly error. If it is an error which the API client is supposed to recognize and change its behavior based on the: "error_code" field will be present (see ERROR_CODES for all relevant values).
+ *
+ * # HTTP API
+ * The HTTP API is server under path /api/v0/.
+ * API requests use URL query parameters and JSON encoded bodies.
+ * API responses use JSON encoded bodies.
+ * 
+ * If an API error occurs the "error" response field will contain a user friendly error. If it is an error which the API client is supposed to recognize and change its behavior based on, and the response HTTP code doesn't clearly indicate the problem (ex., like how "401 Anauthorized" is clear), the "error_code" field will be present (see ERROR_CODES for all relevant values).
  * 
  * Data is stored in MongoDB in the "admins" and "game_deals" collections. Documents meet the ADMIN_SCHEMA and GAME_DEAL_SCHEMA respectively.
  */
@@ -185,7 +187,7 @@ class Server {
   constructor(cfg) {
     this.cfg = cfg;
 
-    this.dbClient = new MongoClient(this.cfg.mongoURI, { useUnifiedTopology: true });
+    this.dbClient = new mongo.MongoClient(this.cfg.mongoURI, { useUnifiedTopology: true });
 
     // Setup express HTTP API
     this.app = express();
@@ -316,15 +318,22 @@ class Server {
   /**
    * Factory which creates middleware that verifies a request body meets a JSON schema.
    * @param schema {Avj Compiled Schema}
-   * @returns {function(req, res, next)} Middleware which responds with code 400 if the request body does not match the schema.
+   * @returns {function(req, res, next)} Middleware which responds with code 400 if the request body does not meet schema requirements.
    */
   mwValidateBodyFactory(schema) {
     return (req, res, next) => {
       const valid = schema(req.body);
       if (valid !== true) {
+        let errsStr = schema.errors.map((e) => {
+          let field = ".";
+          if (e.instancePath.length > 0) {
+            field = e.instancePath.toString().replace(/\//g, ".");
+          }
+          return `for JSON field "${field}": ${e.message}`;
+        });
+        
         res.status(400).json({
-          error: `HTTP body does not match schema: ${schema.errors}`,
-          error_code: ERROR_CODES.bad_request,
+          error: `HTTP body does not meet schema requirements: ${errsStr}`,
         });
         return;
       }
@@ -339,7 +348,7 @@ class Server {
   async mwAuthenticate(req, res, next) {
     // Get header
     const tokenStr = req.header("Authorization");
-    if (token === undefined) {
+    if (tokenStr === undefined) {
       res.status(401).json({
         error: "unauthorized",
       });
@@ -350,7 +359,7 @@ class Server {
     try {
       req.authToken = await new Promise((resolve, reject) => {
         jwt.verify(
-          token,
+          tokenStr,
           this.cfg.authTokenSecret,
           {
             algorithms: [ AUTH_TOKEN_JWT_ALGORITHM ],
@@ -376,9 +385,18 @@ class Server {
 
     // Fetch user
     try {
-      req.authUser = await this.db.admins.findOne(req.authToken.sub);
+      req.authUser = await this.db.admins.findOne({ _id: mongo.ObjectId(req.authToken.sub) });
+      if (req.authUser === null) {
+        res.status(401).json({
+          error: "unauthorized",
+        });
+        return;
+      }
     } catch (e) {
       console.trace(`Error retrieving user for authentication token, token.sub=${req.authToken.sub}, error: ${e}`);
+      res.status(500).json({
+        error: "internal error",
+      });
       return;
     }
 
@@ -417,6 +435,13 @@ class Server {
       console.trace(`Failed to retrieve a user: ${e}`);
       res.status(500).json({
         error: "internal error",
+      });
+      return;
+    }
+
+    if (user === null) {
+      res.status(401).json({
+        error: "unauthorized",
       });
       return;
     }
@@ -519,11 +544,20 @@ class Server {
    *   - expired (bool, optional, default false): If game deals which have expired should be retrieved.
    * Response: 200 JSON
    *   - game_deals (GameDeal[]): Array of game deals sorted by their start date. Maximum of QUERY_LIMIT items.
-   *   - next_offset (int): Next offset value to provide to access the next page of results.
+   *   - next_offset (int): Next offset value to provide to access the next page of results. Is -1 if this page is the last page of results.
    */
   async epListGameDeals(req, res) {
     // URL query parameters
-    const offset = req.query.offset || 0;
+    let offset = null;
+    try {
+      offset = Number(req.query.offset) || 0;
+    } catch (e) {
+      res.status(400).json({
+        error: "\"offset\" query parameter must be a number",
+      });
+      return;
+    }
+    
     const expired = req.query.offset || false;
 
     // Query
@@ -533,12 +567,19 @@ class Server {
         $lte: unixTime(new Date()),
       };
     }
+
+    const allDealsCount = await this.db.game_deals.find(query).count();
+    const deals = await this.db.game_deals.find(query).skip(offset).limit(QUERY_LIMIT).toArray();
     
-    const deals = await db.game_deals.find(query).skip(offset).limit(QUERY_LIMIT).toArray();
+    let next_offset = -1;
+    const nextPageDealsCount = (allDealsCount - offset) - QUERY_LIMIT;
+    if (nextPageDealsCount > 0) {
+      next_offset = offset + deals.length;
+    }
 
     res.json({
       game_deals: deals,
-      next_offset: offset + QUERY_LIMIT,
+      next_offset: next_offset,
     });
   }
 
@@ -553,7 +594,7 @@ class Server {
     let deal = req.body.game_deal;
     deal.author_id = req.authUser._id;
       
-    const inserted = await this.db.game_deals.insertOne(deal);
+    const inserted = (await this.db.game_deals.insertOne(deal)).ops[0];
 
     res.json({
       game_deal: inserted,
