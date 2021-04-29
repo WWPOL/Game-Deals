@@ -55,7 +55,9 @@ function passwordAllowed(plainText) {
   if (plainText.length < 8) {
     return "must be longer than 8 characters";
   } else if (dumbPasswords.check(plainText) === true) {
-    return "this password is commonly tried by hackers and should not be used";
+    const rate = dumbPasswords.rateOfUsage(plainText);
+    const percent = (rate.frequency / 100000) * 100;
+    return `this password is used in about ${percent}% of hacked accounts on the internet, please use something more secure`;
   }
 
   return null;
