@@ -84,5 +84,8 @@ The server's configuration is provided via the environment variables:
 - `GAME_DEALS_MONGO_DB_NAME` (String, Default: `dev-game-deals`): Name of the MongoDB database in which to store data.
 - `GAME_DEALS_AUTH_TOKEN_SECRET` (String, Default: `thisisaverybadsecret`): Secret key used to sign authentication tokens.
 
+## Initial Admin User
+When the server first starts a user with username `admin` and password `admin` is created. This user must reset its password on first login. Use this `admin` account to create new admin accounts for yourself and others.
+
 ## Instructions
 TBD
