@@ -204,6 +204,7 @@ class Server {
     this.app.get(
       "/api/v0/health",
       this.epHealth.bind(this));
+    
     this.app.post(
       "/api/v0/login",
       this.mwValidateBodyFactory(ajv.compile({
@@ -217,6 +218,20 @@ class Server {
         additionalProperties: false,
       })).bind(this),
       this.epLogin.bind(this));
+
+    this.app.post(
+      "/api/v0/admin",
+      this.mwAuthenticate.bind(this),
+      this.mwValidateBodyFactory(ajv.compile({
+        type: "object",
+        properties: {
+          username: { type: "string" },
+          invite_password: { type: "string" },
+        },
+        required: [ "username", "invite_password" ],
+        additionalProperties: false,
+      })),
+      this.epCreateAdmin.bind(this));
     
     this.app.get(
       "/api/v0/game_deal",
@@ -549,6 +564,49 @@ class Server {
 
     res.json({
       auth_token: token,
+    });
+  }
+
+  /**
+   * Create an admin user. Requires the new user to change their password after they first login.
+   * Request: JSON body:
+   *   - username (string): The new admin user's username.
+   *   - invite_password (string): The password the new user will login with for the first time. Tell them this password. The new user must then change this password.
+   * Response:
+   *   - new_admin_id (string): ID of the newly created user.
+   */
+  async epCreateAdmin(req, res) {
+    // Check the new password is allowed
+    const newPwOk = passwordAllowed(req.body.invite_password);
+    if (newPwOk !== null) {
+      res.status(400).json({
+        error: `failed to create new admin: invite password is not allowed: ${newPwOk}`,
+      });
+      return;
+    }
+
+    // Hash the password
+    let pwHash = null;
+    try {
+      pwHash = await bcrypt.hash(req.body.invite_password, BCRYPT_SALT_ROUNDS);
+    } catch (e) {
+      console.trace(`Failed to hash new admin's invite password: ${e}`);
+
+      res.status(500).json({
+        error: "internal error",
+      });
+      return;
+    }
+
+    // Insert admin user
+    const inserted = await this.db.admins.insertOne({
+      username: req.body.username,
+      password_hash: pwHash,
+      must_reset_password: true,
+    });
+
+    res.json({
+      new_admin_id: inserted.insertedId,
     });
   }
 
