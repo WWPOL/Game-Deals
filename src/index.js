@@ -27,6 +27,21 @@ const AUTH_TOKEN_AUDIENCE = "game-deals";
 const BCRYPT_SALT_ROUNDS = 10;
 
 /**
+ * Error codes returned by the API.
+ */
+const ERROR_CODES = {
+  /**
+   * Indicates the API client submitted a malformed request.
+   */
+  bad_request: "bad_request",
+
+  /**
+   * Indicates the API client must reset their password before continuing.
+   */
+  must_reset_password: "must_reset_password",
+};
+
+/**
  * Get the unix timestamp for the date.
  * @param date {Date} To convert.
  * @returns {integer}
@@ -158,7 +173,7 @@ const GAME_DEAL_SCHEMA = {
  * Game Deals HTTP server.
  * 
  * The web frontend is server under path /.
- * The HTTP API is server under path /api/v0/. API requests use URL query parameters and JSON encoded bodies. API responses use JSON encoded bodies.
+ * The HTTP API is server under path /api/v0/. API requests use URL query parameters and JSON encoded bodies. API responses use JSON encoded bodies. If an API error occurs the "error" response field will contain a user friendly error. If it is an error which the API client is supposed to recognize and change its behavior based on the: "code" field will be present (see ERROR_CODES for all relevant values).
  * 
  * Data is stored in MongoDB in the "admins" and "game_deals" collections. Documents meet the ADMIN_SCHEMA and GAME_DEAL_SCHEMA respectively.
  */
@@ -309,6 +324,7 @@ class Server {
       if (valid !== true) {
         res.status(400).json({
           error: `HTTP body does not match schema: ${schema.errors}`,
+          code: ERROR_CODES.bad_request,
         });
         return;
       }
@@ -425,6 +441,7 @@ class Server {
     if (user.must_reset_password === true && req.body.new_password === undefined) {
       res.status(401).json({
         error: "user must reset their password before logging in",
+        code: ERROR_CODES.must_reset_password,
       });
       return;
     }
