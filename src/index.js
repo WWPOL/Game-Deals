@@ -535,7 +535,8 @@ class Server {
         iss: AUTH_TOKEN_AUDIENCE,
         sub: user._id,
       }, this.cfg.authTokenSecret, {
-        algorithm: AUTH_TOKEN_JWT_ALGORITHM
+        algorithm: AUTH_TOKEN_JWT_ALGORITHM,
+        expiresIn: '2w',
       }, (err, token) => {
         if (err !== undefined && err !== null) {
           reject(err);
