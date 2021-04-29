@@ -5,6 +5,7 @@ const bcrypt = require("bcrypt");
 const mongo = require("mongodb");
 const Ajv = require("ajv");
 const ajv = new Ajv();
+const dumbPasswords = require("dumb-passwords");
 
 /**
  * The number of items which should be returned by queries.
@@ -53,6 +54,8 @@ function unixTime(date) {
 function passwordAllowed(plainText) {
   if (plainText.length < 8) {
     return "must be longer than 8 characters";
+  } else if (dumbPasswords.check(plainText) === true) {
+    return "this password is commonly tried by hackers and should not be used";
   }
 
   return null;
@@ -192,8 +195,9 @@ class Server {
     // Setup express HTTP API
     this.app = express();
     
-    this.app.use(this.mwLog);
+    this.app.use(this.mwLogReq);
     this.app.use(bodyParser.json());
+    this.app.use(this.mwLogRes); // Must be last
     
     this.app.get(
       "/api/v0/health",
@@ -303,16 +307,24 @@ class Server {
   }
 
   /**
-   * Log requests and responses.
+   * Log requests. Sets req.mwLogReqStartT as the start time.
    */
-  mwLog(req, res, next) {
+  mwLogReq(req, res, next) {
     console.log(`${req.method} ${req.path}`);
 
-    let startT = new Date();
+    req.mwLogReqStartT = new Date();
     next();
+  }
+
+  /**
+   * Log responses.
+   */
+  mwLogRes(req, res, next) {
+    next()
+    
     let endT = new Date();
 
-    console.log(`${req.method} ${req.path} => ${res.statusCode} (${endT - startT}ms)`);
+    console.log(`${req.method} ${req.path} => ${endT - req.mwLogReqStartT}ms`);
   }
 
   /**
@@ -476,7 +488,7 @@ class Server {
       const newPwOk = passwordAllowed(req.body.new_password);
       if (newPwOk !== null) {
         res.status(400).json({
-          error: `failed to set new password: ${newPkOk}`,
+          error: `failed to set new password: ${newPwOk}`,
         });
         return;
       }
