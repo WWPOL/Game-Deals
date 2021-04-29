@@ -1,5 +1,4 @@
 # Olly G's Game Deals
-
 Video game deal aggregation site.
 
 # Table Of Contents
@@ -9,7 +8,6 @@ Video game deal aggregation site.
 - [Deployment](#deployment)
 
 # Overview
-
 Friendly website which provides those interested in gaming with notifications about the latest video games deals.
 
 **Commitments**:
@@ -35,20 +33,33 @@ Friendly website which provides those interested in gaming with notifications ab
 [This project was made possible by our contributors](./CONTRIBUTORS.md). Want to help out? See [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
 # Development
+The site is a NodeJs server and React frontend.
 
-A Gatsby/React app with a Firebase backend.
+Make sure you have the latest versions of [NodeJS](https://nodejs.org/en/download/) and [Yarn](https://classic.yarnpkg.com/en/docs/install/).
 
-Stuff we're using:
+## Server
+Install dependencies:
 
-- [Gatsby](https://www.gatsbyjs.org/)
-- [Gatsby Firebase Plugin](https://www.gatsbyjs.org/packages/gatsby-plugin-firebase/)
-- [React Bootstrap](https://react-bootstrap.github.io/)
+```
+yarn install
+```
 
-Make sure you have the latest versions of
-[NodeJS](https://nodejs.org/en/download/)
-and [Yarn](https://classic.yarnpkg.com/en/docs/install/).
+Start MongoDB:
 
-## Website
+```
+docker-compose up -d
+```
+
+The default configuration variables should work.
+
+Start the server:
+
+```
+yarn start
+```
+
+## Frontend
+TDB: Frontend is not ready yet.
 
 Install dependencies:
 
@@ -64,111 +75,14 @@ yarn website
 
 Then navigate to [localhost:8000](http://localhost:8000).
 
-To make the website use a locally emulated version of Firebase create a
-Firebase service account and download the credentials JSON file, rename it
-to `firebase-service-account.json`.
-
-```
-yarn emulate-firebase
-```
-
-Finally run:
-
-```
-EMULATE_FIREBASE=true yarn website
-```
-
-## Functions
-
-Functions are located in [`./functions/index.js`](./functions/index.js).
-
-If you would like to run any of the `package.json` scripts in this directory the
-`--ignore-engines` option must be passed due to the fact that the `package.json`
-file defines the `engines` key for the sake of Firebase.
-
-## Firestore
-
-Firestore indexes are defined in `firestore.indexes.json`.
-
-Firestore rules are defined in `firestores.rules`.
-
 # Deployment
+## Configuration
+The server's configuration is provided via the environment variables:
+
+- `GAME_DEALS_HTTP_PORT` (Integer, Default: `8000`): Port on which to run HTTP API
+- `GAME_DEALS_MONGO_URI` (String, Default: `mongodb://127.0.0.1/`): URI used to connect to MongoDB
+- `GAME_DEALS_MONGO_DB_NAME` (String, Default: `dev-game-deals`): Name of the MongoDB database in which to store data.
+- `GAME_DEALS_AUTH_TOKEN_SECRET` (String, Default: `thisisaverybadsecret`): Secret key used to sign authentication tokens.
 
 ## Instructions
-
-Preview a production build:
-
-```
-yarn preview-prod-website
-```
-
-Then navigate to [localhost:9000](http://localhost:9000).
-
-When ready to deploy (make sure to test the production build locally
-first!) push to master and GitHub actions will take care of the rest.
-
-## Manual Instructions
-
-If you would like to deploy manually follow these instructions.
-
-**Website**:
-
-Run:
-
-```
-yarn deploy-website
-```
-
-**Functions**:
-
-Run:
-
-```
-yarn deploy-functions
-```
-
-**Firestore**:
-
-Run:
-
-```
-yarn deploy-firestore
-```
-
-## Deployment Implementation Details
-
-### Website
-
-GitHub actions is used to automatically deploy the master branch to
-GitHub Pages.
-
-This uses GitHub Deploy Keys to authenticate the job runner. See the
-[JamesIves/github-pages-deploy-action](https://github.com/JamesIves/github-pages-deploy-action/tree/dev#using-an-ssh-deploy-key-)
-documentation for details about how this key is used.
-
-To set it up generate an SSH key with no password:
-
-```
-ssh-keygen -t ed25519 -f ./deploy_key
-```
-
-Then copy the contents of the `deploy-key.pub` file and add it as a deploy key
-with write access for this repository.
-
-Then copy the contents of the `deploy-key` file and add a secret named
-`DEPLOY_KEY` to this repository.
-
-Finally delete both the `deploy-key` and `deploy-key.pub` files.
-
-### Firebase
-
-The [Firebase GitHub Action](https://github.com/marketplace/actions/github-action-for-firebase)
-is used to deploy functions and firestore.
-
-Get a Firebase continuous integration authentication token:
-
-```
-yarn firebase login:ci
-```
-
-Set this value as the `FIREBASE_TOKEN` secret to the repository.
+TBD

@@ -1,13 +1,7 @@
-/**
- * Game Deals HTTP server.
- * 
- * The web frontend is server under path /.
- * The HTTP API is server under path /api/v0/. API requests use URL query parameters and JSON encoded bodies. API responses use JSON encoded bodies.
- * 
- * Data is stored in MongoDB in the "admins" and "game_deals" collections. Documents meet the ADMIN_SCHEMA and GAME_DEAL_SCHEMA respectively.
- */
-
 const express = require("express");
+const bodyParser = require("body-parser");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 const MongoClient = require("mongodb").MongoClient;
 const Ajv = require("ajv");
 const ajv = new Ajv();
@@ -18,12 +12,40 @@ const ajv = new Ajv();
 const QUERY_LIMIT = 20;
 
 /**
+ * Algorithm to use when signing JWT authentication tokens.
+ */
+const AUTH_TOKEN_JWT_ALGORITHM = "HS256";
+
+/**
+ * Audience to use when signing JWT authentication tokens.
+ */
+const AUTH_TOKEN_AUDIENCE = "game-deals";
+
+/**
+ * Number of rounds to salt passwords when hashing with bcrypt.
+ */
+const BCRYPT_SALT_ROUNDS = 10;
+
+/**
  * Get the unix timestamp for the date.
  * @param date {Date} To convert.
  * @returns {integer}
  */
 function unixTime(date) {
   return Math.floor(date.getTime() / 1000);
+}
+
+/**
+ * Determines if a password is allowed.
+ * @param plainText {string} Plain text password to check.
+ * @returns {string|null} String describing problem with password or null if password is ok.
+ */
+function passwordAllowed(plainText) {
+  if (plainText.length < 8) {
+    return "must be longer than 8 characters";
+  }
+
+  return null;
 }
 
 /**
@@ -44,12 +66,17 @@ const CFG = {
    * Name of MongoDB database in which to store data.
    */
   mongoDBName: process.env.GAME_DEALS_MONGO_DB_NAME || "dev-game-deals",
+
+  /**
+   * Secret key used to sign authentication tokens.
+   */
+  authTokenSecret: process.env.GAME_DEALS_AUTH_TOKEN_SECRET || "thisisaverybadsecret",
 };
 
 /**
  * Schema for an admin user.
  */
-const ADMIN_SCHEMA = ajv.compile({
+const ADMIN_SCHEMA = {
   type: "object",
   properties: {
     /**
@@ -61,15 +88,20 @@ const ADMIN_SCHEMA = ajv.compile({
      * Bcrypt password hash.
      */
     password_hash: { type: "string" },
+
+    /**
+     * If true then the next time the user logs in they must set a new password.
+     */
+    must_reset_password: { type: "boolean" },
   },
   required: [ "username", "password_hash" ],
   additionalProperties: false,
-});
+};
 
 /*
  * Schema for a game deal.
  */
-const GAME_DEAL_SCHEMA = ajv.compile({
+const GAME_DEAL_SCHEMA = {
   type: "object",
   properties: {
     /**
@@ -120,8 +152,16 @@ const GAME_DEAL_SCHEMA = ajv.compile({
   },
   required: [ "start_date", "end_date", "game", "link", "price" ],
   additionalProperties: false,
-});
+};
 
+/**
+ * Game Deals HTTP server.
+ * 
+ * The web frontend is server under path /.
+ * The HTTP API is server under path /api/v0/. API requests use URL query parameters and JSON encoded bodies. API responses use JSON encoded bodies.
+ * 
+ * Data is stored in MongoDB in the "admins" and "game_deals" collections. Documents meet the ADMIN_SCHEMA and GAME_DEAL_SCHEMA respectively.
+ */
 class Server {
   /**
    * Initializes the server.
@@ -136,9 +176,45 @@ class Server {
     this.app = express();
     
     this.app.use(this.mwLog);
+    this.app.use(bodyParser.json());
     
-    this.app.get("/api/v0/health", this.epHealth);
-    this.app.get("/api/v0/game_deal", this.epListGameDeals);
+    this.app.get(
+      "/api/v0/health",
+      this.epHealth.bind(this));
+    this.app.post(
+      "/api/v0/login",
+      this.mwValidateBodyFactory(ajv.compile({
+        type: "object",
+        properties: {
+          username: { type: "string" },
+          password: { type: "string" },
+          new_password: { type: "string" },
+        },
+        required: [ "username", "password" ],
+        additionalProperties: false,
+      })).bind(this),
+      this.epLogin.bind(this));
+    
+    this.app.get(
+      "/api/v0/game_deal",
+      this.epListGameDeals.bind(this));
+
+    let createGameDealSchema = GAME_DEAL_SCHEMA;
+    delete createGameDealSchema.properties.author_id;
+    createGameDealSchema.required.splice(createGameDealSchema.required.indexOf("author_id"), 1);
+    
+    this.app.post(
+      "/api/v0/game_deal",
+      this.mwAuthenticate.bind(this),
+      this.mwValidateBodyFactory(ajv.compile({
+        type: "object",
+        properties: {
+          game_deal: createGameDealSchema,
+        },
+        required: [ "game_deal" ],
+        additionalProperties: false,
+      })).bind(this),
+      this.epCreateGameDeal.bind(this));
 
     // Initialize in init()
     this.db = null;
@@ -165,6 +241,23 @@ class Server {
       admins: _db.collection("admins"),
       game_deals: _db.collection("game_deals"),
     };
+
+    // Ensure at least one user has been setup
+    const totalUsers = await this.db.admins.find({}).count();
+    if (totalUsers === 0) {
+      // Setup an initial admin user
+      try {
+        await this.db.admins.insertOne({
+          username: "admin",
+          password_hash: await bcrypt.hash("admin", BCRYPT_SALT_ROUNDS),
+          must_reset_password: true,
+        });
+      } catch (e) {
+        throw `Failed to insert initial admin user into database: ${e}`;
+      }
+
+      console.log("Inserted initial admin user with username \"admin\" and password \"admin\"");
+    }
   }
 
   /**
@@ -206,6 +299,77 @@ class Server {
   }
 
   /**
+   * Factory which creates middleware that verifies a request body meets a JSON schema.
+   * @param schema {Avj Compiled Schema}
+   * @returns {function(req, res, next)} Middleware which responds with code 400 if the request body does not match the schema.
+   */
+  mwValidateBodyFactory(schema) {
+    return (req, res, next) => {
+      const valid = schema(req.body);
+      if (valid !== true) {
+        res.status(400).json({
+          error: `HTTP body does not match schema: ${schema.errors}`,
+        });
+        return;
+      }
+
+      next();
+    };
+  }
+
+  /**
+   * Ensures the request contains a valid authentication token in the Authorization header. Sets the req.authUser field with the authenticated user and req.authToken with the authentication token. Responds with code 401 if no, or incorrect, authentication data was found.
+   */
+  async mwAuthenticate(req, res, next) {
+    // Get header
+    const tokenStr = req.header("Authorization");
+    if (token === undefined) {
+      res.status(401).json({
+        error: "unauthorized",
+      });
+      return;
+    }
+
+    // Verify token
+    try {
+      req.authToken = await new Promise((resolve, reject) => {
+        jwt.verify(
+          token,
+          this.cfg.authTokenSecret,
+          {
+            algorithms: [ AUTH_TOKEN_JWT_ALGORITHM ],
+            audience: AUTH_TOKEN_AUDIENCE,
+            issuer: AUTH_TOKEN_AUDIENCE,
+          },
+          (err, decoded) => {
+            if (err !== undefined && err !== null) {
+              reject(err);
+              return;
+            }
+
+            resolve(decoded);
+          });
+      });
+    } catch(e) {
+      console.trace(`Error verifying JWT authentication token: ${e}`);
+      res.status(401).json({
+        error: "unauthorized",
+      });
+      return;
+    }
+
+    // Fetch user
+    try {
+      req.authUser = await this.db.admins.findOne(req.authToken.sub);
+    } catch (e) {
+      console.trace(`Error retrieving user for authentication token, token.sub=${req.authToken.sub}, error: ${e}`);
+      return;
+    }
+
+    next();
+  }
+  
+  /**
    * Provide API status.
    * Request: GET
    * Response: 200 JSON:
@@ -218,8 +382,122 @@ class Server {
   }
 
   /**
+   * Login. Optionally change password.
+   * Request: POST, Body:
+   *   - username (string)
+   *   - password (string)
+   *   - new_password (string, optional): If provided the user's password will be changed. This is required if the .must_reset_password field is true on the user.
+   * Response: 200, JSON body:
+   *   - auth_token (string)
+   */
+  async epLogin(req, res) {
+    // Get user
+    let user = null;
+    try {
+      user = await this.db.admins.findOne({
+        username: req.body.username,
+      });
+    } catch (e) {
+      console.trace(`Failed to retrieve a user: ${e}`);
+      res.status(500).json({
+        error: "internal error",
+      });
+      return;
+    }
+
+    // Check password
+    try {
+      let passwordOk = await bcrypt.compare(req.body.password, user.password_hash)
+      if (passwordOk === false) {
+        res.status(401).json({
+          error: "unauthorized",
+        });
+        return;
+      }
+    } catch (e) {
+      res.status(401).json({
+        error: "unauthorized",
+      });
+      return;
+    }
+
+    // Set new password if needed
+    if (user.must_reset_password === true && req.body.new_password === undefined) {
+      res.status(401).json({
+        error: "user must reset their password before logging in",
+      });
+      return;
+    }
+
+    if (req.body.new_password !== undefined) {
+      // Check the new password is allowed
+      const newPwOk = passwordAllowed(req.body.new_password);
+      if (newPwOk !== null) {
+        res.status(400).json({
+          error: `failed to set new password: ${newPkOk}`,
+        });
+        return;
+      }
+
+      // Hash the password
+      let newPwHash = null;
+      try {
+        newPwHash = await bcrypt.hash(req.body.new_password, BCRYPT_SALT_ROUNDS);
+      } catch (e) {
+        console.trace(`Failed to hash new password: ${e}`);
+
+        res.status(500).json({
+          error: "internal error",
+        });
+        return;
+      }
+
+      // Save the new password
+      try {
+        await this.db.admins.updateOne({
+          _id: user._id,
+        }, {
+          $set: {
+            password_hash: newPwHash,
+            must_reset_password: false,
+          },
+        });
+      } catch (e) {
+        console.trace(`Failed to set new password: ${e}`);
+        
+        res.status(500).json({
+          error: "internal error",
+        });
+        return;
+      }
+    }
+
+    // Generate authentication token
+    const token = await new Promise((resolve, reject) => {
+      jwt.sign({
+        aud: AUTH_TOKEN_AUDIENCE,
+        iss: AUTH_TOKEN_AUDIENCE,
+        sub: user._id,
+      }, this.cfg.authTokenSecret, {
+        algorithm: AUTH_TOKEN_JWT_ALGORITHM
+      }, (err, token) => {
+        if (err !== undefined && err !== null) {
+          reject(err);
+          return;
+        }
+
+        resolve(token);
+      });
+    });
+
+    res.json({
+      auth_token: token,
+    });
+  }
+
+  /**
    * List game deals.
-   * Request: GET,  URL parameters:
+   * Request: GET, URL parameters:
    *   - offset (uint, optional, default 0): Game deals will be returned sorted by their start date. This parameter indicates the index of the first game deal to retrieve using this ordering.
    *   - expired (bool, optional, default false): If game deals which have expired should be retrieved.
    * Response: 200 JSON
@@ -244,6 +522,24 @@ class Server {
     res.json({
       game_deals: deals,
       next_offset: offset + QUERY_LIMIT,
+    });
+  }
+
+  /**
+   * Create a game deal.
+   * Request: POST, Authenticated, JSON body:
+   *   - game_deal (GameDeal): Game deal to create. Should not include the "author_id" field.
+   * Response:
+   *   - game_deal (GameDeal): Created game deal with all fields.
+   */
+  async epCreateGameDeal(req, res) {
+    let deal = req.body.game_deal;
+    deal.author_id = req.authUser._id;
+      
+    const inserted = await this.db.game_deals.insertOne(deal);
+
+    res.json({
+      game_deal: inserted,
     });
   }
 }
