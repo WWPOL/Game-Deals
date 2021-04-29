@@ -7,7 +7,7 @@
   "author": "WWPOL",
   "license": "MIT",
   "scripts": {
-    "start": "deno run src/index.js"
+    "start": "node --trace-warnings src/index.js"
   },
   "dependencies": {
     "ajv": "^8.2.0",
