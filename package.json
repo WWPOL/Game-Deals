@@ -7,7 +7,9 @@
   "author": "WWPOL",
   "license": "MIT",
   "scripts": {
-    "start": "node --trace-warnings src/index.js"
+    "start": "node --trace-warnings server/index.js",
+    "build": "parcel build ./frontend/index.html",
+    "watch": "parcel serve ./frontend/index.html"
   },
   "dependencies": {
     "ajv": "^8.2.0",
@@ -17,5 +19,10 @@
     "express": "^4.17.1",
     "jsonwebtoken": "^8.5.1",
     "mongodb": "^3.6.6"
+  },
+  "devDependencies": {
+    "parcel-bundler": "^1.12.5",
+    "react": "^0.0.0-269dd6ec5",
+    "react-dom": "^0.0.0-269dd6ec5"
   }
 }

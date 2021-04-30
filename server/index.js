@@ -196,9 +196,12 @@ class Server {
 
     // Setup express HTTP API
     this.app = express();
-    
+
     this.app.use(this.mwLogReq);
+    
     this.app.use(bodyParser.json());
+    this.app.use(express.static("./dist"));
+    
     this.app.use(this.mwLogRes); // Must be last
     
     this.app.get(

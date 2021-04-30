@@ -37,13 +37,13 @@ The site is a NodeJs server and React frontend.
 
 Make sure you have the latest versions of [NodeJS](https://nodejs.org/en/download/) and [Yarn](https://classic.yarnpkg.com/en/docs/install/).
 
-## Server
-Install dependencies:
+Then install dependencies:
 
 ```
 yarn install
 ```
 
+## Server
 Start MongoDB:
 
 ```
@@ -59,21 +59,15 @@ yarn start
 ```
 
 ## Frontend
-TDB: Frontend is not ready yet.
+For most frontend development the built Parcel bundler results will be served by the server, ensure it is running ([Server](#server)).
 
-Install dependencies:
-
-```
-yarn install
-```
-
-Start the auto-reloading development server:
+Next run the Parcel bundler on the frontend files:
 
 ```
-yarn website
+yarn watch
 ```
 
-Then navigate to [localhost:8000](http://localhost:8000).
+Then navigate to [localhost:8000](http://localhost:8000) (ignore the message from the command line saying to visit `127.0.0.1:1234`, this only serves the frontend files but without the server, this can work but none of the frontend will display any data without the API server).
 
 # Deployment
 ## Configuration

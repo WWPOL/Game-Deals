@@ -1,6 +1,10 @@
 # NPM files
 node_modules/
 
+# Parcel build output
+.cache/
+dist/
+
 # Runtime logs
 *.log
 
