@@ -39,7 +39,7 @@ const ERROR_CODES = {
 
 /**
  * Get the unix timestamp for the date.
- * @param date {Date} To convert.
+ * @param {Date} date To convert.
  * @returns {integer}
  */
 function unixTime(date) {
@@ -48,7 +48,7 @@ function unixTime(date) {
 
 /**
  * Determines if a password is allowed.
- * @param plainText {string} Plain text password to check.
+ * @param {string} plainText Plain text password to check.
  * @returns {string|null} String describing problem with password or null if password is ok.
  */
 function passwordAllowed(plainText) {
@@ -187,7 +187,7 @@ const GAME_DEAL_SCHEMA = {
 class Server {
   /**
    * Initializes the server.
-   * @param cfg {Config} Application configuration from CFG.
+   * @param {Config} cfg Application configuration from CFG.
    */
   constructor(cfg) {
     this.cfg = cfg;
@@ -257,7 +257,8 @@ class Server {
       })).bind(this),
       this.epCreateGameDeal.bind(this));
 
-    // Initialize in init()
+    // Initialize this in init()
+    this.initCalled = false;
     this.db = null;
   }
 
@@ -265,6 +266,8 @@ class Server {
    * Initialize server dependencies.
    */
   async init() {
+    this.initCalled = true;
+    
     // Connect to MongoDB
     console.log(`Connecting to Mongo database "${this.cfg.mongoDBName}"`);
     
@@ -309,10 +312,16 @@ class Server {
   }
 
   /**
-   * Listen for HTTP API requests. 
+   * Listen for HTTP API requests. The init() method must be called before this.
    * @returns {Promise} Resolves when HTTP server closes.
    */
   async httpListen() {
+    // Check init() called
+    if (this.initCalled === false) {
+      throw new Error("init() method must be called before server can start");
+    }
+
+    // Start server
     console.log(`Opening HTTP API listener on :${this.cfg.httpPort}`);
     
     const server = this.app.listen(this.cfg.httpPort, () => {
@@ -349,7 +358,7 @@ class Server {
 
   /**
    * Factory which creates middleware that verifies a request body meets a JSON schema.
-   * @param schema {Avj Compiled Schema}
+   * @param {Avj Compiled Schema} schema
    * @returns {function(req, res, next)} Middleware which responds with code 400 if the request body does not meet schema requirements.
    */
   mwValidateBodyFactory(schema) {
@@ -437,8 +446,11 @@ class Server {
   
   /**
    * Provide API status.
-   * Request: GET
-   * Response: 200 JSON:
+   * # Request
+   * GET
+   * 
+   * # Response
+   * 200 JSON:
    *   - ok (bool): Indicates if the API should be used.
    */
   epHealth(req, res) {
@@ -449,11 +461,14 @@ class Server {
 
   /**
    * Login. Optionally change password.
-   * Request: POST, Body:
+   * # Request
+   * POST, Body:
    *   - username (string)
    *   - password (string)
    *   - new_password (string, optional): If provided the user's password will be changed. This is required if the .must_reset_password field is true on the user.
-   * Response: 200, JSON body:
+   * 
+   * # Response
+   * 200, Body:
    *   - auth_token (string)
    */
   async epLogin(req, res) {
@@ -572,10 +587,13 @@ class Server {
 
   /**
    * Create an admin user. Requires the new user to change their password after they first login.
-   * Request: JSON body:
+   * # Request
+   * JSON body:
    *   - username (string): The new admin user's username.
    *   - invite_password (string): The password the new user will login with for the first time. Tell them this password. The new user must then change this password.
-   * Response:
+   * 
+   * # Response
+   * 200, Body:
    *   - new_admin_id (string): ID of the newly created user.
    */
   async epCreateAdmin(req, res) {
@@ -615,10 +633,13 @@ class Server {
 
   /**
    * List game deals.
-   * Request: GET, URL parameters:
+   * # Request
+   * GET, URL parameters:
    *   - offset (uint, optional, default 0): Game deals will be returned sorted by their start date. This parameter indicates the index of the first game deal to retrieve using this ordering.
    *   - expired (bool, optional, default false): If game deals which have expired should be retrieved.
-   * Response: 200 JSON
+   * 
+   * # Response
+   * 200, Body:
    *   - game_deals (GameDeal[]): Array of game deals sorted by their start date. Maximum of QUERY_LIMIT items.
    *   - next_offset (int): Next offset value to provide to access the next page of results. Is -1 if this page is the last page of results.
    */
@@ -661,9 +682,12 @@ class Server {
 
   /**
    * Create a game deal.
-   * Request: POST, Authenticated, JSON body:
+   * # Request
+   * POST, Authenticated, Body:
    *   - game_deal (GameDeal): Game deal to create. Should not include the "author_id" field.
-   * Response:
+   * 
+   * # Response
+   * 200, Body:
    *   - game_deal (GameDeal): Created game deal with all fields.
    */
   async epCreateGameDeal(req, res) {

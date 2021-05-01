@@ -2,15 +2,19 @@
  * API client.
  */
 export default class API {
+  /**
+   * Create a new API client.
+   * @returns {API} New API client.
+   */
   constructor() {
   }
 
   /**
    * Make a HTTP API request.
-   * @param method {string} HTTP method for request.
-   * @param path {string} API endpoint to call.
-   * @param body {object} API request data to encode as JSON. Pass undefined to not encode a body.
-   * @param opts {object} Additional fetch options. The `method` field will always be overriden by the `method` argument. The `Content-Type` header and request `body` will be overriden if the `body` argument is provided.
+   * @param {string} method HTTP method for request.
+   * @param {string} path API endpoint to call.
+   * @param {object} [body] API request data to encode as JSON. Pass undefined to not encode a body.
+   * @param {object} [opts] Additional fetch options. The `method` field will always be overriden by the `method` argument. The `Content-Type` header and request `body` will be overriden if the `body` argument is provided.
    * @returns {Promise} Resolves with the response. Rejects with API errors.
    * @throws {Error} If an error occurs while making the API request.
    * @throws {EndpointError} If the API returned an error response.
@@ -51,8 +55,8 @@ export default class API {
 
   /**
    * List game deals.
-   * @param offset {number} List offset index.
-   * @param expired {boolean} Include expired deals.
+   * @param {number} offset List offset index.
+   * @param {boolean} expired Include expired deals.
    * @returns {Promise} Resolves with game deals array. Rejects with error.
    * @throws {FriendlyError} If a problem occurs which can be explained to the user.
    * @throws {Error} If an error occurs which cannot be explained to the user.
@@ -79,16 +83,38 @@ export default class API {
  * An error which can be shown to the user. All other errors will be hidden behind a console.error call and a "internal error" message for the user.
  */
 export class FriendlyError extends Error {
+  /**
+   * Creates a new FriendlyError.
+   * @param {string} msg User friendly error message. Should not contain any jargon. This message will be transformed so that it always starts with a capital letter and ends with a period (or other punctuation if already present).
+   * @returns {FriendlyError} New error to show to user.
+   */
   constructor(msg) {
+    // Capitalize first letter
+    msg[0] = msg[0].toUpperCase();
+
+    // Ensure ends with punctuation
+    const endI = msg.length - 1;
+    if ([".", "?", "!"].indexOf(msg[endI]) === -1) {
+      msg += ".";
+    }
+    
     super(msg);
     this.name = "FriendlyError";
   }
 }
 
 /**
- * Indicates an API endpoint request returned an error response. The `error` field contains a user friendly message. The `error_code` field is a machine code for a specific condition which API clients are supposed to have knowledge of, it can be undefined.
+ * Indicates an API endpoint request returned an error response.
+ * @property {string} error Contains a user friendly message.
+ * @property {string} [error_code] Machine code for a specific condition which API clients are supposed to have knowledge of, it can be undefined if the server did not return one.
  */
 export class EndpointError extends Error {
+  /**
+   * Create an EndpointError.
+   * @param {string} error See error property.
+   * @param {string} error_code See error_code property.
+   * @returns {EndpointError} New error.
+   */
   constructor(error, error_code) {
     super(`The API returned an error response: error=${error}, error_code=${error_code}`);
     this.name = "EndpointError";
