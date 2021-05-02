@@ -6,6 +6,7 @@ const mongo = require("mongodb");
 const Ajv = require("ajv");
 const ajv = new Ajv();
 const dumbPasswords = require("dumb-passwords");
+const path = require("path");
 
 /**
  * The number of items which should be returned by queries.
@@ -256,6 +257,10 @@ class Server {
         additionalProperties: false,
       })).bind(this),
       this.epCreateGameDeal.bind(this));
+
+    this.app.get("*", (req, res) => {
+      res.sendFile(path.resolve("./dist/index.html"));
+    });
 
     // Initialize this in init()
     this.initCalled = false;

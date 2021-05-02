@@ -13,7 +13,8 @@ import 'antd/dist/antd.css';
 
 import API from "./api";
 import Header from "./components/Header.jsx";
-import HomePage from "./pages/Home.jsx";
+import Home from "./pages/Home.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
 
 const APICtx = React.createContext({});
 const ErrorCtx = React.createContext(() => {});
@@ -22,8 +23,8 @@ const AppEl = styled.div`
 width: 100%;
 height: 100%;
 display: flex;
+flex-direction: column;
   /* background: #212121; */
-flex: 1 1;
 `;
 
 /**
@@ -58,12 +59,16 @@ const App = () => {
   return (
     <AppEl>
       <Ctxs>
-        <Header />
-
         <Router>
+          <Header />
+          
           <Switch>
+            <Route path="/dashboard">
+              <Dashboard />
+            </Route>
+
             <Route path="/">
-              <HomePage />
+              <Home />
             </Route>
           </Switch>
         </Router>

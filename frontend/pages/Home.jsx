@@ -60,7 +60,6 @@ const HomePage = () => {
         
         return (
           <div key={deal._id}>
-
             <p>
               {expiresStr}
             </p>

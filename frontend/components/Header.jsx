@@ -1,9 +1,14 @@
 import React from "react";
 import styled from "styled-components";
 
+/**
+ * Height of header element.
+ */
+const HEIGHT = "3.3rem";
+
 const HdEl = styled.div`
-height: 3.3rem;
-line-height: 3.3rem;
+height: ${HEIGHT};
+line-height: ${HEIGHT};
 width: 100%;
 display: flex;
 background: #75ffa8;
@@ -34,3 +39,4 @@ const Header = () => {
 };
 
 export default Header;
+export { HEIGHT };
