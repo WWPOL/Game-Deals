@@ -15,6 +15,8 @@ display: flex;
 margin-left: 1rem;
 color: #f24bd6;
   /* text-shadow: 2px 2px #f24bd6; */
+font-style: italic;
+font-weight: bold;
 `;
 
 /**
