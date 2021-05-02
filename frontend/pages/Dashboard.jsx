@@ -9,6 +9,9 @@ import {
 import styled from "styled-components";
 import { ShopOutlined, UserOutlined } from "@ant-design/icons";
 
+import DashboardGameDeals from "./DashboardGameDeals.jsx";
+import DashboardAdmins from "./DashboardAdmins.jsx";
+
 const DshEl = styled.div`
 display: flex;
 flex-grow: 1;
@@ -102,11 +105,11 @@ const Dashboard = () => {
 
       <Switch>
         <Route path={`${routeMatch.path}/game-deals`}>
-          Game Deals
+          <DashboardGameDeals />
         </Route>
 
         <Route path={`${routeMatch.path}/admins`}>
-          Admins
+          <DashboardAdmins />
         </Route>
 
         <Route path={`${routeMatch.path}/`}>
