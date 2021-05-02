@@ -1,12 +1,15 @@
 /**
  * API client.
+ * @property {function(msg)} showError Function which displays the error msg argument to the user.
  */
 export default class API {
   /**
    * Create a new API client.
+   * @param {function(msg)} showError Set showError prop.
    * @returns {API} New API client.
    */
-  constructor() {
+  constructor(showError) {
+    this.showError = showError;
   }
 
   /**
@@ -58,8 +61,6 @@ export default class API {
    * @param {number} offset List offset index.
    * @param {boolean} expired Include expired deals.
    * @returns {Promise} Resolves with game deals array. Rejects with error.
-   * @throws {FriendlyError} If a problem occurs which can be explained to the user.
-   * @throws {Error} If an error occurs which cannot be explained to the user.
    */
   async listGameDeals(offset, expired) {
     try {
@@ -71,8 +72,9 @@ export default class API {
       console.trace(`Failed to list game deals: ${e}`);
       
       if (e instanceof EndpointError) {
-        throw FriendlyError(e.error);
+        this.showError(new FriendlyError(e.error));
       } else {
+        this.showError("sorry, something unexpected went wrong when trying to list game deals");
         throw e;
       }        
     }

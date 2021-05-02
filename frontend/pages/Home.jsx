@@ -26,17 +26,7 @@ const HomePage = () => {
   const [deals, setDeals] = useState([]);
 
   const fetchDeals = async () => {
-    try {
-      setDeals(await api.listGameDeals());
-    } catch (e) {
-      console.trace(`Failed to list game deals for home page: ${e}`);
-      
-      if (e instanceof FriendlyError) {
-        setError(e);
-      } else {
-        setError("sorry, something unexpected went wrong");
-      }
-    }
+    return await api.listGameDeals();
   };
 
   useEffect(() => {

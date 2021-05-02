@@ -28,25 +28,36 @@ const MenuTitle = styled(Link)`
 padding-top: 0.5rem;
 padding-bottom: 0.5rem;
 padding-left: 1rem;
-border-bottom: 1px solid #484848;
+
+
 font-size: 1.5rem;
 text-align: left;
+font-weight: bold;
+`;
+
+const MenuHr = styled.div`
+width: 4rem;
+margin-left: 1rem;
+margin-bottom: 0.5rem;
+border-top: 0.2rem solid #020da1; /* 000982; */
 `;
 
 const MenuItems = styled.div`
-margin-top: 0.5rem;
 display: flex;
 flex-direction: column;
+margin-left: 1rem;
 
 .nav-link-active, .nav-link-active:hover {
   background: #02074f;
   color: #1890ff;
+  border-left: solid 0.25rem #f24bd6;
 }
 `;
 
 const MenuItem = styled(NavLink)`
 height: 2.6rem;
 line-height: 2.6rem;
+padding-top: 0.1rem;
 padding-left: 1rem;
 display: flex;
 align-items: center;
@@ -54,11 +65,11 @@ flex-direction: row;
 font-size: 1.1rem;
 transition: background 0.5s color 0.5s;
 cursor: pointer;
-color: white;
+/* color: white; */
 
 &:hover {
   background: #1d215e;/* #02074f; */
-  color: white;
+  /* color: white; */
   /* color: #1890ff; */
 }
 `;
@@ -79,6 +90,8 @@ const Dashboard = () => {
         <MenuTitle  to={`${routeMatch.path}/`}>
           Dashboard
         </MenuTitle>
+
+        <MenuHr />
 
         <MenuItems>
           <MenuItem
@@ -120,4 +133,14 @@ const Dashboard = () => {
   );
 };
 
+/**
+ * Navigate back to the dashboard home.
+ * @param {ReactRouterDom.History} history To modify.
+ */
+const GoDashHome = (history) => {
+  history.push("/dashboard");
+};
+
 export default Dashboard;
+
+export { GoDashHome };
