@@ -129,7 +129,7 @@ const GAME_DEAL_SCHEMA = {
      * A unix timestamp of when the deal becomes available.
      */
     start_date: { type: "integer" },
-
+    
     /**
      * A unix timestamp of when the deal expires.
      */

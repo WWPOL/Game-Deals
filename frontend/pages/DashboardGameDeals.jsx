@@ -24,20 +24,30 @@ import {
 
 const GAME_DEAL_COLS = [
   {
-    title: "Author",
-    dataIndex: "author",
-    key: "author_id",
-  },
-  {
     title: "Game",
     dataIndex: "game",
     key: "game",
   },
   {
+    title: "Price",
+    dataIndex: "price",
+    key: "price",
+  },
+  {
+    title: "Deal",
+    dataIndex: "deal",
+    key: "link",
+  },
+  {
     title: "Expires*",
-    dataIndex: "end_date",
+    dataIndex: "expires",
     key: "end_date",
-  }
+  },
+  {
+    title: "Author",
+    dataIndex: "author",
+    key: "author_id",
+  },
 ];
 
 const DshEl = styled.div`
@@ -48,9 +58,11 @@ color: white;
 `;
 
 const DealsList = styled.div`
+padding-left: 2rem;
+padding-right: 2rem;
 display: flex;
 flex-direction: column;
-align-items: center;
+flex-grow: 1;
 `;
 
 /**
@@ -79,6 +91,20 @@ const DashboardGameDeals = () => {
 
         return admin.username;
       };
+
+      const dealLinkEl = (deal) => {
+        const domainParts = deal.link.split(".");
+        let shortDomain = deal.link;
+        if (domainParts.length >= 2) {
+          shortDomain = domainParts.slice(0, 2).join(".");
+        }
+        
+        return (
+          <a href={deal.link}>
+            {shortDomain}
+          </a>
+        );
+      };
       
       setDeals(await Promise.all(deals.map(async (deal) => {
         return {
@@ -86,13 +112,24 @@ const DashboardGameDeals = () => {
           key: deal._id,
           author: await authorEl(deal.author_id),
           game: deal.game.name,
-          end_date: dateStr(deal.end_date),
+          expires: dateStr(deal.end_date),
+          deal: dealLinkEl(deal),
         };
       })));
     }
 
     fetchDeals();
   }, []);
+
+  const rowSelection = {
+    onChange: (keys, rows) => {
+      console.log(`rowSelection.onChange: keys=${keys}, rows=${JSON.stringify(rows)}`);
+    },
+    getCheckboxProps: (deal) => ({
+      disabled: false,
+      name: deal.id,
+    }),
+  };
   
   return (
     <DshEl>
@@ -103,6 +140,7 @@ const DashboardGameDeals = () => {
 
       <DealsList>
         <Table
+          rowSelection={rowSelection}
           dataSource={deals}
           columns={GAME_DEAL_COLS}
         />
