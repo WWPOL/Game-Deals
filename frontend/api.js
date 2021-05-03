@@ -20,7 +20,7 @@ export default class API {
    * @param {string} method HTTP method for request.
    * @param {string} path API endpoint to call.
    * @param {object} [body] API request data to encode as JSON. Pass undefined to not encode a body.
-   * @param {object} [opts] Additional fetch options. The `method` field will always be overriden by the `method` argument. The `Content-Type` header and request `body` will be overriden if the `body` argument is provided. The __body_sensitive field can be set to true which will cause any error messages not to include the body.
+   * @param {object} [opts] Additional fetch options. The `method` field will always be overriden by the `method` argument. The `Content-Type` header and request `body` will be overriden if the `body` argument is provided. The __body_sensitive field can be set to true which will cause any error messages not to include the body. The "Authorization" header is censored by default.
    * @returns {Promise} Resolves with the response. Rejects with API errors.
    * @throws {Error} If an error occurs while making the API request.
    * @throws {EndpointError} If the API returned an error response.
@@ -57,6 +57,10 @@ export default class API {
       // Censor body after request is made
       if (bodySensitive === true) {
         opts.body = "***censored***";
+      }
+
+      if (opts.headers !== undefined && opts.headers.Authorization !== undefined && opts.headers.Authorization.length > 0) {
+        opts.headers.Authorization = "***censored***";
       }
 
       // Ensure success result
@@ -150,8 +154,15 @@ export default class API {
    * @throws {Error} If creating game deal fails.
    */
   async createGameDeal(deal) {
+    const authToken = await this.getAuth();
+
+    // Make API request
     try {
-      const resp = await this.fetch("POST", "/api/v0/game_deal", { game_deal: deal });
+      const resp = await this.fetch("POST", "/api/v0/game_deal", { game_deal: deal }, {
+        headers: {
+          "Authorization": authToken,
+        },
+      });
 
       const body = await resp.json();
 
