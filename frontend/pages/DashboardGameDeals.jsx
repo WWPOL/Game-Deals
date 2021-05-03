@@ -89,11 +89,6 @@ const GAME_DEAL_COLS = [
     dataIndex: "expires",
     key: "end_date",
   },
-  {
-    title: "Author",
-    dataIndex: "author",
-    key: "author_id",
-  },
 ];
 
 /**
@@ -117,12 +112,6 @@ const DashboardGameDeals = () => {
         return strftime("%m/%d/%y %I:%M %p", date);
       };
 
-      const authorEl = async (adminID) => {
-        const admin = await api.getAdmin(adminID);
-
-        return admin.username;
-      };
-
       const dealLinkEl = (deal) => {
         const domainParts = deal.link.split(".");
         let shortDomain = deal.link;
@@ -141,7 +130,6 @@ const DashboardGameDeals = () => {
         return {
           ...deal,
           key: deal._id,
-          author: await authorEl(deal.author_id),
           game: deal.game.name,
           expires: dateStr(deal.end_date),
           deal: dealLinkEl(deal),

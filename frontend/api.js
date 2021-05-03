@@ -78,8 +78,10 @@ export default class API {
       if (e instanceof EndpointError) {
         this.showError(new FriendlyError(e.error));
       } else {
-        this.showError("sorry, something unexpected went wrong when trying to list game deals");
-      }        
+        this.showError("sorry, something unexpected went wrong when trying to get a list game deals");
+      }
+
+      throw e;
     }
   }
 
@@ -103,6 +105,8 @@ export default class API {
       } else {
         this.showError("sorry, something unexpected happened while retrieving an admin's information");
       }
+
+      throw e;
     }
   }
 }
