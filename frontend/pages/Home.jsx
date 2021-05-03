@@ -3,12 +3,19 @@ import React, {
   useEffect,
   useContext,
 } from "react";
+import styled from "styled-components";
 import humanizeDuration from "humanize-duration";
 
 import { APICtx, ErrorCtx } from "../App";
 import {
   FriendlyError,
 } from "../api";
+
+const HomeEl = styled.div`
+display: flex;
+flex-grow: 1;
+background: #000221;
+`;
 
 /**
  * Get the unix timestamp for the date.
@@ -36,7 +43,7 @@ const HomePage = () => {
   const now = unixTime(new Date());
   
   return (
-    <>
+    <HomeEl>
       {deals.map((deal) => {
         const expiresDt = deal.end_date - now;
         let expiresStr = humanizeDuration(expiresDt);
@@ -62,7 +69,7 @@ const HomePage = () => {
           </div>
         );
       })}
-    </>
+    </HomeEl>
   );
 };
 

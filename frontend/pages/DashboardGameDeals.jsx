@@ -11,6 +11,7 @@ import {
   PageHeader,
   Table,
 } from "antd";
+import "../antd.less";
 import strftime from "strftime";
 
 import {
@@ -24,16 +25,16 @@ import {
 const GAME_DEAL_COLS = [
   {
     title: "Author",
-    dataIndex: "author_id",
+    dataIndex: "author",
     key: "author_id",
   },
   {
-    title: "Starts On",
-    dataIndex: "start_date",
-    key: "start_date",
+    title: "Game",
+    dataIndex: "game",
+    key: "game",
   },
   {
-    title: "Ends On",
+    title: "Expires*",
     dataIndex: "end_date",
     key: "end_date",
   }
@@ -42,6 +43,14 @@ const GAME_DEAL_COLS = [
 const DshEl = styled.div`
 display: flex;
 flex-direction: column;
+flex-grow: 1;
+color: white;
+`;
+
+const DealsList = styled.div`
+display: flex;
+flex-direction: column;
+align-items: center;
 `;
 
 /**
@@ -57,22 +66,29 @@ const DashboardGameDeals = () => {
 
   useEffect(() => {
     async function fetchDeals() {
-      const deals = await api.listGameDeals();
+      const deals = await api.listGameDeals(0, true);
 
       const dateStr = (epoch) => {
         const date = new Date(epoch * 1000);
         
         return strftime("%m/%d/%y %I:%M %p", date);
       };
+
+      const authorEl = async (adminID) => {
+        const admin = await api.getAdmin(adminID);
+
+        return admin.username;
+      };
       
-      setDeals(deals.map((deal) => {
+      setDeals(await Promise.all(deals.map(async (deal) => {
         return {
           ...deal,
           key: deal._id,
-          start_date: dateStr(deal.start_date),
+          author: await authorEl(deal.author_id),
+          game: deal.game.name,
           end_date: dateStr(deal.end_date),
         };
-      }));
+      })));
     }
 
     fetchDeals();
@@ -85,10 +101,13 @@ const DashboardGameDeals = () => {
         title="Game Deals"
       />
 
-      <Table
-        dataSource={deals}
-        columns={GAME_DEAL_COLS}
-      />
+      <DealsList>
+        <Table
+          dataSource={deals}
+          columns={GAME_DEAL_COLS}
+        />
+        <i>* Times are based on your browser's local time zone.</i>
+      </DealsList>
     </DshEl>
   );
 };

@@ -52,19 +52,23 @@ export default class API {
 
       return resp;
     } catch(e) {
-      throw new Error(`failed to make HTTP API request ${opts}: ${e}`);
+      throw new Error(`failed to make HTTP API request ${JSON.stringify(opts)}: ${e}`);
     }
   }
 
   /**
    * List game deals.
    * @param {number} offset List offset index.
-   * @param {boolean} expired Include expired deals.
+   * @param {boolean} [expired] Include expired deals. Defaults to false.
    * @returns {Promise} Resolves with game deals array. Rejects with error.
    */
   async listGameDeals(offset, expired) {
+    if (expired === undefined) {
+      expired = false;
+    }
+    
     try {
-      const resp = await this.fetch("GET", "/api/v0/game_deal");
+      const resp = await this.fetch("GET", `/api/v0/game_deal?expired=${expired}`);
 
       const body = await resp.json();
       return body.game_deals;
@@ -75,8 +79,30 @@ export default class API {
         this.showError(new FriendlyError(e.error));
       } else {
         this.showError("sorry, something unexpected went wrong when trying to list game deals");
-        throw e;
       }        
+    }
+  }
+
+  /**
+   * Get an admin.
+   * @param {string} id ID of admin to retrieve.
+   * @returns {Promise} Resolves with admin object.
+   */
+  async getAdmin(id) {
+    try {
+      const resp = await this.fetch("GET", `/api/v0/admin/${id}`);
+
+      const body = await resp.json();
+      
+      return body.admin;
+    } catch (e) {
+      console.trace(`failed to retrieve admin by ID "${id}": ${e}`);
+      
+      if (e instanceof EndpointError) {
+        this.showError(new FriendlyError(e.error));
+      } else {
+        this.showError("sorry, something unexpected happened while retrieving an admin's information");
+      }
     }
   }
 }

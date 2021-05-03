@@ -15,6 +15,7 @@ import DashboardAdmins from "./DashboardAdmins.jsx";
 const DshEl = styled.div`
 display: flex;
 flex-grow: 1;
+background: #000221;
 `;
 
 const SideMenu = styled.div`

@@ -15,7 +15,7 @@ import {
 import {
   CloseCircleOutlined,
 } from "@ant-design/icons";
-import 'antd/dist/antd.css';
+import "./antd.less";
 
 import API from "./api";
 import Header from "./components/Header.jsx";
