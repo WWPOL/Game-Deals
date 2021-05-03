@@ -10,7 +10,12 @@ import styled from "styled-components";
 import {
   PageHeader,
   Table,
+  Tooltip,
+  Button,
 } from "antd";
+import {
+  PlusOutlined,
+} from "@ant-design/icons";
 import "../antd.less";
 import strftime from "strftime";
 
@@ -21,6 +26,38 @@ import {
 import {
   GoDashHome,
 } from "./Dashboard.jsx";
+
+const DshEl = styled.div`
+display: flex;
+flex-direction: column;
+flex-grow: 1;
+color: white;
+`;
+
+const HeaderTags = styled.div`
+display: flex;
+flex-grow: 1;
+`;
+
+const NewDealButton = styled(Button)`
+display: flex;
+align-items: center;
+`;
+
+const DealsList = styled.div`
+padding-left: 2rem;
+padding-right: 2rem;
+display: flex;
+flex-direction: column;
+`;
+
+const DealsTable = styled(Table)`
+flex-grow: 1;
+`;
+
+const ExpiresTooltip = styled(Tooltip)`
+cursor: pointer;
+`;
 
 const GAME_DEAL_COLS = [
   {
@@ -39,7 +76,16 @@ const GAME_DEAL_COLS = [
     key: "link",
   },
   {
-    title: "Expires*",
+    title: (
+      <>
+        Expires
+        <ExpiresTooltip
+          title="Times are based on your browser's local time zone."
+        >
+          <sup>&dagger;</sup>
+        </ExpiresTooltip>
+      </>
+    ),
     dataIndex: "expires",
     key: "end_date",
   },
@@ -49,21 +95,6 @@ const GAME_DEAL_COLS = [
     key: "author_id",
   },
 ];
-
-const DshEl = styled.div`
-display: flex;
-flex-direction: column;
-flex-grow: 1;
-color: white;
-`;
-
-const DealsList = styled.div`
-padding-left: 2rem;
-padding-right: 2rem;
-display: flex;
-flex-direction: column;
-flex-grow: 1;
-`;
 
 /**
  * Displays a page which manages game deals.
@@ -136,15 +167,24 @@ const DashboardGameDeals = () => {
       <PageHeader
         onBack={() => GoDashHome(history)}
         title="Game Deals"
+        tags={
+          <HeaderTags>
+            <NewDealButton
+              size="large"
+              icon={<PlusOutlined />}
+            >
+              New Game Deal
+            </NewDealButton>
+          </HeaderTags>
+        }
       />
 
-      <DealsList>
-        <Table
+      <DealsList>        
+        <DealsTable
           rowSelection={rowSelection}
           dataSource={deals}
           columns={GAME_DEAL_COLS}
         />
-        <i>* Times are based on your browser's local time zone.</i>
       </DealsList>
     </DshEl>
   );

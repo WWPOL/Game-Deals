@@ -12,20 +12,22 @@ import { ShopOutlined, UserOutlined } from "@ant-design/icons";
 import DashboardGameDeals from "./DashboardGameDeals.jsx";
 import DashboardAdmins from "./DashboardAdmins.jsx";
 
+import COLORS from "../colors";
+
 const DshEl = styled.div`
 display: flex;
 flex-grow: 1;
-background: #000221;
+background: ${COLORS.blue.fill.dark};
 `;
 
 const SideMenu = styled.div`
 width: 15rem;
 display: flex;
 flex-direction: column;
-background: #00043b;/* #212121; */
+background: ${COLORS.blue.fill.primary};
 
 a:hover {
-  color: #40a9ff;
+  color: ${COLORS.blue.text.light};
 }
 `;
 
