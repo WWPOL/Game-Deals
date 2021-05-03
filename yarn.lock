@@ -1142,6 +1142,11 @@ ansi-to-html@^0.6.4:
   dependencies:
     entities "^1.1.2"
 
+ant-design@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/ant-design/-/ant-design-1.0.0.tgz#53ea0a397da976358e88bf06224fb3de756b87b4"
+  integrity sha1-U+oKOX2pdjWOiL8GIk+z3nVrh7Q=
+
 antd@^4.15.3:
   version "4.15.3"
   resolved "https://registry.yarnpkg.com/antd/-/antd-4.15.3.tgz#000b460c5fa9c3f5a33eb14f6ddf360723dec5e2"

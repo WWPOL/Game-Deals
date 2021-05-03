@@ -1,4 +1,7 @@
 import React from "react";
+import {
+  Link,
+} from "react-router-dom";
 import styled from "styled-components";
 
 /**
@@ -14,7 +17,7 @@ display: flex;
 background: #75ffa8;
 `;
 
-const Brand = styled.div`
+const Brand = styled(Link)`
 font-size: 1.5rem;
 display: flex;
 margin-left: 1rem;
@@ -22,6 +25,10 @@ color: #f24bd6;
   /* text-shadow: 2px 2px #f24bd6; */
 font-style: italic;
 font-weight: bold;
+
+&:hover {
+  color: #f24bd6;
+}
 `;
 
 /**
@@ -31,7 +38,7 @@ font-weight: bold;
 const Header = () => {
   return (
     <HdEl>
-      <Brand>
+      <Brand to="/">
         Olly Game Deals
       </Brand>
     </HdEl>

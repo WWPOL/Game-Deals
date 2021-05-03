@@ -199,10 +199,8 @@ class Server {
     this.app = express();
 
     this.app.use(this.mwLogReq);
-    
     this.app.use(bodyParser.json());
     this.app.use(express.static("./dist"));
-    
     this.app.use(this.mwLogRes); // Must be last
     
     this.app.get(
@@ -258,9 +256,8 @@ class Server {
       })).bind(this),
       this.epCreateGameDeal.bind(this));
 
-    this.app.get("*", (req, res) => {
-      res.sendFile(path.resolve("./dist/index.html"));
-    });
+    // Allow frontend routes to reroute to index.html
+    this.app.get("*", this.epFrontendHtml);
 
     // Initialize this in init()
     this.initCalled = false;
@@ -447,6 +444,18 @@ class Server {
     }
 
     next();
+  }
+
+  /**
+   * Allow frontend routes to resolve back to single page app HTML. If a path isn't a valid frontend route then the frontend router will render a 404 page.
+   * # Request
+   * GET
+   *
+   * # Response
+   * 200 index.html page.
+   */
+  epFrontendHtml(req, res) {
+    res.sendFile(path.resolve("./dist/index.html"));
   }
   
   /**

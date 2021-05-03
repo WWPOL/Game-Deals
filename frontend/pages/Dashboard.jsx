@@ -25,7 +25,7 @@ background: #00043b;/* #212121; */
 `;
 
 const MenuTitle = styled(Link)`
-padding-top: 0.5rem;
+padding-top: 1rem;
 padding-bottom: 0.5rem;
 padding-left: 1rem;
 
@@ -48,6 +48,7 @@ flex-direction: column;
 margin-left: 1rem;
 
 .nav-link-active, .nav-link-active:hover {
+  margin-left: 0;
   background: #02074f;
   color: #1890ff;
   border-left: solid 0.25rem #f24bd6;
@@ -57,12 +58,14 @@ margin-left: 1rem;
 const MenuItem = styled(NavLink)`
 height: 2.6rem;
 line-height: 2.6rem;
+margin-left: 0.25rem;
 padding-top: 0.1rem;
 padding-left: 1rem;
 display: flex;
 align-items: center;
 flex-direction: row;
 font-size: 1.1rem;
+border-radius: 0.1rem;
 transition: background 0.5s color 0.5s;
 cursor: pointer;
 /* color: white; */

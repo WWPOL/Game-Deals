@@ -21,15 +21,15 @@ function unixTime(date) {
 
 const HomePage = () => {
   const api = useContext(APICtx);
-  const setError = useContext(ErrorCtx);
+  const setError = useContext(ErrorCtx)[1];
   
   const [deals, setDeals] = useState([]);
 
-  const fetchDeals = async () => {
-    return await api.listGameDeals();
-  };
-
   useEffect(() => {
+    async function fetchDeals() {
+      setDeals(await api.listGameDeals());
+    }
+
     fetchDeals();
   }, []);
 

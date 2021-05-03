@@ -9,6 +9,12 @@ import {
   Route,
   Link
 } from "react-router-dom";
+import {
+  Button,
+} from "antd";
+import {
+  CloseCircleOutlined,
+} from "@ant-design/icons";
 import 'antd/dist/antd.css';
 
 import API from "./api";
@@ -27,6 +33,35 @@ flex-direction: column;
   /* background: #212121; */
 `;
 
+const Error = styled.div`
+margin-top: 0.5rem;
+padding: 0.5rem;
+display: flex;
+flex-direction: row;
+align-items: center;
+background: #d32f2f;
+color: white;
+position: fixed;
+align-self: center;
+border-radius: 0.2rem;
+`;
+
+const ErrorButton = styled(Button)`
+background: none;
+border: none;
+color: white;
+
+&:hover, &:active {
+  background: none;
+  color: white;
+  border: none;
+}
+`;
+
+const ErrorTxt = styled.div`
+font-size: 1rem;
+`;
+
 /**
  * Wrap the contents of this element with all the context providers in the app.
  * Provides the API client and the error box.
@@ -37,12 +72,18 @@ const Ctxs = ({ children }) => {
   const [error, setError] = useState(null);
   
   return (
-    <ErrorCtx.Provider value={setError}>
+    <ErrorCtx.Provider value={[error, setError]}>
       <APICtx.Provider value={new API(setError)}>
         {error !== null && (
-          <div>
-            <b><u>Error: {error}</u></b>
-          </div>
+          <Error>
+            <ErrorButton onClick={() => setError(null)}>
+              <CloseCircleOutlined />
+            </ErrorButton>
+            
+            <ErrorTxt>
+              Error: {error}
+            </ErrorTxt>
+          </Error>
         )}
         
         {children}
