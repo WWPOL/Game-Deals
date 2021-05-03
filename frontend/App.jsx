@@ -87,7 +87,7 @@ class SharedProm {
    * @returns {Promise} Resolve or reject result.
    */
   async when() {
-    await this.prom;
+    return await this.prom;
   }
 
   /**
@@ -146,10 +146,15 @@ const Ctxs = ({ children }) => {
 
     // Prompt user for login credentials
     setLoginReason(action);
-    
-    const loginRes = await getAuthFinishedProm.when();
 
-    return loginRes;
+    // Wait for user to complete login flow
+    const authToken = await getAuthFinishedProm.when();
+
+    localStorage.setItem(LOCAL_STORAGE_API_AUTH_TOKEN_KEY, authToken);
+
+    setLoginReason(null);
+
+    return authToken;
   };
 
   const api = new API(setError, getAuth);
