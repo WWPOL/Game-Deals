@@ -11,6 +11,7 @@ import {
   PageHeader,
   Table,
 } from "antd";
+import strftime from "strftime";
 
 import {
   APICtx,
@@ -28,8 +29,8 @@ const GAME_DEAL_COLS = [
   },
   {
     title: "Starts On",
-    dataIndex: "state_date",
-    key: "state_date",
+    dataIndex: "start_date",
+    key: "start_date",
   },
   {
     title: "Ends On",
@@ -56,11 +57,20 @@ const DashboardGameDeals = () => {
 
   useEffect(() => {
     async function fetchDeals() {
-      const d = await api.listGameDeals();
-      setDeals(d.map((d) => {
+      const deals = await api.listGameDeals();
+
+      const dateStr = (epoch) => {
+        const date = new Date(epoch * 1000);
+        
+        return strftime("%m/%d/%y %I:%M %p", date);
+      };
+      
+      setDeals(deals.map((deal) => {
         return {
-          ...d,
-          key: d._id,
+          ...deal,
+          key: deal._id,
+          start_date: dateStr(deal.start_date),
+          end_date: dateStr(deal.end_date),
         };
       }));
     }

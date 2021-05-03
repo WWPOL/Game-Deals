@@ -30,6 +30,7 @@
     "react-dom": "^0.0.0-269dd6ec5",
     "react-router-dom": "^5.2.0",
     "sass": "^1.32.12",
+    "strftime": "^0.10.0",
     "styled-components": "^5.2.3"
   }
 }
