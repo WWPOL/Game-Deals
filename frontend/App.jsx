@@ -150,8 +150,10 @@ const Ctxs = ({ children }) => {
     // Wait for user to complete login flow
     const authToken = await getAuthFinishedProm.when();
 
+    // Save auth token for later
     localStorage.setItem(LOCAL_STORAGE_API_AUTH_TOKEN_KEY, authToken);
 
+    // Hide login prompt
     setLoginReason(null);
 
     return authToken;
@@ -159,22 +161,23 @@ const Ctxs = ({ children }) => {
 
   const api = new API(setError, getAuth);
 
+  /**
+   * Runs when the login UI is successfully filled out by the user.
+   * @param {object} values Form values.
+   */
   const onLoginFormFinish = async (values) => {
     const authToken = await api.login(values.username, values.password);
     getAuthFinishedProm.resolve(authToken);
   };
 
+  /**
+   * Runs when the login UI is filled out incorrectly by the user.
+   * @param {object} err Error information.
+   */
   const onLoginFormFinishFailed = (err) => {
     console.trace("onLoginFormFinishFailed", err);
     setError("Please fill out the log in form correctly.");
   };
-
-  useEffect(() => {
-    console.log("getAuth(): called");
-    getAuth("foo fee").then((res) => {
-      console.log("getAuth(): done: ", res);
-    });
-  }, []);
   
   return (
     <ErrorCtx.Provider value={[error, setError]}>
@@ -193,42 +196,46 @@ const Ctxs = ({ children }) => {
           )}
 
           {loginReason === null && (children) || (
-            <Form
-              name="Log In"
-              onFinish={onLoginFormFinish}
-              onFinishFailed={onLoginFormFinishFailed}
-            >
-              <Form.Item
-                label="Username"
-                name="username"
-                rules={[{
-                  required: true,
-                  message: "Please enter your username",
-                }]}
+            <>
+              <b>Log in to {loginReason}</b>
+              
+              <Form
+                name="Log In"
+                onFinish={onLoginFormFinish}
+                onFinishFailed={onLoginFormFinishFailed}
               >
-                <Input />
-              </Form.Item>
-
-              <Form.Item
-                label="Password"
-                name="password"
-                rules={[{
-                  required: true,
-                  message: "Please enter your password",
-                }]}
-              >
-                <Input.Password />
-              </Form.Item>
-
-              <Form.Item>
-                <Button
-                  type="primary"
-                  htmlType="submit"
+                <Form.Item
+                  label="Username"
+                  name="username"
+                  rules={[{
+                    required: true,
+                    message: "Please enter your username",
+                  }]}
                 >
-                  Log In
-                </Button>
-              </Form.Item>
-            </Form>
+                  <Input />
+                </Form.Item>
+
+                <Form.Item
+                  label="Password"
+                  name="password"
+                  rules={[{
+                    required: true,
+                    message: "Please enter your password",
+                  }]}
+                >
+                  <Input.Password />
+                </Form.Item>
+
+                <Form.Item>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                  >
+                    Log In
+                  </Button>
+                </Form.Item>
+              </Form>
+            </>
           )}
         </APICtx.Provider>
       </GetAuthCtx.Provider>
@@ -263,4 +270,4 @@ const App = () => {
 };
 
 export default App;
-export { APICtx, ErrorCtx };
+export { APICtx, ErrorCtx, GetAuthCtx };

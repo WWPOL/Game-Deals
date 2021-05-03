@@ -1,4 +1,7 @@
-import React from "react";
+import React, {
+  useContext,
+  useEffect,
+} from "react";
 import {
   Switch,
   Route,
@@ -10,8 +13,10 @@ import styled from "styled-components";
 import {
   ShopOutlined,
   UserOutlined,
+
 } from "@ant-design/icons";
 
+import { GetAuthCtx } from "../App.jsx";
 import DashboardHome from "./DashboardHome.jsx";
 import DashboardGameDeals from "./DashboardGameDeals.jsx";
 import DashboardNewGameDeal from "./DashboardNewGameDeal.jsx";
@@ -99,6 +104,13 @@ margin-left: 0.7rem;
  */
 const Dashboard = () => {
   const routeMatch = useRouteMatch();
+  const getAuth = useContext(GetAuthCtx);
+
+  // Ensure user is logged in before showing the dashboard
+  useEffect(() => {
+    getAuth("view the dashboard");
+  }, []);
+  
   return (
     <DshEl>
       <SideMenu>
