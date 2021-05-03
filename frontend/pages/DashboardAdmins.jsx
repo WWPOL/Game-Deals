@@ -2,7 +2,10 @@ import React from "react";
 import {
   useHistory
 } from "react-router-dom";
-import { PageHeader } from "antd";
+import {
+  PageHeader,
+  Breadcrumb,
+} from "antd";
 
 import {
   GoDashHome,
@@ -18,7 +21,11 @@ const DashboardAdmins = () => {
   return (
     <PageHeader
       onBack={() => GoDashHome(history)}
-      title="Admins"
+      title={
+        <Breadcrumb>
+          <Breadcrumb.Item>Admins</Breadcrumb.Item>
+        </Breadcrumb>
+      }
     />
   );
 };

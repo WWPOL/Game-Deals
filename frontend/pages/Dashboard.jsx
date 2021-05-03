@@ -7,8 +7,12 @@ import {
   useRouteMatch,
 } from "react-router-dom";
 import styled from "styled-components";
-import { ShopOutlined, UserOutlined } from "@ant-design/icons";
+import {
+  ShopOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
 
+import DashboardHome from "./DashboardHome.jsx";
 import DashboardGameDeals from "./DashboardGameDeals.jsx";
 import DashboardNewGameDeal from "./DashboardNewGameDeal.jsx";
 import DashboardAdmins from "./DashboardAdmins.jsx";
@@ -141,7 +145,7 @@ const Dashboard = () => {
         </Route>
 
         <Route path={`${routeMatch.path}/`}>
-          Dashboard Home
+          <DashboardHome />
         </Route>
       </Switch>
     </DshEl>
