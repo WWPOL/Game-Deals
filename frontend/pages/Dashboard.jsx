@@ -23,6 +23,10 @@ width: 15rem;
 display: flex;
 flex-direction: column;
 background: #00043b;/* #212121; */
+
+a:hover {
+  color: #40a9ff;
+}
 `;
 
 const MenuTitle = styled(Link)`
