@@ -1,15 +1,18 @@
 /**
  * API client.
  * @property {function(msg)} showError Function which displays the error msg argument to the user.
+ * @property {async function(action)} getAuth Function which returns an API authentication token. The action argument should be a user friendly description of requires authorization. If the user is not logged in this function should request login information from the user and use the login API endpoint to obtain an API authentication token.
  */
 export default class API {
   /**
    * Create a new API client.
    * @param {function(msg)} showError Set showError prop.
+   * @param {async function(action)} getAuth Set getAuth property.
    * @returns {API} New API client.
    */
-  constructor(showError) {
+  constructor(showError, getAuth) {
     this.showError = showError;
+    this.getAuth = getAuth;
   }
 
   /**
@@ -17,7 +20,7 @@ export default class API {
    * @param {string} method HTTP method for request.
    * @param {string} path API endpoint to call.
    * @param {object} [body] API request data to encode as JSON. Pass undefined to not encode a body.
-   * @param {object} [opts] Additional fetch options. The `method` field will always be overriden by the `method` argument. The `Content-Type` header and request `body` will be overriden if the `body` argument is provided.
+   * @param {object} [opts] Additional fetch options. The `method` field will always be overriden by the `method` argument. The `Content-Type` header and request `body` will be overriden if the `body` argument is provided. The __body_sensitive field can be set to true which will cause any error messages not to include the body.
    * @returns {Promise} Resolves with the response. Rejects with API errors.
    * @throws {Error} If an error occurs while making the API request.
    * @throws {EndpointError} If the API returned an error response.
@@ -25,6 +28,13 @@ export default class API {
   async fetch(method, path, body, opts) {
     if (opts === undefined) {
       opts = {};
+    }
+
+    // Check __body_sensitive
+    let bodySensitive = false;
+    if (opts.__body_sensitive === true) {
+      bodySensitive = true;
+      delete opts.__body_sensitive;
     }
 
     // Set method
@@ -44,8 +54,15 @@ export default class API {
     try {
       const resp = await fetch(path, opts);
 
+      // Censor body after request is made
+      if (bodySensitive === true) {
+        opts.body = "***censored***";
+      }
+
       // Ensure success result
-      if (resp.status != 200) {
+      if (resp.status == 401) {
+        throw new UnauthorizedError(`options=${JSON.stringify(opts)}`);
+      } else if (resp.status != 200) {
         const body = await resp.json();
         throw new EndpointError(body.error, body.error_code);
       }
@@ -57,10 +74,51 @@ export default class API {
   }
 
   /**
+   * Exchange API admin user login credentials for an API authentication token. Optionally allows setting a new password in the process.
+   * @param {string} username Login name of admin.
+   * @param {string} password Plain text login password.
+   * @param {string} [new_password] A new password for the admin user to be set after login.
+   * @returns {Promise} Resolves with API authentication token, rejects with error.
+   * @throws {Error} If login failed.
+   */
+  async login(username, password, new_password) {
+    try {
+      const resp = await this.fetch("POST", "/api/v0/login", { username, password, new_password }, { __body_sensitive: true });
+
+      const body = await resp.json();
+
+      return body.auth_token;
+    } catch (e) {
+      const censor = (value) => {
+        if (value === undefined || value === null) {
+          return value;
+        }
+        
+        if (value.length > 0) {
+          return "***censored***";
+        }
+
+        return "";
+      };
+      
+      console.trace(`Failed to login for username="${username}", password=${censor(password)}, new_password=${censor(new_password)}, error=${e}`);
+
+      if (e instanceof FriendlyError) {
+        this.showError(`failed to login: ${e}`);
+      } else {
+        this.showError(`sorry, something unexpected happened when logging in as "${username}"`);
+      }
+
+      throw e;
+    }
+  }
+
+  /**
    * List game deals.
    * @param {number} offset List offset index.
    * @param {boolean} [expired] Include expired deals. Defaults to false.
    * @returns {Promise} Resolves with game deals array. Rejects with error.
+   * @throws {Error} If listing game deals fails.
    */
   async listGameDeals(offset, expired) {
     if (expired === undefined) {
@@ -86,9 +144,36 @@ export default class API {
   }
 
   /**
+   * Create a new game deal.
+   * @param {GameDeal} deal The game deal to create.
+   * @returns {Promise} Resolves with created game deal, rejects with error.
+   * @throws {Error} If creating game deal fails.
+   */
+  async createGameDeal(deal) {
+    try {
+      const resp = await this.fetch("POST", "/api/v0/game_deal", { game_deal: deal });
+
+      const body = await resp.json();
+
+      return body.game_deal;
+    } catch (e) {
+      console.trace(`Failed to create a game deal=${JSON.stringify(deal)}, error=${e}`);
+      
+      if (e instanceof FriendlyError) {
+        this.showError(e);
+      } else {
+        this.showError("sorry, something unexpected happened while create the new game deal");
+      }
+
+      throw e;
+    }
+  }
+
+  /**
    * Get an admin.
    * @param {string} id ID of admin to retrieve.
    * @returns {Promise} Resolves with admin object.
+   * @throws {Error} If getting the admin fails.
    */
   async getAdmin(id) {
     try {
@@ -100,8 +185,8 @@ export default class API {
     } catch (e) {
       console.trace(`failed to retrieve admin by ID "${id}": ${e}`);
       
-      if (e instanceof EndpointError) {
-        this.showError(new FriendlyError(e.error));
+      if (e instanceof FriendlyError) {
+        this.showError(e);
       } else {
         this.showError("sorry, something unexpected happened while retrieving an admin's information");
       }
@@ -153,5 +238,30 @@ export class EndpointError extends Error {
 
     this.error = error;
     this.error_code = error_code;
+  }
+}
+
+/**
+ * Indicates the API client does not have permission to perform the specified action.
+ */
+export class UnauthorizedError extends Error {
+  /**
+   * Creates a new UnauthorizedError.
+   * @param {string} msg A short technical message about what was not authorized. 
+   * @returns {UnauthorizedError} New error.
+   */
+  constructor(msg) {
+    super(msg);
+
+    this.name = "UnauthorizedError";
+  }
+
+  /**
+   * Constructs a FriendlyError to show to the user.
+   * @param {string} action A user friendly description of the action which was taking place.
+   * @returns {FriendlyError} Describing what happened and how the user is unauthorized.
+   */
+  asFriendlyError(action) {
+    return new FriendlyError(`you do not have permission to ${action}`);
   }
 }

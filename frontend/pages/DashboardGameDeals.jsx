@@ -84,7 +84,11 @@ const GAME_DEAL_COLS = [
       <>
         Expires
         <ExpiresTooltip
-          title="Times are based on your browser's local time zone."
+          title={
+            <>
+              Times are based on your browser's local time zone. Format: <code>MM/DD/YY HH:MM</code>.
+            </>
+          }
         >
           <sup>&dagger;</sup>
         </ExpiresTooltip>

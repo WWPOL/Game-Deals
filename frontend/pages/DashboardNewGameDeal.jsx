@@ -42,11 +42,29 @@ const DashboardNewGameDeal = () => {
   const history = useHistory();
 
   /**
-   * Run when the new game deal form is completed successfully.
-   * @param {object} values Entered values.
+   * True if the API request to create the specified game deal is loading.
    */
-  const onFinish = (values) => {
-    console.log("onFinish", values);
+  const [createLoading, setCreateLoading] = useState(false);
+
+  /**
+   * Run when the new game deal form is completed successfully. Makes the API request to create the game deal.
+   * @param {object} values Entered values for game deal.
+   */
+  const onFinish = async (values) => {
+    setCreateLoading(true);
+    
+    const newDeal = await api.createGameDeal({
+      game: {
+        name: values.game_name,
+        image_url: values.game_image_url,
+      },
+      link: values.link,
+      price: values.price,
+    });
+
+    history.push(`/dashboard/game_deals/${newDeal._id}`);
+
+    setCreateLoading(false);
   };
 
   /**
@@ -54,7 +72,8 @@ const DashboardNewGameDeal = () => {
    * @param {object} err Details about failure.
    */
   const onFinishFailed = (err) => {
-    console.log("onFinishFailed", err);
+    console.trace("onFinishFailed", err);
+    showError("Please fill out the new Game Deal form correctly.")
   };
   
   return (
