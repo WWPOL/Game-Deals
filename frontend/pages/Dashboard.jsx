@@ -10,6 +10,7 @@ import styled from "styled-components";
 import { ShopOutlined, UserOutlined } from "@ant-design/icons";
 
 import DashboardGameDeals from "./DashboardGameDeals.jsx";
+import DashboardNewGameDeal from "./DashboardNewGameDeal.jsx";
 import DashboardAdmins from "./DashboardAdmins.jsx";
 
 import COLORS from "../colors";
@@ -127,6 +128,10 @@ const Dashboard = () => {
       </SideMenu>
 
       <Switch>
+        <Route path={`${routeMatch.path}/game-deals/new`}>
+          <DashboardNewGameDeal />
+        </Route>
+                
         <Route path={`${routeMatch.path}/game-deals`}>
           <DashboardGameDeals />
         </Route>
@@ -147,10 +152,24 @@ const Dashboard = () => {
  * Navigate back to the dashboard home.
  * @param {ReactRouterDom.History} history To modify.
  */
-const GoDashHome = (history) => {
+export function GoDashHome(history) {
   history.push("/dashboard");
 };
 
-export default Dashboard;
+/**
+ * Navigate back to the Game Deals dashboard page.
+ * @param {ReactRouterDom.History} history To modify.
+ */
+export function GoDashGameDeals(history) {
+  history.push("/dashboard/game-deals/");
+}
 
-export { GoDashHome };
+/**
+ * Navigate back to the New Game Deal dashboard page.
+ * @param {ReactRouterDom.History} history To modify.
+ */
+export function GoDashNewGameDeal(history) {
+  history.push("/dashboard/game-deals/new");
+}
+
+export default Dashboard;

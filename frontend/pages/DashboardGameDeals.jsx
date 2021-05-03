@@ -4,7 +4,8 @@ import React, {
   useContext,
 } from "react";
 import {
-  useHistory
+  useHistory,
+  Link,
 } from "react-router-dom";
 import styled from "styled-components";
 import {
@@ -12,6 +13,7 @@ import {
   Table,
   Tooltip,
   Button,
+  Breadcrumb
 } from "antd";
 import {
   PlusOutlined,
@@ -25,6 +27,7 @@ import {
 } from "../App.jsx";
 import {
   GoDashHome,
+  GoDashNewGameDeal,
 } from "./Dashboard.jsx";
 
 const DshEl = styled.div`
@@ -34,14 +37,15 @@ flex-grow: 1;
 color: white;
 `;
 
-const HeaderTags = styled.div`
+const ActionsRow = styled.div`
 display: flex;
-flex-grow: 1;
+margin-bottom: 1rem;
 `;
 
 const NewDealButton = styled(Button)`
 display: flex;
 align-items: center;
+flex-grow: 0;
 `;
 
 const DealsList = styled.div`
@@ -140,6 +144,9 @@ const DashboardGameDeals = () => {
     fetchDeals();
   }, []);
 
+  /**
+   * Defines the behavior of the game deals table row selection. See antd.Table.
+   */
   const rowSelection = {
     onChange: (keys, rows) => {
       console.log(`rowSelection.onChange: keys=${keys}, rows=${JSON.stringify(rows)}`);
@@ -154,20 +161,23 @@ const DashboardGameDeals = () => {
     <DshEl>
       <PageHeader
         onBack={() => GoDashHome(history)}
-        title="Game Deals"
-        tags={
-          <HeaderTags>
-            <NewDealButton
-              size="large"
-              icon={<PlusOutlined />}
-            >
-              New Game Deal
-            </NewDealButton>
-          </HeaderTags>
+        title={
+          <Breadcrumb>
+            <Breadcrumb.Item>Game Deals</Breadcrumb.Item>
+          </Breadcrumb>
         }
       />
 
-      <DealsList>        
+      <DealsList>
+        <ActionsRow>
+          <NewDealButton
+            size="large"
+            icon={<PlusOutlined />}
+            onClick={() => GoDashNewGameDeal(history)}
+          >
+            New Game Deal
+          </NewDealButton>
+        </ActionsRow>
         <DealsTable
           rowSelection={rowSelection}
           dataSource={deals}
