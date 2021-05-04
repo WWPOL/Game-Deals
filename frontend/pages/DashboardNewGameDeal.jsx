@@ -14,7 +14,9 @@ import {
   Input,
   InputNumber,
   Button,
+  Typography,
 } from "antd";
+const { Title } = Typography;
 
 import {
   APICtx,
@@ -31,9 +33,72 @@ flex-grow: 1;
 `;
 
 const DshContent = styled.div`
+padding-left: 1rem;
+padding-right: 1rem;
 display: flex;
 align-items: center;
+align-content: center;
 flex-direction: column;
+`;
+
+const NewDealForm = styled(Form)`
+width: 100%;
+display: flex;
+flex-direction: column;
+flex-grow: 1;
+`;
+
+const FormOverview = styled.div`
+width: 100%;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+flex-grow: 1;
+`;
+
+const FormTitle = styled(Title)`
+display: flex;
+`;
+
+const FormDescription = styled.div`
+display: flex;
+font-style: italic;
+flex-grow: 1;
+`;
+
+const FormSection = styled.div`
+max-width: 40rem;
+display: flex;
+flex-direction: column;
+flex-grow: 1;
+margin-top: 2rem;
+`;
+
+const SectionTitle = styled(Title)`
+display: flex;
+flex-grow: 1;
+margin-bottom: 0 !important;
+`;
+
+const SectionContent = styled.div`
+display: flex;
+flex-direction: column;
+flex-grow: 1;
+
+.ant-row {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  margin-bottom: 3.5rem;
+
+  .ant-form-item-label {
+    display: flex;
+  }
+
+  .ant-form-item-control {
+    display: flex;
+  }
+}
 `;
 
 const DashboardNewGameDeal = () => {
@@ -93,65 +158,95 @@ const DashboardNewGameDeal = () => {
       />
 
       <DshContent>
-        <Form
-          name="New Game Deal"
+        <FormOverview>
+          <FormTitle level={1}>
+            New Game Deal
+          </FormTitle>
+
+          <FormDescription>
+            Create a new game deal by entering information below.
+          </FormDescription>
+        </FormOverview>
+        
+        <NewDealForm
+          name="new-game-deal"
           onFinish={onFinish}
           onFinishFailed={onFinishFailed}
-          layout="vertical"
         >
-          <Form.Item
-            label="Game"
-            name="game_name"
-            rules={[{
-              required: true,
-              message: "Game name required",
-            }]}
-          >
-            <Input />
-          </Form.Item>
+          <FormSection>
+            <SectionTitle level={2}>
+              Game
+            </SectionTitle>
 
-          <Form.Item
-            label="Cover Image"
-            name="game_image_url"
-            rules={[{
-              required: true,
-              message: "Game cover image URL required",
-            }]}
-          >
-            <Input />
-          </Form.Item>
+            <SectionContent>
+              <Form.Item
+                label="Name"
+                name="game_name"
+                hint="Game name"
+                rules={[{
+                  required: true,
+                  message: "Game name required",
+                }]}
+              >
+                <Input />
+              </Form.Item>
 
-          <Form.Item
-            label="Deal Link"
-            name="link"
-            rules={[{
-              required: true,
-              message: "Deal link required",
-            }]}
-          >
-            <Input />
-          </Form.Item>
+              <Form.Item
+                label="Cover Image"
+                name="game_image_url"
+                rules={[{
+                  required: true,
+                  message: "Game cover image URL required",
+                }]}
+              >
+                <Input />
+              </Form.Item>
+            </SectionContent>
+          </FormSection>
 
-          <Form.Item
-            label="Price"
-            name="price"
-            rules={[{
-              required: true,
-              message: "Price is required",
-            }]}
-          >
-            <InputNumber />
-          </Form.Item>
+          <FormSection>
+            <SectionTitle level={2}>
+              Deal
+            </SectionTitle>
 
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-            >
-              Create Game Deal
-            </Button>
-          </Form.Item>
-        </Form>
+            <SectionContent>
+              <Form.Item
+                label="Price"
+                name="price"
+                rules={[{
+                  required: true,
+                  message: "Price is required",
+                }]}
+              >
+                <InputNumber />
+              </Form.Item>
+
+              <Form.Item
+                label="Deal Link"
+                name="link"
+                rules={[{
+                  required: true,
+                  message: "Deal link required",
+                }]}
+              >
+                <Input />
+              </Form.Item>
+            </SectionContent>
+          </FormSection>
+
+          <FormSection>
+            <SectionContent>
+              <Form.Item>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                >
+                  Create Game Deal
+                </Button>
+              </Form.Item>
+            </SectionContent>
+          </FormSection>
+        </NewDealForm>
       </DshContent>
     </DshEl>
   );

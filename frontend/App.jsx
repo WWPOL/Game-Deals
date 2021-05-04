@@ -37,7 +37,7 @@ flex-direction: column;
   /* background: #212121; */
 `;
 
-const Error = styled.div`
+const ErrorContainer = styled.div`
 margin-top: 0.5rem;
 padding: 0.5rem;
 display: flex;
@@ -137,10 +137,11 @@ let getAuthFinishedProm = new SharedProm();
 /**
  * Wrap the contents of this element with all the context providers in the app.
  * Provides the API client and the error box.
- * @param {Elements} children Child elements to place inside the context providers.
- * @returns {Elements} Children wrapped with context providers.
+ * @param {Elements} header Elements which make up the header, will be wrapped in context providers.
+ * @param {Elements} children Child elements to place inside the context providers. 
+ * @returns {Elements} Header and children wrapped with context providers. If the user needs to login the children will be temporarily replaced with a login screen.
  */
-const Ctxs = ({ children }) => {
+const Ctxs = ({ header, children }) => {
   /**
    * An error string to display to the user. Set to null if there is no error.
    */
@@ -204,7 +205,7 @@ const Ctxs = ({ children }) => {
       <GetAuthCtx.Provider value={getAuth}>
         <APICtx.Provider value={api}>
           {error !== null && (
-            <Error>
+            <ErrorContainer>
               <ErrorButton onClick={() => setError(null)}>
                 <CloseCircleOutlined />
               </ErrorButton>
@@ -212,8 +213,10 @@ const Ctxs = ({ children }) => {
               <ErrorTxt>
                 Error: {error}
               </ErrorTxt>
-            </Error>
+            </ErrorContainer>
           )}
+
+          {header}
 
           {loginReason === null && (children) || (
             <>
@@ -270,10 +273,10 @@ const Ctxs = ({ children }) => {
 const App = () => {
   return (
     <AppEl>
-      <Ctxs>
-        <Router>
-          <Header />
-          
+      <Router>
+        <Ctxs
+          header={<Header />}
+        >
           <Switch>
             <Route path="/dashboard">
               <Dashboard />
@@ -283,8 +286,8 @@ const App = () => {
               <Home />
             </Route>
           </Switch>
-        </Router>
-      </Ctxs>
+        </Ctxs>
+      </Router>
     </AppEl>
   );
 };
