@@ -27,7 +27,7 @@ import Dashboard from "./pages/Dashboard.jsx";
 
 const APICtx = React.createContext({});
 const ErrorCtx = React.createContext(() => {});
-const GetAuthCtx = React.createContext(() => {});
+const AuthCtx = React.createContext([() => {}, () => {}]); // [ getAuth(action), clearAuth() ]
 
 const AppEl = styled.div`
 width: 100%;
@@ -180,6 +180,13 @@ const Ctxs = ({ header, children }) => {
     return authToken;
   };
 
+  /**
+   * Remove a user's login information from any storage locations. Logs the user out.
+   */
+  const clearAuth = () => {
+    localStorage.removeItem(LOCAL_STORAGE_API_AUTH_TOKEN_KEY);
+  };
+
   const api = new API(setError, getAuth);
 
   /**
@@ -202,7 +209,7 @@ const Ctxs = ({ header, children }) => {
   
   return (
     <ErrorCtx.Provider value={[error, setError]}>
-      <GetAuthCtx.Provider value={getAuth}>
+      <AuthCtx.Provider value={[getAuth, clearAuth]}>
         <APICtx.Provider value={api}>
           {error !== null && (
             <ErrorContainer>
@@ -261,7 +268,7 @@ const Ctxs = ({ header, children }) => {
             </>
           )}
         </APICtx.Provider>
-      </GetAuthCtx.Provider>
+      </AuthCtx.Provider>
     </ErrorCtx.Provider>
   );
 };
@@ -293,4 +300,4 @@ const App = () => {
 };
 
 export default App;
-export { APICtx, ErrorCtx, GetAuthCtx };
+export { APICtx, ErrorCtx, AuthCtx };
