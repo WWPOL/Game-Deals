@@ -25,6 +25,7 @@ import {
 import {
   GoDashGameDeals,
 } from "./Dashboard.jsx";
+import InputMoney from "../components/InputMoney.jsx";
 
 const DshEl = styled.div`
 display: flex;
@@ -96,7 +97,7 @@ flex-grow: 1;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  margin-bottom: 3.5rem;
+  /* margin-bottom: 3.5rem; */
 
   .ant-form-item-label {
     display: flex;
@@ -104,6 +105,7 @@ flex-grow: 1;
 
   .ant-form-item-control {
     display: flex;
+    margin-bottom: 1rem
   }
 }
 `;
@@ -188,7 +190,7 @@ const DashboardNewGameDeal = () => {
 
               <SectionContent>
                 <Form.Item
-                  label="Name"
+                  label="Game Name"
                   name="game_name"
                   hint="Game name"
                   rules={[{
@@ -200,11 +202,11 @@ const DashboardNewGameDeal = () => {
                 </Form.Item>
 
                 <Form.Item
-                  label="Cover Image"
+                  label="Game Image Link"
                   name="game_image_url"
                   rules={[{
                     required: true,
-                    message: "Game cover image URL required",
+                    message: "Game image link required",
                   }]}
                 >
                   <Input />
@@ -219,14 +221,14 @@ const DashboardNewGameDeal = () => {
 
               <SectionContent>
                 <Form.Item
-                  label="Price"
+                  label="Post-Deal Price"
                   name="price"
                   rules={[{
                     required: true,
                     message: "Price is required",
                   }]}
                 >
-                  <InputNumber />
+                  <InputMoney />
                 </Form.Item>
 
                 <Form.Item
