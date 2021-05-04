@@ -145,7 +145,7 @@ const DashboardNewGameDeal = () => {
    */
   const onFinishFailed = (err) => {
     console.trace("onFinishFailed", err);
-    showError("Please fill out the new Game Deal form correctly.")
+    showError("Please fill out the new game deal form correctly.")
   };
   
   return (

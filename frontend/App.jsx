@@ -41,6 +41,7 @@ const ErrorContainer = styled.div`
 margin-top: 0.5rem;
 padding: 0.5rem;
 display: flex;
+z-index: 2;
 flex-direction: row;
 align-items: center;
 background: #d32f2f;
@@ -63,7 +64,9 @@ color: white;
 `;
 
 const ErrorTxt = styled.div`
+padding-left: 0.5rem;
 font-size: 1rem;
+font-weight: bold;
 `;
 
 /**
@@ -212,14 +215,14 @@ const Ctxs = ({ header, children }) => {
       <AuthCtx.Provider value={[getAuth, clearAuth]}>
         <APICtx.Provider value={api}>
           {error !== null && (
-            <ErrorContainer>
-              <ErrorButton onClick={() => setError(null)}>
-                <CloseCircleOutlined />
-              </ErrorButton>
-              
+            <ErrorContainer>              
               <ErrorTxt>
                 Error: {error}
               </ErrorTxt>
+
+              <ErrorButton onClick={() => setError(null)}>
+                <CloseCircleOutlined />
+              </ErrorButton>
             </ErrorContainer>
           )}
 
