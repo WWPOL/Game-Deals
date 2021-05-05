@@ -57,7 +57,7 @@ flex-direction: column;
 `;
 
 const IncrementButton = styled(Button)`
-height: 1rem;
+height: 0.9rem;
 padding: 0;
 margin: 0;
 display: flex;
@@ -82,6 +82,28 @@ align-self: center;
 const InputMoney = () => {
   const [value, setValue] = useState(0);
 
+  const incrementVal = () => setValue((v) => v + 1);
+  const deincrementVal = () => {
+    setValue((v) => {
+      let newVal = v - 1;
+      if (newVal < 0) {
+        newVal = 0;
+      }
+
+      return newVal;
+    });
+  };
+
+  const onValChange = (e) => {
+    const val = e.target.value;
+
+    if (val < 0) {
+      setValue(0);
+    } else {
+      setValue(val);
+    }
+  };
+
   return (
     <El>
       <CurrencyLabel>
@@ -93,16 +115,18 @@ const InputMoney = () => {
       <Input
         type="number"
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={onValChange}
       />
 
       <IncrementButtons>
         <IncrementButton
+          onClick={incrementVal}
           icon={<SymbolUp />}
         >
         </IncrementButton>
 
         <IncrementButton
+          onClick={deincrementVal}
           icon={<SymbolDown />}
         >
         </IncrementButton>
