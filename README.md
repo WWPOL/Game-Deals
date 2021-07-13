@@ -37,35 +37,39 @@ The site is a NodeJs server and React frontend.
 
 Make sure you have the latest versions of [NodeJS](https://nodejs.org/en/download/) and [Yarn](https://classic.yarnpkg.com/en/docs/install/).
 
-Then install dependencies:
-
-```
-yarn install
-```
-
 ## Server
-Start MongoDB:
+- In the repository root  
+  Start MongoDB:
+  ```
+  docker-compose up -d
+  ```
+  
+  The default configuration variables should work.
 
-```
-docker-compose up -d
-```
-
-The default configuration variables should work.
-
-Start the server:
-
-```
-yarn start
-```
+- In the `./server` directory  
+  Install dependencies:
+  ```
+  yarn install
+  ```
+  
+  Start the server:
+  ```
+  yarn start
+  ```
 
 ## Frontend
 For most frontend development the built Parcel bundler results will be served by the server, ensure it is running ([Server](#server)).
 
-Next run the Parcel bundler on the frontend files:
-
-```
-yarn watch
-```
+- In the `./frontend` directory  
+  Install dependencies:
+  ```
+  yarn install
+  ```
+  
+  Next run the Parcel bundler on the frontend files:
+  ```
+  yarn watch
+  ```
 
 Then navigate to [localhost:8000](http://localhost:8000) (ignore the message from the command line saying to visit `127.0.0.1:1234`, this only serves the frontend files but without the server, this can work but none of the frontend will display any data without the API server).
 

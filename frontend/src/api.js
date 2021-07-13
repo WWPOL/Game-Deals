@@ -232,6 +232,32 @@ export class FriendlyError extends Error {
 }
 
 /**
+ * Indicates the API client does not have permission to perform the specified action.
+ */
+export class UnauthorizedError extends EndpointError {
+  /**
+   * Creates a new UnauthorizedError.
+   * @param {string} msg A short technical message about what was not authorized. 
+   * @returns {UnauthorizedError} New error.
+   */
+  constructor(error, errorCode) {
+    super(error, errorCode);
+
+    this.name = "UnauthorizedError";
+  }
+
+  /**
+   * Constructs a FriendlyError to show to the user.
+   * @param {string} action A user friendly description of the action which was taking place.
+   * @returns {FriendlyError} Describing what happened and how the user is unauthorized.
+   */
+  asFriendlyError(action) {
+    return new FriendlyError(`you do not have permission to ${action}`);
+  }
+}
+
+
+/**
  * Indicates an API endpoint request returned an error response.
  * @property {string} error Contains a user friendly message.
  * @property {string} [error_code] Machine code for a specific condition which API clients are supposed to have knowledge of, it can be undefined if the server did not return one.
@@ -249,30 +275,5 @@ export class EndpointError extends Error {
 
     this.error = error;
     this.error_code = error_code;
-  }
-}
-
-/**
- * Indicates the API client does not have permission to perform the specified action.
- */
-export class UnauthorizedError extends Error {
-  /**
-   * Creates a new UnauthorizedError.
-   * @param {string} msg A short technical message about what was not authorized. 
-   * @returns {UnauthorizedError} New error.
-   */
-  constructor(msg) {
-    super(msg);
-
-    this.name = "UnauthorizedError";
-  }
-
-  /**
-   * Constructs a FriendlyError to show to the user.
-   * @param {string} action A user friendly description of the action which was taking place.
-   * @returns {FriendlyError} Describing what happened and how the user is unauthorized.
-   */
-  asFriendlyError(action) {
-    return new FriendlyError(`you do not have permission to ${action}`);
   }
 }

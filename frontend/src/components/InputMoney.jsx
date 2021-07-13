@@ -11,9 +11,11 @@ import {
   CaretDownOutlined,
 } from "@ant-design/icons";
 
+import COLORS from "../colors";
+
 const El = styled.div`
 display: flex;
-border: 0.1rem solid white;
+border: 0.1rem solid ${COLORS.outline.white};
 border-radius: 0.2rem;
 height: 2rem;
 

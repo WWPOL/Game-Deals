@@ -200,7 +200,7 @@ class Server {
 
     this.app.use(this.mwLogReq);
     this.app.use(bodyParser.json());
-    this.app.use(express.static("./dist"));
+    this.app.use(express.static("../frontend/dist"));
     this.app.use(this.mwLogRes); // Must be last
     
     this.app.get(
@@ -456,7 +456,7 @@ class Server {
    * 200 index.html page.
    */
   epFrontendHtml(req, res) {
-    res.sendFile(path.resolve("./dist/index.html"));
+    res.sendFile(path.resolve("../frontend/dist/index.html"));
   }
   
   /**
