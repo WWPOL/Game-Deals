@@ -76,7 +76,7 @@ const CFG = {
   /**
    * URI used to connect to MongoDB.
    */
-  mongoURI: process.env.GAME_DEALS_MONGO_URI || "mongodb://127.0.0.1/",
+  mongoURI: process.env.GAME_DEALS_MONGO_URI || "mongodb://mongo",
 
   /**
    * Name of MongoDB database in which to store data.
@@ -173,9 +173,6 @@ const GAME_DEAL_SCHEMA = {
 /**
  * Game Deals HTTP server.
  * 
- * # Frontend
- * The web frontend is server under path /.
- *
  * # HTTP API
  * The HTTP API is server under path /api/v0/.
  * API requests use URL query parameters and JSON encoded bodies.
@@ -200,7 +197,6 @@ class Server {
 
     this.app.use(this.mwLogReq);
     this.app.use(bodyParser.json());
-    this.app.use(express.static("../frontend/dist"));
     this.app.use(this.mwLogRes); // Must be last
     
     this.app.get(
@@ -257,8 +253,6 @@ class Server {
       this.epCreateGameDeal.bind(this));
 
     this.app.get("/api/v0/admin/:id", this.epGetAdmin.bind(this));
-
-    this.app.get("*", this.epFrontendHtml); // Must be last get route
 
     // Initialize this in init()
     this.initCalled = false;
@@ -445,18 +439,6 @@ class Server {
     }
 
     next();
-  }
-
-  /**
-   * Allow frontend routes to resolve back to single page app HTML. If a path isn't a valid frontend route then the frontend router will render a 404 page.
-   * # Request
-   * GET
-   *
-   * # Response
-   * 200 index.html page.
-   */
-  epFrontendHtml(req, res) {
-    res.sendFile(path.resolve("../frontend/dist/index.html"));
   }
   
   /**

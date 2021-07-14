@@ -8,7 +8,7 @@
   "license": "MIT",
   "scripts": {
     "build": "parcel build ./src/index.html",
-    "start": "parcel serve ./src/index.html"
+    "start": "parcel watch --hmr-port 1235 ./src/index.html"
   },
   "dependencies": {
     "@ant-design/icons": "^4.6.2",

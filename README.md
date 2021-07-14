@@ -41,45 +41,11 @@ A development environment can be run via Docker Compose:
 ./scripts/dev.sh
 ```
 
-This will run a frontend and backend development server. If you would like to run outside of docker follow the instructions below.
+Access the frontend and backend via `localhost:8000`.
 
-Make sure you have the latest versions of [NodeJS](https://nodejs.org/en/download/) and [Yarn](https://classic.yarnpkg.com/en/docs/install/).
+Docker compose runs development setup which automatically reloads the frontend and backend.
 
-## Server
-- In the repository root  
-  Docker will still be used to run a MongoDB server:
-  ```
-  docker-compose up -d mongo
-  ```
-  
-  The default configuration variables should work.
-
-- In the `./server` directory  
-  Install dependencies:
-  ```
-  yarn install
-  ```
-  
-  Start the server:
-  ```
-  yarn start
-  ```
-
-## Frontend
-For most frontend development the built Parcel bundler results will be served by the server, ensure it is running ([Server](#server)).
-
-- In the `./frontend` directory  
-  Install dependencies:
-  ```
-  yarn install
-  ```
-  
-  Next run the Parcel bundler on the frontend files:
-  ```
-  yarn watch
-  ```
-
-Then navigate to [localhost:8000](http://localhost:8000) (ignore the message from the command line saying to visit `127.0.0.1:1234`, this only serves the frontend files but without the server, this can work but none of the frontend will display any data without the API server).
+A Nginx proxy container runs on port `8000`. Access the backend via the `/api/` URL path, and the frontend via the `/` URL path.
 
 # Deployment
 ## Configuration
