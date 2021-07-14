@@ -43,7 +43,7 @@ A development environment can be run via Docker Compose:
 
 Access the frontend and backend via `localhost:8000`.
 
-Docker compose runs development setup which automatically reloads the frontend and backend.
+Docker compose runs a development setup which automatically reloads the frontend and backend.
 
 A Nginx proxy container runs on port `8000`. Access the backend via the `/api/` URL path, and the frontend via the `/` URL path.
 
