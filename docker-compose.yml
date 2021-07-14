@@ -8,3 +8,15 @@ services:
       - "./container-data/mongo:/data/db"
     ports:
       - "27017:27017"
+  frontenddev:
+    image: node:latest
+    working_dir: /mnt
+    volumes:
+      - "./frontend:/mnt"
+    command: ./scripts/dev.sh
+  backenddev:
+    image: node:latest
+    working_dir: /mnt
+    volumes:
+      - "./server:/mnt"
+    command: ./scripts/dev.sh

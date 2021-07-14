@@ -35,13 +35,21 @@ Friendly website which provides those interested in gaming with notifications ab
 # Development
 The site is a NodeJs server and React frontend.
 
+A development environment can be run via Docker Compose:
+
+```
+./scripts/dev.sh
+```
+
+This will run a frontend and backend development server. If you would like to run outside of docker follow the instructions below.
+
 Make sure you have the latest versions of [NodeJS](https://nodejs.org/en/download/) and [Yarn](https://classic.yarnpkg.com/en/docs/install/).
 
 ## Server
 - In the repository root  
-  Start MongoDB:
+  Docker will still be used to run a MongoDB server:
   ```
-  docker-compose up -d
+  docker-compose up -d mongo
   ```
   
   The default configuration variables should work.
