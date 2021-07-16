@@ -21,11 +21,11 @@ const { Title } = Typography;
 import {
   APICtx,
   ErrorCtx,
-} from "../App.jsx";
+} from "~/App";
 import {
   GoDashGameDeals,
-} from "./Dashboard.jsx";
-import InputMoney from "../components/InputMoney.jsx";
+} from "~/pages/Dashboard";
+import { InputMoney } from "~/components/InputMoney";
 
 const DshEl = styled.div`
 display: flex;

@@ -2,6 +2,7 @@ import React, {
   useEffect,
   useState,
 } from "react";
+
 import styled from "styled-components";
 import {
   BrowserRouter as Router,
@@ -18,12 +19,12 @@ import {
 import {
   CloseCircleOutlined,
 } from "@ant-design/icons";
-import "./antd.less";
+import "~/antd.less";
 
-import API from "./api";
-import Header from "./components/Header.jsx";
-import Home from "./pages/Home.jsx";
-import Dashboard from "./pages/Dashboard.jsx";
+import { API } from "~/api";
+import { Header } from "~/components/Header";
+import { Home } from "~/pages/Home";
+import { Dashboard } from "~/pages/Dashboard";
 
 const APICtx = React.createContext({});
 const ErrorCtx = React.createContext(() => {});
@@ -302,5 +303,4 @@ const App = () => {
   );
 };
 
-export default App;
-export { APICtx, ErrorCtx, AuthCtx };
+export { App, APICtx, ErrorCtx, AuthCtx };

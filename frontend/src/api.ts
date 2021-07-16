@@ -3,7 +3,7 @@
  * @property {function(msg)} showError Function which displays the error msg argument to the user.
  * @property {async function(action)} getAuth Function which returns an API authentication token. The action argument should be a user friendly description of requires authorization. If the user is not logged in this function should request login information from the user and use the login API endpoint to obtain an API authentication token.
  */
-export default class API {
+export class API {
   /**
    * Create a new API client.
    * @param {function(msg)} showError Set showError prop.
@@ -232,6 +232,27 @@ export class FriendlyError extends Error {
 }
 
 /**
+ * Indicates an API endpoint request returned an error response.
+ * @property {string} error Contains a user friendly message.
+ * @property {string} [error_code] Machine code for a specific condition which API clients are supposed to have knowledge of, it can be undefined if the server did not return one.
+ */
+export class EndpointError extends Error {
+  /**
+   * Create an EndpointError.
+   * @param {string} error See error property.
+   * @param {string} error_code See error_code property.
+   * @returns {EndpointError} New error.
+   */
+  constructor(error, error_code) {
+    super(`The API returned an error response: error=${error}, error_code=${error_code}`);
+    this.name = "EndpointError";
+
+    this.error = error;
+    this.error_code = error_code;
+  }
+}
+
+/**
  * Indicates the API client does not have permission to perform the specified action.
  */
 export class UnauthorizedError extends EndpointError {
@@ -253,27 +274,5 @@ export class UnauthorizedError extends EndpointError {
    */
   asFriendlyError(action) {
     return new FriendlyError(`you do not have permission to ${action}`);
-  }
-}
-
-
-/**
- * Indicates an API endpoint request returned an error response.
- * @property {string} error Contains a user friendly message.
- * @property {string} [error_code] Machine code for a specific condition which API clients are supposed to have knowledge of, it can be undefined if the server did not return one.
- */
-export class EndpointError extends Error {
-  /**
-   * Create an EndpointError.
-   * @param {string} error See error property.
-   * @param {string} error_code See error_code property.
-   * @returns {EndpointError} New error.
-   */
-  constructor(error, error_code) {
-    super(`The API returned an error response: error=${error}, error_code=${error_code}`);
-    this.name = "EndpointError";
-
-    this.error = error;
-    this.error_code = error_code;
   }
 }

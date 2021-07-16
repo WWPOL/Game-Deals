@@ -1,4 +1,4 @@
-export default {
+const COLORS = {
   text: {
     blue: {
       primary: "#1890ff",
@@ -26,3 +26,5 @@ export default {
   },
   pink: "#f24bd6",
 };
+
+export { COLORS };

@@ -7,9 +7,7 @@ import {
   Breadcrumb,
 } from "antd";
 
-import {
-  GoDashHome,
-} from "./Dashboard.jsx";
+import { GoDashHome } from "~/pages/Dashboard";
 
 /**
  * Displays a page which manages admin users.
@@ -30,4 +28,4 @@ const DashboardAdmins = () => {
   );
 };
 
-export default DashboardAdmins;
+export { DashboardAdmins };

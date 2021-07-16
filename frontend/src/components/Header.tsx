@@ -45,5 +45,4 @@ const Header = () => {
   );
 };
 
-export default Header;
-export { HEIGHT };
+export { Header, HEIGHT };

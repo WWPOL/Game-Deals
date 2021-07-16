@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -x
 docker-compose up -d
-docker-compose logs -f frontenddev backenddev nginxdev
+docker-compose logs -f --tail=20 frontenddev backenddev

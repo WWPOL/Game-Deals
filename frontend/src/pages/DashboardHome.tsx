@@ -11,9 +11,7 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 
-import {
-  GoDashHome,
-} from "./Dashboard.jsx";
+import { GoDashHome } from "~/pages/Dashboard";
 
 const DshEl = styled.div`
 padding: 1rem;
@@ -73,4 +71,4 @@ const DashboardHome = () => {
   );
 };
 
-export default DashboardHome;
+export { DashboardHome };

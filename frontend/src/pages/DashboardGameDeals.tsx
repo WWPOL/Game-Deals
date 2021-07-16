@@ -24,11 +24,11 @@ import strftime from "strftime";
 import {
   APICtx,
   ErrorCtx,
-} from "../App.jsx";
+} from "~/App";
 import {
   GoDashHome,
   GoDashNewGameDeal,
-} from "./Dashboard.jsx";
+} from "~/pages/Dashboard";
 
 const DshEl = styled.div`
 display: flex;
@@ -192,4 +192,4 @@ const DashboardGameDeals = () => {
   );
 };
 
-export default DashboardGameDeals;
+export { DashboardGameDeals };

@@ -11,7 +11,7 @@ import {
   CaretDownOutlined,
 } from "@ant-design/icons";
 
-import COLORS from "../colors";
+import { COLORS } from "~/colors";
 
 const El = styled.div`
 display: flex;
@@ -137,4 +137,4 @@ const InputMoney = () => {
   );
 };
 
-export default InputMoney;
+export { InputMoney };

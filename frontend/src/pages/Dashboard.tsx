@@ -16,13 +16,13 @@ import {
 
 } from "@ant-design/icons";
 
-import { AuthCtx } from "../App.jsx";
-import DashboardHome from "./DashboardHome.jsx";
-import DashboardGameDeals from "./DashboardGameDeals.jsx";
-import DashboardNewGameDeal from "./DashboardNewGameDeal.jsx";
-import DashboardAdmins from "./DashboardAdmins.jsx";
+import { AuthCtx } from "~/App";
+import { DashboardHome } from "~/pages/DashboardHome";
+import { DashboardGameDeals } from "~/pages/DashboardGameDeals";
+import { DashboardNewGameDeal } from "~/pages/DashboardNewGameDeal";
+import { DashboardAdmins } from "~/pages/DashboardAdmins";
 
-import COLORS from "../colors";
+import { COLORS } from "~/colors";
 
 const DshEl = styled.div`
 display: flex;
@@ -188,4 +188,4 @@ export function GoDashNewGameDeal(history) {
   history.push("/dashboard/game-deals/new");
 }
 
-export default Dashboard;
+export { Dashboard };

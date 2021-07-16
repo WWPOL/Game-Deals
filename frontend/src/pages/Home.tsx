@@ -6,10 +6,10 @@ import React, {
 import styled from "styled-components";
 import humanizeDuration from "humanize-duration";
 
-import { APICtx, ErrorCtx } from "../App";
+import { APICtx, ErrorCtx } from "~/App";
 import {
   FriendlyError,
-} from "../api";
+} from "~/api";
 
 const HomeEl = styled.div`
 display: flex;
@@ -26,7 +26,7 @@ function unixTime(date) {
   return Math.floor(date.getTime() / 1000);
 }
 
-const HomePage = () => {
+const Home = () => {
   const api = useContext(APICtx);
   const setError = useContext(ErrorCtx)[1];
   
@@ -73,4 +73,4 @@ const HomePage = () => {
   );
 };
 
-export default HomePage;
+export { Home };
