@@ -105,7 +105,7 @@ const GAME_DEAL_COLS = [
  */
 const DashboardGameDeals = () => {
   const api = useContext(APICtx);
-  const showError = useContext(ErrorCtx)[1];
+  const { showError } = useContext(ErrorCtx);
   const history = useHistory();
 
   const [deals, setDeals] = useState([]);

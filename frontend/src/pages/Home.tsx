@@ -28,7 +28,7 @@ function unixTime(date) {
 
 const Home = () => {
   const api = useContext(APICtx);
-  const setError = useContext(ErrorCtx)[1];
+  const { setError } = useContext(ErrorCtx);
   
   const [deals, setDeals] = useState([]);
 

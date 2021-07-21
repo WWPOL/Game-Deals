@@ -1,17 +1,17 @@
 /**
  * API client.
- * @property {function(msg)} showError Function which displays the error msg argument to the user.
+ * @property {function(msg)} setError Function which displays the error msg argument to the user.
  * @property {async function(action)} getAuth Function which returns an API authentication token. The action argument should be a user friendly description of requires authorization. If the user is not logged in this function should request login information from the user and use the login API endpoint to obtain an API authentication token.
  */
 export class API {
   /**
    * Create a new API client.
-   * @param {function(msg)} showError Set showError prop.
+   * @param {function(msg)} setError Set setError prop.
    * @param {async function(action)} getAuth Set getAuth property.
    * @returns {API} New API client.
    */
-  constructor(showError, getAuth) {
-    this.showError = showError;
+  constructor(setError, getAuth) {
+    this.setError = setError;
     this.getAuth = getAuth;
   }
 
@@ -108,9 +108,9 @@ export class API {
       console.trace(`Failed to login for username="${username}", password=${censor(password)}, new_password=${censor(new_password)}, error=${e}`);
 
       if (e instanceof FriendlyError) {
-        this.showError(`failed to login: ${e}`);
+        this.setError(`failed to login: ${e}`);
       } else {
-        this.showError(`sorry, something unexpected happened when logging in as "${username}"`);
+        this.setError(`sorry, something unexpected happened when logging in as "${username}"`);
       }
 
       throw e;
@@ -138,9 +138,9 @@ export class API {
       console.trace(`Failed to list game deals: ${e}`);
       
       if (e instanceof EndpointError) {
-        this.showError(new FriendlyError(e.error));
+        this.setError(new FriendlyError(e.error));
       } else {
-        this.showError("sorry, something unexpected went wrong when trying to get a list game deals");
+        this.setError("sorry, something unexpected went wrong when trying to get a list game deals");
       }
 
       throw e;
@@ -171,9 +171,9 @@ export class API {
       console.trace(`Failed to create a game deal=${JSON.stringify(deal)}, error=${e}`);
       
       if (e instanceof FriendlyError) {
-        this.showError(e);
+        this.setError(e);
       } else {
-        this.showError("sorry, something unexpected happened while create the new game deal");
+        this.setError("sorry, something unexpected happened while create the new game deal");
       }
 
       throw e;
@@ -197,9 +197,9 @@ export class API {
       console.trace(`failed to retrieve admin by ID "${id}": ${e}`);
       
       if (e instanceof FriendlyError) {
-        this.showError(e);
+        this.setError(e);
       } else {
-        this.showError("sorry, something unexpected happened while retrieving an admin's information");
+        this.setError("sorry, something unexpected happened while retrieving an admin's information");
       }
 
       throw e;

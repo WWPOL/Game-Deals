@@ -12,9 +12,6 @@ import {
 } from "react-router-dom";
 import {
   Button,
-  Form,
-  Input,
-  Checkbox,
 } from "antd";
 import {
   CloseCircleOutlined,
@@ -23,12 +20,13 @@ import "~/antd.less";
 
 import { API } from "~/api";
 import { Header } from "~/components/Header";
+import { Login } from "~/components/Login";
 import { Home } from "~/pages/Home";
 import { Dashboard } from "~/pages/Dashboard";
 
-const APICtx = React.createContext({});
-const ErrorCtx = React.createContext(() => {});
-const AuthCtx = React.createContext([() => {}, () => {}]); // [ getAuth(action), clearAuth() ]
+export const APICtx = React.createContext({});
+export const ErrorCtx = React.createContext(() => {});
+export const AuthCtx = React.createContext([() => {}, () => {}]); // [ getAuth(action), clearAuth() ]
 
 const AppEl = styled.div`
 width: 100%;
@@ -192,28 +190,10 @@ const Ctxs = ({ header, children }) => {
   };
 
   const api = new API(setError, getAuth);
-
-  /**
-   * Runs when the login UI is successfully filled out by the user.
-   * @param {object} values Form values.
-   */
-  const onLoginFormFinish = async (values) => {
-    const authToken = await api.login(values.username, values.password);
-    getAuthFinishedProm.resolve(authToken);
-  };
-
-  /**
-   * Runs when the login UI is filled out incorrectly by the user.
-   * @param {object} err Error information.
-   */
-  const onLoginFormFinishFailed = (err) => {
-    console.trace("onLoginFormFinishFailed", err);
-    setError("Please fill out the log in form correctly.");
-  };
   
   return (
-    <ErrorCtx.Provider value={[error, setError]}>
-      <AuthCtx.Provider value={[getAuth, clearAuth]}>
+    <ErrorCtx.Provider value={{ error, setError }}>
+      <AuthCtx.Provider value={{ getAuth, clearAuth }}>
         <APICtx.Provider value={api}>
           {error !== null && (
             <ErrorContainer>              
@@ -230,46 +210,9 @@ const Ctxs = ({ header, children }) => {
           {header}
 
           {loginReason === null && (children) || (
-            <>
-              <b>Log in to {loginReason}</b>
-              
-              <Form
-                name="Log In"
-                onFinish={onLoginFormFinish}
-                onFinishFailed={onLoginFormFinishFailed}
-              >
-                <Form.Item
-                  label="Username"
-                  name="username"
-                  rules={[{
-                    required: true,
-                    message: "Please enter your username",
-                  }]}
-                >
-                  <Input />
-                </Form.Item>
-
-                <Form.Item
-                  label="Password"
-                  name="password"
-                  rules={[{
-                    required: true,
-                    message: "Please enter your password",
-                  }]}
-                >
-                  <Input.Password />
-                </Form.Item>
-
-                <Form.Item>
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                  >
-                    Log In
-                  </Button>
-                </Form.Item>
-              </Form>
-            </>
+            <Login
+              loginReason={loginReason}
+            />
           )}
         </APICtx.Provider>
       </AuthCtx.Provider>
@@ -281,7 +224,7 @@ const Ctxs = ({ header, children }) => {
  * Main application.
  * @returns {Elements} Website elements.
  */
-const App = () => {
+export function App() {
   return (
     <AppEl>
       <Router>
@@ -302,5 +245,3 @@ const App = () => {
     </AppEl>
   );
 };
-
-export { App, APICtx, ErrorCtx, AuthCtx };

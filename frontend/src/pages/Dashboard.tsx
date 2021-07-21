@@ -102,9 +102,9 @@ margin-left: 0.7rem;
  * Management dashboard.
  * @returns {Elements} Dashboard elements.
  */
-const Dashboard = () => {
+export function Dashboard() {
   const routeMatch = useRouteMatch();
-  const [getAuth, clearAuth] = useContext(AuthCtx);
+  const { getAuth, clearAuth } = useContext(AuthCtx);
 
   // Ensure user is logged in before showing the dashboard
   useEffect(() => {
@@ -187,5 +187,3 @@ export function GoDashGameDeals(history) {
 export function GoDashNewGameDeal(history) {
   history.push("/dashboard/game-deals/new");
 }
-
-export { Dashboard };

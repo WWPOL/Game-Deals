@@ -112,7 +112,7 @@ flex-grow: 1;
 
 const DashboardNewGameDeal = () => {
   const api = useContext(APICtx);
-  const showError = useContext(ErrorCtx)[1];
+  const { setError } = useContext(ErrorCtx);
   const history = useHistory();
 
   /**
@@ -147,7 +147,7 @@ const DashboardNewGameDeal = () => {
    */
   const onFinishFailed = (err) => {
     console.trace("onFinishFailed", err);
-    showError("Please fill out the new game deal form correctly.")
+    setError("Please fill out the new game deal form correctly.")
   };
   
   return (
