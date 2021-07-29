@@ -18,9 +18,14 @@ import {
 } from "@ant-design/icons";
 import "~/antd.less";
 
+import { SharedProm } from "~/lib/shared-prom";
 import { API } from "~/api";
 import { Header } from "~/components/Header";
-import { Login } from "~/components/Login";
+import {
+  Login,
+  getStoredAuthToken,
+  setStoredAuthToken,
+} from "~/components/Auth/";
 import { Home } from "~/pages/Home";
 import { Dashboard } from "~/pages/Dashboard";
 
@@ -68,72 +73,6 @@ font-size: 1rem;
 font-weight: bold;
 `;
 
-/**
- * Allows for a promise to be resolved or rejected from anywhere.
- * @property {Promise} prom Internal promise used in resolve(), reject(), and when().
- * @property {function(data)} promResolve Function which will resolve the internal promise.
- * @property {function(data)} promReject Function which will reject the internal promise.
- */
-class SharedProm {
-  /**
-   * Creates a new SharedProm;
-   * @returns {SharedProm} New shared promise.
-   */
-  constructor() {
-    this.reset();
-  }
-
-  /**
-   * Reject the current promise (so that any hanging calls to this.when() exit. Then reset the internal this.prom Promise.
-   */
-  reset() {
-    // End any existing calls to this.when();
-    if (this.prom !== undefined) {
-      this.promReject(new Error("The shared promise was reset"));
-    }
-
-    // Setup new internal Promise
-    let self = this;
-    this.prom = new Promise((resolve, reject) => {
-      self.promResolve = resolve;
-      self.promReject = reject;
-    });
-  }
-
-  /**
-   * Waits for shared promise to resolve or reject. Then resets the promise for future use.
-   * @returns {Promise} Resolve or reject result.
-   */
-  async when() {
-    const result = await this.prom;
-
-    this.reset();
-
-    return result;
-  }
-
-  /**
-   * Resolves the shared promise.
-   * @param {any} [data] Information to return when shared promise resolves.
-   */
-  resolve(data) {
-    this.promResolve(data);
-  }
-
-  /**
-   * Rejects the shared promise.
-   * @param {any} [data] Information to return when shared promise rejects.
-   */
-  reject(data) {
-    this.promReject(data);
-  }
-}
-
-/**
- * The local storage key in which the API authorization token will be stored. This value will be set to null if the user is not logged in.
- */
-const LOCAL_STORAGE_API_AUTH_TOKEN_KEY = "apiAuthToken";
-
 let getAuthFinishedProm = new SharedProm();
 
 /**
@@ -149,35 +88,32 @@ const Ctxs = ({ header, children }) => {
    */
   const [error, setError] = useState(null);
 
-  /**
-   * Not null if the login menu should be displayed instead of the current page. Should contain a quick user friendly sentence explaining why the user needs to login. Set to null in order to hide the login UI.
-   */
-  const [loginReason, setLoginReason] = useState(null);
+  const [mustLogin, setMustLogin] = useState(false);
 
   /**
    * Get API the user's API authorization token. If not logged in then login the user and return the resulting token. If the user is logged in the API authorization token will be saved in local storage under key LOCAL_STORAGE_API_AUTH_TOKEN_KEY.
    * @param {string} action User friendly description of the action which requires authorization.
    * @returns {Promise} Resolves with API authorization token, rejects with error.
    */
-  const getAuth = async (action) => {
+  const getAuth = async () => {
     // Check if already logged in
-    const storedToken = localStorage.getItem(LOCAL_STORAGE_API_AUTH_TOKEN_KEY);
+    const storedToken = getStoredAuthToken();
 
     if (storedToken !== null) {
       return storedToken;
     }
 
     // Prompt user for login credentials
-    setLoginReason(action);
+    setMustLogin(true);
 
     // Wait for user to complete login flow
     const authToken = await getAuthFinishedProm.when();
 
     // Save auth token for later
-    localStorage.setItem(LOCAL_STORAGE_API_AUTH_TOKEN_KEY, authToken);
+    setStoredAuthToken(authToken);
 
     // Hide login prompt
-    setLoginReason(null);
+    setMustLogin(true);
 
     return authToken;
   };
@@ -209,9 +145,11 @@ const Ctxs = ({ header, children }) => {
 
           {header}
 
-          {loginReason === null && (children) || (
+          {!mustLogin && (
+            children
+          ) || (
             <Login
-              loginReason={loginReason}
+              getAuthFinishedProm={getAuthFinishedProm}
             />
           )}
         </APICtx.Provider>

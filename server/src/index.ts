@@ -1,12 +1,22 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
-const mongo = require("mongodb");
-const Ajv = require("ajv");
+import express from "express";
+import bodyParser from "body-parser";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+import mongo from "mongodb";
+import Ajv from "ajv";
+import dumbPasswords from "dumb-passwords";
+import path from "path";
+
+import {
+  EnvConfig,
+  Config,
+} from "~/config";
+import {
+  GenerateEndpoints,
+  HTTPMethod,
+} from "~/endpoints";
+
 const ajv = new Ajv();
-const dumbPasswords = require("dumb-passwords");
-const path = require("path");
 
 /**
  * The number of items which should be returned by queries.
@@ -63,31 +73,6 @@ function passwordAllowed(plainText) {
 
   return null;
 }
-
-/**
- * Server configuration.
- */
-const CFG = {
-  /**
-   * Port on which to run HTTP API.
-   */
-  httpPort: process.env.GAME_DEALS_HTTP_PORT || 8000,
-
-  /**
-   * URI used to connect to MongoDB.
-   */
-  mongoURI: process.env.GAME_DEALS_MONGO_URI || "mongodb://mongo",
-
-  /**
-   * Name of MongoDB database in which to store data.
-   */
-  mongoDBName: process.env.GAME_DEALS_MONGO_DB_NAME || "dev-game-deals",
-
-  /**
-   * Secret key used to sign authentication tokens.
-   */
-  authTokenSecret: process.env.GAME_DEALS_AUTH_TOKEN_SECRET || "thisisaverybadsecret",
-};
 
 /**
  * Schema for an admin user.
@@ -183,14 +168,17 @@ const GAME_DEAL_SCHEMA = {
  * Data is stored in MongoDB in the "admins" and "game_deals" collections. Documents meet the ADMIN_SCHEMA and GAME_DEAL_SCHEMA respectively.
  */
 class Server {
+  cfg: Config;
+  app: express.Application;
+  
   /**
    * Initializes the server.
    * @param {Config} cfg Application configuration from CFG.
    */
-  constructor(cfg) {
+  constructor(cfg: Config) {
     this.cfg = cfg;
 
-    this.dbClient = new mongo.MongoClient(this.cfg.mongoURI, { useUnifiedTopology: true });
+    // this.dbClient = new mongo.MongoClient(this.cfg.mongoURI, { useUnifiedTopology: true });
 
     // Setup express HTTP API
     this.app = express();
@@ -198,61 +186,68 @@ class Server {
     this.app.use(this.mwLogReq);
     this.app.use(bodyParser.json());
     this.app.use(this.mwLogRes); // Must be last
-    
-    this.app.get(
-      "/api/v0/health",
-      this.epHealth.bind(this));
-    
-    this.app.post(
-      "/api/v0/login",
-      this.mwValidateBodyFactory(ajv.compile({
-        type: "object",
-        properties: {
-          username: { type: "string" },
-          password: { type: "string" },
-          new_password: { type: "string" },
-        },
-        required: [ "username", "password" ],
-        additionalProperties: false,
-      })).bind(this),
-      this.epLogin.bind(this));
 
-    this.app.post(
-      "/api/v0/admin",
-      this.mwAuthenticate.bind(this),
-      this.mwValidateBodyFactory(ajv.compile({
-        type: "object",
-        properties: {
-          username: { type: "string" },
-          invite_password: { type: "string" },
-        },
-        required: [ "username", "invite_password" ],
-        additionalProperties: false,
-      })),
-      this.epCreateAdmin.bind(this));
-    
-    this.app.get(
-      "/api/v0/game_deal",
-      this.epListGameDeals.bind(this));
+    const endpoints = GenerateEndpoints({
+      cfg: this.cfg,
+    });
+    endpoints.forEach((handler) => {
+      this.app[handler.method()](handler.path(), handler.handle);
+    });
 
-    let createGameDealSchema = GAME_DEAL_SCHEMA;
-    delete createGameDealSchema.properties.author_id;
-    createGameDealSchema.required.splice(createGameDealSchema.required.indexOf("author_id"), 1);
+    // this.app.get(
+    //   "/api/v0/health",
+    //   this.epHealth.bind(this));
     
-    this.app.post(
-      "/api/v0/game_deal",
-      this.mwAuthenticate.bind(this),
-      this.mwValidateBodyFactory(ajv.compile({
-        type: "object",
-        properties: {
-          game_deal: createGameDealSchema,
-        },
-        required: [ "game_deal" ],
-        additionalProperties: false,
-      })).bind(this),
-      this.epCreateGameDeal.bind(this));
+    // this.app.post(
+    //   "/api/v0/login",
+    //   this.mwValidateBodyFactory(ajv.compile({
+    //     type: "object",
+    //     properties: {
+    //       username: { type: "string" },
+    //       password: { type: "string" },
+    //       new_password: { type: "string" },
+    //     },
+    //     required: [ "username", "password" ],
+    //     additionalProperties: false,
+    //   })).bind(this),
+    //   this.epLogin.bind(this));
 
-    this.app.get("/api/v0/admin/:id", this.epGetAdmin.bind(this));
+    // this.app.post(
+    //   "/api/v0/admin",
+    //   this.mwAuthenticate.bind(this),
+    //   this.mwValidateBodyFactory(ajv.compile({
+    //     type: "object",
+    //     properties: {
+    //       username: { type: "string" },
+    //       invite_password: { type: "string" },
+    //     },
+    //     required: [ "username", "invite_password" ],
+    //     additionalProperties: false,
+    //   })),
+    //   this.epCreateAdmin.bind(this));
+    
+    // this.app.get(
+    //   "/api/v0/game_deal",
+    //   this.epListGameDeals.bind(this));
+
+    // let createGameDealSchema = GAME_DEAL_SCHEMA;
+    // delete createGameDealSchema.properties.author_id;
+    // createGameDealSchema.required.splice(createGameDealSchema.required.indexOf("author_id"), 1);
+    
+    // this.app.post(
+    //   "/api/v0/game_deal",
+    //   this.mwAuthenticate.bind(this),
+    //   this.mwValidateBodyFactory(ajv.compile({
+    //     type: "object",
+    //     properties: {
+    //       game_deal: createGameDealSchema,
+    //     },
+    //     required: [ "game_deal" ],
+    //     additionalProperties: false,
+    //   })).bind(this),
+    //   this.epCreateGameDeal.bind(this));
+
+    // this.app.get("/api/v0/admin/:id", this.epGetAdmin.bind(this));
 
     // Initialize this in init()
     this.initCalled = false;
@@ -452,6 +447,7 @@ class Server {
    */
   epHealth(req, res) {
     res.json({
+      foo: 1,
       ok: true,
     });
   }
@@ -737,7 +733,7 @@ class Server {
 
 // Start server
 (async function() {
-  const server = new Server(CFG);
+  const server = new Server(EnvConfig());
 
   await server.init();
 

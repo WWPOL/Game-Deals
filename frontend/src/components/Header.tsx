@@ -4,6 +4,8 @@ import {
 } from "react-router-dom";
 import styled from "styled-components";
 
+import { Logout } from "~/components/Auth";
+
 /**
  * Height of header element.
  */
@@ -41,6 +43,8 @@ const Header = () => {
       <Brand to="/">
         Olly Game Deals
       </Brand>
+
+      <Logout />
     </HdEl>
   );
 };

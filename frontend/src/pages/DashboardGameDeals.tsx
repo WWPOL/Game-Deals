@@ -103,7 +103,7 @@ const GAME_DEAL_COLS = [
  * Displays a page which manages game deals.
  * @returns {Elements} Game deal dashboard elements.
  */
-const DashboardGameDeals = () => {
+export function DashboardGameDeals() {
   const api = useContext(APICtx);
   const { showError } = useContext(ErrorCtx);
   const history = useHistory();
@@ -191,5 +191,3 @@ const DashboardGameDeals = () => {
     </DshEl>
   );
 };
-
-export { DashboardGameDeals };

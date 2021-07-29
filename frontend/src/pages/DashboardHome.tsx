@@ -39,7 +39,7 @@ margin-left: 0.5rem;
  * Displays a page which provides an overview of the dashboard functionality.
  * @returns {Elements} Dashboard home elements.
  */
-const DashboardHome = () => {
+export function DashboardHome() {
   return (
     <DshEl>
       <SectionCard
@@ -70,5 +70,3 @@ const DashboardHome = () => {
     </DshEl>
   );
 };
-
-export { DashboardHome };

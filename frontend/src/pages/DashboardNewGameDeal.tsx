@@ -110,7 +110,7 @@ flex-grow: 1;
 }
 `;
 
-const DashboardNewGameDeal = () => {
+export function DashboardNewGameDeal() {
   const api = useContext(APICtx);
   const { setError } = useContext(ErrorCtx);
   const history = useHistory();
@@ -262,5 +262,3 @@ const DashboardNewGameDeal = () => {
     </DshEl>
   );
 };
-
-export default DashboardNewGameDeal;

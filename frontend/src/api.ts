@@ -1,3 +1,5 @@
+export const ERROR_CODE_MUST_RESET_PASSWORD = "must_reset_password";
+
 /**
  * API client.
  * @property {function(msg)} setError Function which displays the error msg argument to the user.
@@ -51,8 +53,9 @@ export class API {
     }
 
     // Make request
+    let resp = undefined;
     try {
-      const resp = await fetch(path, opts);
+      resp = await fetch(path, opts);
 
       // Censor body after request is made
       if (bodySensitive === true) {
@@ -62,19 +65,22 @@ export class API {
       if (opts.headers !== undefined && opts.headers.Authorization !== undefined && opts.headers.Authorization.length > 0) {
         opts.headers.Authorization = "***censored***";
       }
-
-      // Ensure success result
-      if (resp.status == 401) {
-        throw new UnauthorizedError(`options=${JSON.stringify(opts)}`);
-      } else if (resp.status != 200) {
-        const body = await resp.json();
-        throw new EndpointError(body.error, body.error_code);
-      }
-
-      return resp;
     } catch(e) {
       throw new Error(`failed to make HTTP API request ${JSON.stringify(opts)}: ${e}`);
     }
+
+    // Ensure success result
+    if (resp.status === 401) {
+      const respBody = await resp.json();
+      
+      throw new UnauthorizedError(`options=${JSON.stringify(opts)}`, respBody.error_code);
+    } else if (resp.status !== 200) {
+      const respBody = await resp.json();
+      
+      throw new EndpointError(respBody.error, respBody.error_code);
+    }
+
+    return resp;
   }
 
   /**
@@ -109,11 +115,12 @@ export class API {
 
       if (e instanceof FriendlyError) {
         this.setError(`failed to login: ${e}`);
+      } else if (e instanceof UnauthorizedError) {
+        // Bubble up so caller knows
+        throw e;
       } else {
         this.setError(`sorry, something unexpected happened when logging in as "${username}"`);
       }
-
-      throw e;
     }
   }
 
@@ -142,8 +149,6 @@ export class API {
       } else {
         this.setError("sorry, something unexpected went wrong when trying to get a list game deals");
       }
-
-      throw e;
     }
   }
 
@@ -175,8 +180,6 @@ export class API {
       } else {
         this.setError("sorry, something unexpected happened while create the new game deal");
       }
-
-      throw e;
     }
   }
 
@@ -201,8 +204,6 @@ export class API {
       } else {
         this.setError("sorry, something unexpected happened while retrieving an admin's information");
       }
-
-      throw e;
     }
   }
 }

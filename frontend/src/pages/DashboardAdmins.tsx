@@ -13,7 +13,7 @@ import { GoDashHome } from "~/pages/Dashboard";
  * Displays a page which manages admin users.
  * @returns {Elements} Admin dashboard elements.
  */
-const DashboardAdmins = () => {
+export function DashboardAdmins() {
   const history = useHistory();
   
   return (
@@ -27,5 +27,3 @@ const DashboardAdmins = () => {
     />
   );
 };
-
-export { DashboardAdmins };
