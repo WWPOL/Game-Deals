@@ -1,32 +1,34 @@
 version: "3.7"
 services:
-  mongo:
-    image: mongo
+  postgres:
+    image: postgres
     environment:
-      MONGO_INITDB_DATABASE: dev-game-deals
+      POSTGRES_USER: devgamedeals
+      POSTGRES_PASSWORD: devgamedeals
+      POSTGRES_DB: devgamedeals
     volumes:
-      - "./container-data/mongo:/data/db"
-  nginxdev:
+      - "postgresdata:/var/lib/postgresql/data/"
+    restart: always
+  nginx:
     image: nginx:latest
     volumes:
       - "./dev-nginx.conf:/etc/nginx/nginx.conf"
-      - "frontenddist:/mnt/frontenddist"
     ports:
       - "8000:8000"
-  frontenddev:
+    restart: always
+  frontend:
     image: node:latest
     working_dir: /mnt
     volumes:
       - "./frontend:/mnt"
-      - "frontenddist:/mnt/dist"
-    ports:
-      - "1235:1235"
     command: ./scripts/dev.sh
-  backenddev:
+    restart: always
+  backend:
     image: node:latest
     working_dir: /mnt
     volumes:
       - "./server:/mnt"
     command: ./scripts/dev.sh
+    restart: always
 volumes:
-  frontenddist: {}
+  postgresdata: {}

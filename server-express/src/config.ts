@@ -8,15 +8,9 @@ export type Config {
   httpPort: number;
 
   /**
-   * Postgres database information.
+   * URI used to connect to MongoDB.
    */
-  db: {
-    host: string;
-    port: number;
-    username: string;
-    password: string;
-    database: string;
-  };
+  mongoURI: string;
 
   /**
    * Name of MongoDB database in which to store data.

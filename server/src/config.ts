@@ -1,21 +1,23 @@
 /**
  * Server configuration.
  */
-export type Config {
+export type Config = {
   /**
    * Port on which to run HTTP API.
    */
   httpPort: number;
 
   /**
-   * URI used to connect to MongoDB.
+   * Postgres database information.
    */
-  mongoURI: string;
-
-  /**
-   * Name of MongoDB database in which to store data.
-   */
-  mongoDBName: string;
+  db: {
+    host: string;
+    port: number;
+    username: string;
+    password: string;
+    database: string;
+    autoMigrate: boolean;
+  };
 
   /**
    * Secret key used to sign authentication tokens.
@@ -23,9 +25,17 @@ export type Config {
   authTokenSecret: string;
 }
 
-export EnvConfig(): Config = {
-  httpPort: process.env.GAME_DEALS_HTTP_PORT || 8000,
-  mongoURI: process.env.GAME_DEALS_MONGO_URI || "mongodb://mongo",
-  mongoDBName: process.env.GAME_DEALS_MONGO_DB_NAME || "dev-game-deals",
-  authTokenSecret: process.env.GAME_DEALS_AUTH_TOKEN_SECRET || "thisisaverybadsecret",
-};
+export function EnvConfig(): Config {
+  return {
+    httpPort: process.env.GAME_DEALS_HTTP_PORT || 8000,
+    db: {
+      host: process.env.GAME_DEALS_DB_HOST || "postgres",
+      port: process.env.GAME_DEALS_DB_PORT || 5432,
+      user: process.env.GAME_DEALS_DB_USERNAME || "devgamedeals",
+      password: process.env.GAME_DEALS_DB_PASSWORD || "devgamedeals",
+      database: process.env.GAME_DEALS_DB_DATABASE || "devgamedeals",
+      autoMigrate: process.env.GAME_DEALS_DB_AUTO_MIGRATE.length > 0 || false,
+    },
+    authTokenSecret: process.env.GAME_DEALS_AUTH_TOKEN_SECRET || "thisisaverybadsecret",
+  };
+}
