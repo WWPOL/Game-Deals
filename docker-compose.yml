@@ -27,7 +27,7 @@ services:
     image: node:latest
     working_dir: /mnt
     volumes:
-      - "./server:/mnt"
+      - "./backend:/mnt"
     command: ./scripts/dev.sh
     restart: always
 volumes:

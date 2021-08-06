@@ -49,7 +49,7 @@ A Nginx proxy container runs on port `8000`. Access the backend via the `/api/` 
 
 # Deployment
 ## Configuration
-The server's configuration is provided via the environment variables:
+The backend's configuration is provided via the environment variables:
 
 - `GAME_DEALS_HTTP_PORT` (Integer, Default: `8000`): Port on which to run HTTP API
 - `GAME_DEALS_MONGO_URI` (String, Default: `mongodb://127.0.0.1/`): URI used to connect to MongoDB
@@ -57,7 +57,7 @@ The server's configuration is provided via the environment variables:
 - `GAME_DEALS_AUTH_TOKEN_SECRET` (String, Default: `thisisaverybadsecret`): Secret key used to sign authentication tokens.
 
 ## Initial Admin User
-When the server first starts a user with username `admin` and password `admin` is created. This user must reset its password on first login. Use this `admin` account to create new admin accounts for yourself and others.
+When the backend first starts a user with username `admin` and password `admin` is created. This user must reset its password on first login. Use this `admin` account to create new admin accounts for yourself and others.
 
 ## Instructions
 TBD
