@@ -5,8 +5,8 @@ import {
   ManyToOne,
 } from "typeorm";
 
-import { User } from "~/models/User";
-import { Game } from "~/models/Game";
+import { User } from "./user";
+import { Game } from "./game";
 
 @Entity()
 export class Deal {

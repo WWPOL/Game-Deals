@@ -5,7 +5,7 @@ import {
   OneToMany,
 } from "typeorm";
 
-import { Deal } from "~/models/Deal";
+import { Deal } from "./deal";
 
 @Entity()
 export class Game {
@@ -18,6 +18,6 @@ export class Game {
   @Column()
   image_url: string;
 
-  @OneToMany(() => Deal,  deal => deal.game)
+  @OneToMany(() => Deal, (deal: Deal) => deal.game)
   deals: Deal[];
 }

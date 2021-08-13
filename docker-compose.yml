@@ -18,16 +18,16 @@ services:
     restart: always
   frontend:
     image: node:latest
-    working_dir: /mnt
+    working_dir: /mnt/frontend
     volumes:
-      - "./frontend:/mnt"
+      - "./:/mnt"
     command: ./scripts/dev.sh
     restart: always
   backend:
     image: node:latest
-    working_dir: /mnt
+    working_dir: /mnt/backend
     volumes:
-      - "./backend:/mnt"
+      - "./:/mnt"
     command: ./scripts/dev.sh
     restart: always
 volumes:

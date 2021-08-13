@@ -8,13 +8,14 @@
   "license": "MIT",
   "scripts": {
     "build": "parcel build ./src/index.html",
-    "start": "parcel watch --hmr-port 1235 ./src/index.html",
+    "start": "parcel serve --port --hmr-port 1235 ./src/index.html",
     "check": "tsc --noEmit"
   },
   "dependencies": {
     "@ant-design/icons": "^4.6.2",
     "ant-design": "^1.0.0",
     "antd": "^4.15.3",
+    "highlight.js": "^11.2.0",
     "humanize-duration": "^3.25.2",
     "react": "^17.0.0",
     "react-dom": "^17.0.0",

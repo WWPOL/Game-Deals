@@ -5,7 +5,7 @@ import {
   OneToMany,
 } from 'typeorm';
 
-import { Deal } from "~/models/deal";
+import { Deal } from "./deal";
 
 @Entity()
 export class User {
