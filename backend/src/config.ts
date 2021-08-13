@@ -4,6 +4,7 @@
 export type Config = {
   /**
    * Port on which to run HTTP API.
+   * Env key: GAME_DEALS_HTTP_PORT
    */
   httpPort: number;
 
@@ -14,16 +15,50 @@ export type Config = {
 
   /**
    * Secret key used to sign authentication tokens.
+   * Env key: GAME_DEALS_AUTH_TOKEN_SECRET
    */
   authTokenSecret: string;
 }
 
+/**
+ * Postgres database configuration.
+ */
 export type DBConfig = {
+  /**
+   * Network address of server, not including port or scheme.
+   * Env key: GAME_DEALS_DB_HOST
+   */
   host: string;
+
+  /**
+   * Network port on which server is listening.
+   * Env key: GAME_DEALS_DB_PORT
+   */
   port: number;
+
+  /**
+   * Name of identity with which to authenticate.
+   * Env Key: GAME_DEALS_DB_USERNAME
+   */
   username: string;
+
+  /**
+   * Authentication secret.
+   * Env key: GAME_DEALS_DB_PASSWORD
+   */
   password: string;
+
+  /**
+   * Name of database to connect to within server.
+   * Env key: GAME_DEALS_DB_DATABASE
+   */
   database: string;
+
+  /**
+   * If true migrations will automatically be run. Dangerous in production.
+   * Env key: GAME_DEALS_DB_AUTO_MIGRATE
+   *          If not empty sets to true.
+   */
   synchronize: boolean;
 }
 
