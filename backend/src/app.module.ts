@@ -1,30 +1,37 @@
 import { Module } from "@nestjs/common";
+import {
+  ConfigModule,
+  ConfigService,
+} from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
 
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
-import { EnvConfig } from "./config";
+import {
+  DBConfig,
+  EnvConfig,
+} from "./config";
 import { User } from "./models/user";
 import { Game } from "./models/game";
 import { Deal } from "./models/deal";
 
-const CFG = EnvConfig();
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: "postgres",
-      host: CFG.db.host,
-      port: CFG.db.port,
-      username: CFG.db.username,
-      password: CFG.db.password,
-      database: CFG.db.database,
-      entities: [
-        User,
-        Game,
-        Deal,
-      ],
-      synchronize: CFG.db.autoMigrate,
+    TypeOrmModule.forRootAsync({
+      imports: [ ConfigModule ],
+      useFactory: (cfg: ConfigService) => ({
+        ...cfg.get<DBConfig>("db"),
+        type: "postgres",
+        entities: [
+          User,
+          Game,
+          Deal,
+        ],
+      }),
+      inject: [ ConfigModule.forRoot({
+        load: [ EnvConfig ],
+      }) ],
     }),
   ],
   controllers: [

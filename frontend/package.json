@@ -8,7 +8,7 @@
   "license": "MIT",
   "scripts": {
     "build": "parcel build ./src/index.html",
-    "start": "parcel serve --port --hmr-port 1235 ./src/index.html",
+    "start": "parcel serve --port 8002 --hmr-port 8003 ./src/index.html",
     "check": "tsc --noEmit"
   },
   "dependencies": {
