@@ -1,6 +1,0 @@
-{
-  "type": "postgres",
-  "cli": {
-    "migrationsDir": "migrations"
-  }
-}

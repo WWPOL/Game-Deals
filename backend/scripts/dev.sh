@@ -1,17 +1,20 @@
 #!/usr/bin/env bash
-prog_dir=$(dirname $(realpath "$0"))
-backend_dir=$(realpath "$prog_dir/../")
-repo_dir=$(realpath "$backend_dir/../")
+declare -r PROG_DIR=$(dirname $(realpath "$0"))
+declare -r BACKEND_DIR=$(realpath "$PROG_DIR/../")
+declare -r REPO_DIR=$(realpath "$BACKEND_DIR/../")
 
-. "$repo_dir/scripts/common.sh"
+source "$REPO_DIR/scripts/common.sh"
+
+readonly -ri EXIT_INSTALL=20
+readonly -ri EXIT_START=21
 
 log "Backend invocation"
 
-if file_newer "$backend_dir/node_modules" "$backend_dir/yarn.lock"; then
-  run_log "yarn install" "$ERR_BACKEND_INSTALL" "Failed to install dependencies"
+if file_newer "$BACKEND_DIR/node_modules" "$BACKEND_DIR/yarn.lock"; then
+  run_log "yarn install" "$EXIT_INSTALL" "Failed to install dependencies"
 else
   log "Yarn dependencies up to date"
 fi
 
 log "Starting server"
-run_log "yarn start" "$ERR_BACKEND_START" "Failed to start server"
+run_log "yarn start" "$EXIT_START" "Failed to start server"

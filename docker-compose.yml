@@ -19,6 +19,8 @@ services:
   frontend:
     image: node:latest
     working_dir: /mnt/frontend
+    ports:
+      - "8002:8002"
     volumes:
       - "./:/mnt"
     command: ./scripts/dev.sh
@@ -26,6 +28,8 @@ services:
   backend:
     image: node:latest
     working_dir: /mnt/backend
+    ports:
+      - "8001:8001"
     volumes:
       - "./:/mnt"
     command: ./scripts/dev.sh
