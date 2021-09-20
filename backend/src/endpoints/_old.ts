@@ -87,22 +87,6 @@
   }
   
   /**
-   * Provide API status.
-   * # Request
-   * GET
-   * 
-   * # Response
-   * 200 JSON:
-   *   - ok (bool): Indicates if the API should be used.
-   */
-  epHealth(req, res) {
-    res.json({
-      foo: 1,
-      ok: true,
-    });
-  }
-
-  /**
    * Login. Optionally change password.
    * # Request
    * POST, Body:
