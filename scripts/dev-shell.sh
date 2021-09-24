@@ -33,7 +33,7 @@ fi
 container=""
 case "$svc" in
   frontend) container=frontend ;;
-  server) container=backend ;;
+  backend) container=backend ;;
   *) die "Invalid SVC value" ;;
 esac
 
