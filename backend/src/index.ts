@@ -10,9 +10,8 @@ import {
   EnvConfig,
   Config,
 } from "./config";
-import {
-  Endpoints,
-} from "./endpoints";
+import { Endpoints } from "./endpoints";
+import { wrapHandler } from "./endpoints/base";
 
 const ajv = new Ajv();
 
@@ -113,7 +112,7 @@ class Server {
     Endpoints({
       cfg,
     }).forEach((handler) => {
-      this.app[handler.method()](handler.path(), handler.handle);
+      this.app[handler.method()](handler.path(), wrapHandler(handler));
     });
 
     // this.app.get(

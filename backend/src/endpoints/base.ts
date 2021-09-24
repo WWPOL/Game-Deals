@@ -15,6 +15,61 @@ export type EndpointCtx = {
 export type HTTPMethod = "all" | "get" | "post" | "put" | "delete" | "patch" | "options" | "head";
 
 /**
+ * Call an EndpointHandler handle method from a standard Express endpoint handler.
+ * @param handler - The Endpoint handler.
+ * @returns Standard express event handler which will call the endpoint handler.
+ */
+export function wrapHandler(handler: EndpointHandler): (req: Request, resp: Response) => Promise<void> {
+  return async (req: Request, resp: Response): Promise<void> => {
+    const epResp = await handler.handle(req, resp);
+    await epResp.respond(resp);
+  };
+}
+
+/**
+ * Sends a response to the client.
+ */
+export interface EndpointResponder {
+  /**
+   * Performs the action of responding to the request.
+   */
+  respond(resp: Response): Promise<void>;
+}
+
+/**
+ * Responds with JSON.
+ * @typeParam T - Type of JSON response.
+ */
+export class JSONResponder<T> implements EndpointResponder {
+  /**
+   * HTTP status code.
+   */
+  status: number;
+
+  /**
+   * JSON response data.
+   */
+  data: T;
+
+  /**
+   * Initialize a JSON responder.
+   * @param status - Status code.
+   * @param data - Response data.
+   */
+  constructor(status: number, data: T) {
+    this.status = status;
+    this.data = data;
+  }
+
+  /**
+   * Set the response HTTP status code and send the JSON body.
+   */
+  async respond(resp: Response): Promise<void> {
+    resp.status(this.status).json(this.data);
+  }
+}
+
+/**
  * Defines logic to run when an HTTP request is received.
  */
 export abstract class EndpointHandler {
@@ -45,6 +100,6 @@ export abstract class EndpointHandler {
    * @param req - Express HTTP request
    * @param resp - Express HTTP response
    */
-  abstract handle(req: Request, resp: Response): Promise<void>;
+  abstract handle(req: Request, resp: Response): Promise<EndpointResponder>;
 }
 
