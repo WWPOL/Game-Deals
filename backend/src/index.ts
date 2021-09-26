@@ -1,7 +1,7 @@
 import * as express from "express";
 import * as bodyParser from "body-parser";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
+import * as bcrypt from "bcrypt";
 import Ajv from "ajv";
 import dumbPasswords from "dumb-passwords";
 import "reflect-metadata"; // For TypeORM
@@ -215,14 +215,53 @@ class Server {
 
     return this.dbConn;        
   }
+
+  /**
+   * Initializes an admin user if none exists.
+   */
+  async initAdmin(): Promise<void> {
+    const totalUsers = await User.count({});
+    if (totalUsers === 0) {
+      // Setup an initial admin user
+      try {
+        const admin = new User();
+        admin.username = "admin";
+        admin.password_hash = await bcrypt.hash("admin", BCRYPT_SALT_ROUNDS);
+        admin.must_reset_password = true;
+        await admin.save();
+      } catch (e) {
+        throw new Error(`Failed to insert initial admin user into database: ${e}`);
+      }
+
+      console.log("Inserted initial admin user with username \"admin\" and password \"admin\"");
+    }
+  }
 }
 
 // Start server
 (async function() {
   const server = new Server(EnvConfig());
-  
-  await server.db();
-  await server.httpListen();
+
+  try {
+    await server.db();
+  } catch (e) {
+    console.error(`Failed to connect to database: ${e}`);
+    return;
+  }
+
+  try {
+    await server.initAdmin();
+  } catch (e) {
+    console.error(`Failed to initialize first admin user: ${e}`);
+    return;
+  }
+
+  try {
+    await server.httpListen();
+  } catch (e) {
+    console.error(`Failed to start the HTTP API: ${e}`);
+    return;
+  }
   
   console.log("Gracefully exiting");
 })();

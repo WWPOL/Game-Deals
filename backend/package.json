@@ -13,6 +13,7 @@
     "dev": "nodemon --watch src --ext ts --exec 'yarn start; yarn check'"
   },
   "dependencies": {
+    "@types/bcrypt": "^5.0.0",
     "ajv": "^8.2.0",
     "bcrypt": "^5.0.1",
     "body-parser": "^1.19.0",
