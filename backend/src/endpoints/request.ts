@@ -1,6 +1,7 @@
 import { Request } from "express";
-import * as D from "io-ts/Decoder";
+import * as t from "io-ts";
 import { isRight } from "fp-ts/Either";
+import dReporter from "io-ts-reporters";
 
 import { MkEndpointError } from "./error";
 
@@ -30,12 +31,12 @@ export class DecoderParser<I> implements BodyParser<I> {
   /**
    * io-ts decoder.
    */
-  decoder: D.Decoder<unknown, I>;
+  decoder: t.Decoder<unknown, I>;
 
   /**
    * Initialize decoder parser.
    */
-  constructor(decoder: D.Decoder<unknown, I>) {
+  constructor(decoder: t.Decoder<unknown, I>) {
     this.decoder = decoder;
   }
 
@@ -51,7 +52,7 @@ export class DecoderParser<I> implements BodyParser<I> {
     }
 
     throw MkEndpointError({
-      error: `Failed to parse request body: ${JSON.stringify(decoded.left, null, 4)}`,
+      error: `Failed to parse request body: ${dReporter.report(decoded)}`,
       http_status: 400,
     });
   }

@@ -1,4 +1,4 @@
-import * as D from "io-ts/Decoder";
+import * as t from "io-ts";
 import {
   BaseEndpoint,
   HTTPMethod,
@@ -13,16 +13,16 @@ import { JSONResponder } from "../../response";
 /**
  * Login endpoint request body shape.
  */
-const LoginReqShape = D.struct({
-  username: D.string,
-  password: D.string,
+const LoginReqShape = t.type({
+  username: t.string,
+  password: t.string,
 
   /**
   * If provided the user's password will be changed. This is required if the .must_reset_password field is true on the user.
   */
-  // new_password: D.union([D.string, D.undefined]),
+  // new_password: t.union([t.string, t.undefined]),
 });
-type LoginReq = D.TypeOf<typeof LoginReqShape>;
+type LoginReq = t.TypeOf<typeof LoginReqShape>;
 
 /**
  * Login response.
