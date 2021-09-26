@@ -2,6 +2,8 @@ import { Request } from "express";
 import * as D from "io-ts/Decoder";
 import { isRight } from "fp-ts/Either";
 
+import { MkEndpointError } from "./error";
+
 /**
  * @typeParam I - Body type.
  */
@@ -48,10 +50,10 @@ export class DecoderParser<I> implements BodyParser<I> {
       return decoded.right;
     }
 
-    throw {
+    throw MkEndpointError({
       error: `Failed to parse request body: ${JSON.stringify(decoded.left, null, 4)}`,
       http_status: 400,
-    };
+    });
   }
 }
 

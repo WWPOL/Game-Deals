@@ -80,14 +80,14 @@ export class ErrorResponder implements EndpointResponder {
    * Send the error to the user via a JSONResponder.
    */
   async respond(resp: Response): Promise<void> {
-    const err = (function(): { errResp: ErrorResponse, httpStatus: number } {
-      if (typeof this.error === typeof EndpointError) {
+    const err = (function(error): { errResp: ErrorResponse, httpStatus: number } {
+      if (error._tag === "endpoint_error") {
         return {
           errResp: {
-            error: this.error.error,
-            error_code: this.error.error_code,
+            error: error.error,
+            error_code: error.error_code,
           },
-          httpStatus: this.error.http_status,
+          httpStatus: error.http_status,
         };
       }
 
@@ -97,7 +97,7 @@ export class ErrorResponder implements EndpointResponder {
         },
         httpStatus: 500,
       };
-    })();
+    })(this.error);
     const jsonResponder = new JSONResponder(err.httpStatus, err.errResp);
     await jsonResponder.respond(resp);
   }

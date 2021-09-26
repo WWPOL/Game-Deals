@@ -5,18 +5,13 @@ export enum ErrorCode {
   /**
    * Indicates the API client must reset their password before continuing.
    */
-  MustResetPassword: "must_reset_password",
+  MustResetPassword = "must_reset_password",
 };
 
 /**
- * Error which occurs during an endpoint.
+ * Data stored in an EndpointError. Without typing _tag field.
  */
-export type EndpointError = {
-  /**
-   * Typing information.
-   */
-  _tag: "endpoint_error";
-  
+export type UntaggedEndpointError = {
   /**
    * Technical description of the error.
    */
@@ -33,4 +28,21 @@ export type EndpointError = {
    */
   error_code?: ErrorCode;
 };
+
+/**
+ * Error which occurs during an endpoint.
+ */
+export type EndpointError = {
+  /**
+   * Typing information.
+   */
+  _tag: "endpoint_error";
+} & UntaggedEndpointError;
+
+export function MkEndpointError(data: UntaggedEndpointError): EndpointError {
+  return {
+    _tag: "endpoint_error",
+    ...data,
+  };
+}
 
