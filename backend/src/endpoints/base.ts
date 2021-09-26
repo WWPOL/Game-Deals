@@ -40,7 +40,11 @@ export type HTTPMethod = "all" | "get" | "post" | "put" | "delete" | "patch" | "
  */
 export function wrapHandler<I>(handler: EndpointHandler<I>): (req: Request, resp: Response) => Promise<void> {
   return async (req: Request, resp: Response): Promise<void> => {
-    console.log(`${handler.method()} ${handler.path()}`);
+    const log = (msg: string) => {
+      console.log(`${handler.method()} ${handler.path()} ${msg}`);
+    };
+    
+    log("");
     const startT = new Date().getTime();
     
     // Build request
@@ -57,6 +61,7 @@ export function wrapHandler<I>(handler: EndpointHandler<I>): (req: Request, resp
       try {
         return await handler.handle(epReq);
       } catch (e) {
+        log(`=> error=${e}`);
         return new ErrorResponder(e);
       }
     })();
@@ -67,7 +72,7 @@ export function wrapHandler<I>(handler: EndpointHandler<I>): (req: Request, resp
     const endT = new Date().getTime();
     const dt = endT - startT;
     
-    console.log(`${handler.method()} ${handler.path()} => ${epResp.status()} ${dt}ms`);
+    log(`=> ${epResp.status()} ${dt}ms`);
   };
 }
 
@@ -78,10 +83,24 @@ export class BaseEndpoint {
   cfg: Config;
 
   /**
+   * @returns Database connection.
+   */
+  _dbFn: () => Promise<DBConnection>;
+
+  /**
    * Initializes an endpoint handler.
    */
   constructor(ctx: EndpointCtx) {
     this.cfg = ctx.cfg;
+    this._dbFn = ctx.db;
+  }
+
+  /**
+   * Provides access to the database.
+   * @returns Database connection.
+   */
+  async db(): Promise<DBConnection> {
+    return await this._dbFn();
   }
 }
 

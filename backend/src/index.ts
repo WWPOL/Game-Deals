@@ -16,6 +16,9 @@ import {
 } from "./config";
 import { Endpoints } from "./endpoints";
 import { wrapHandler } from "./endpoints/base";
+import { User } from "./models/user";
+import { Game } from "./models/game";
+import { Deal } from "./models/deal";
 
 const ajv = new Ajv();
 
@@ -202,6 +205,11 @@ class Server {
         password: this.cfg.db.password,
         database: this.cfg.db.database,
         synchronize: this.cfg.db.synchronize,
+        entities: [
+          User,
+          Game,
+          Deal,
+        ],
       });
     }
 
@@ -212,7 +220,8 @@ class Server {
 // Start server
 (async function() {
   const server = new Server(EnvConfig());
-
+  
+  await server.db();
   await server.httpListen();
   
   console.log("Gracefully exiting");

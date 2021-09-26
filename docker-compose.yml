@@ -32,6 +32,8 @@ services:
       - "8001:8001"
     volumes:
       - "./:/mnt"
+    environment:
+      - GAME_DEALS_DB_AUTO_MIGRATE=true
     command: ./scripts/dev.sh
     restart: always
 volumes:

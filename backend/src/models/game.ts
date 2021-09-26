@@ -1,4 +1,5 @@
 import {
+  BaseEntity,
   Entity,
   Column,
   PrimaryGeneratedColumn,
@@ -8,7 +9,7 @@ import {
 import { Deal } from "./deal";
 
 @Entity()
-export class Game {
+export class Game extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: string;
 

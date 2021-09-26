@@ -9,6 +9,7 @@ import {
   DecoderParser,
 } from "../../request";
 import { JSONResponder } from "../../response";
+import { User } from "../../../models/user";
 
 /**
  * Login endpoint request body shape.
@@ -20,7 +21,7 @@ const LoginReqShape = t.type({
   /**
   * If provided the user's password will be changed. This is required if the .must_reset_password field is true on the user.
   */
-  // new_password: t.union([t.string, t.undefined]),
+  new_password: t.union([t.string, t.undefined]),
 });
 type LoginReq = t.TypeOf<typeof LoginReqShape>;
 
@@ -52,8 +53,11 @@ export class LoginEndpoint extends BaseEndpoint {
 
   async handle(req: EndpointRequest<LoginReq>): Promise<JSONResponder<LoginResp>> {
     const body = req.body();
-    return new JSONResponder(200, { auth_token: "123" });
     
+    console.log("users=", await User.find());
+
+    return new JSONResponder(200, { auth_token: "123" });
+
     // // Get user
     // let user = null;
     // try {

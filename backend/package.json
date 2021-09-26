@@ -10,7 +10,7 @@
     "build": "tsc",
     "start": "ts-node ./src/index.ts",
     "check": "tsc --noEmit",
-    "dev": "nodemon --watch src --ext ts --exec 'npm start'"
+    "dev": "nodemon --watch src --ext ts --exec 'yarn start; yarn check'"
   },
   "dependencies": {
     "ajv": "^8.2.0",
