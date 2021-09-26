@@ -8,6 +8,8 @@
     "paths": {
       "~*": [ "./*" ]
     },
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true
   },
   "include": [ "src/**/*" ],
   "files": [

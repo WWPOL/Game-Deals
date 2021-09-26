@@ -1,13 +1,11 @@
 import {
   EndpointCtx,
   EndpointHandler,
-} from "./base";
-import {
-  Endpoints as V1Endpoints,
-} from "./v1/";
+} from "../../base";
+import { LoginEndpoint } from "./login";
 
 export function Endpoints(ctx: EndpointCtx): EndpointHandler<any>[] {
   return [
-    ...V1Endpoints(ctx),
+    new LoginEndpoint(ctx),
   ];
 }

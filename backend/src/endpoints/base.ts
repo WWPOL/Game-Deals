@@ -1,12 +1,30 @@
 import { Request, Response } from "express";
-
+import {
+  Connection as DBConnection,
+} from "typeorm";
 import { Config } from "~/config";
-
+import {
+  BodyParser,
+  EndpointRequest,
+} from "./request";
+import {
+  EndpointResponder,
+  ErrorResponder,
+} from "./response";
+ 
 /**
  * Data required to setup an endpoint handler.
  */
 export type EndpointCtx = {
+  /**
+   * Backend configuration.
+   */
   cfg: Config;
+
+  /**
+   * @returns Database connection.
+   */
+  db: () => Promise<DBConnection>;
 }
 
 /**
@@ -16,65 +34,38 @@ export type HTTPMethod = "all" | "get" | "post" | "put" | "delete" | "patch" | "
 
 /**
  * Call an EndpointHandler handle method from a standard Express endpoint handler.
+ * @typeParam I - Request body type.
  * @param handler - The Endpoint handler.
  * @returns Standard express event handler which will call the endpoint handler.
  */
-export function wrapHandler(handler: EndpointHandler): (req: Request, resp: Response) => Promise<void> {
+export function wrapHandler<I>(handler: EndpointHandler<I>): (req: Request, resp: Response) => Promise<void> {
   return async (req: Request, resp: Response): Promise<void> => {
-    const epResp = await handler.handle(req, resp);
+    // Build request
+    const epReq = {
+      req: req,
+      body: (): I => {
+        const bodyParser = handler.bodyParser();
+        return bodyParser.parse(req);
+      },
+    };
+
+    // Handle
+    const epResp = await (async function(): Promise<EndpointResponder> {
+      try {
+        return await handler.handle(epReq);
+      } catch (e) {
+        return new ErrorResponder(e);
+      }
+    })();
+
+    // Respond
     await epResp.respond(resp);
   };
 }
 
-/**
- * Sends a response to the client.
- */
-export interface EndpointResponder {
+export class BaseEndpoint {
   /**
-   * Performs the action of responding to the request.
-   */
-  respond(resp: Response): Promise<void>;
-}
-
-/**
- * Responds with JSON.
- * @typeParam T - Type of JSON response.
- */
-export class JSONResponder<T> implements EndpointResponder {
-  /**
-   * HTTP status code.
-   */
-  status: number;
-
-  /**
-   * JSON response data.
-   */
-  data: T;
-
-  /**
-   * Initialize a JSON responder.
-   * @param status - Status code.
-   * @param data - Response data.
-   */
-  constructor(status: number, data: T) {
-    this.status = status;
-    this.data = data;
-  }
-
-  /**
-   * Set the response HTTP status code and send the JSON body.
-   */
-  async respond(resp: Response): Promise<void> {
-    resp.status(this.status).json(this.data);
-  }
-}
-
-/**
- * Defines logic to run when an HTTP request is received.
- */
-export abstract class EndpointHandler {
-  /**
-   * Configuration for server.
+   * Endpoint context
    */
   cfg: Config;
 
@@ -84,22 +75,31 @@ export abstract class EndpointHandler {
   constructor(ctx: EndpointCtx) {
     this.cfg = ctx.cfg;
   }
+}
 
+/**
+ * Defines logic to run when an HTTP request is received.
+ * @typeParam I - Request body data type.
+ */
+export interface EndpointHandler<I> {
+  /**
+   * Generate body parser.
+   */
+  bodyParser(): BodyParser<I>;
+  
   /**
    * @returns HTTP method for which to handle HTTP requests.
    */
-  abstract method(): HTTPMethod;
+  method(): HTTPMethod;
 
   /**
    * @returns HTTP path of HTTP requests to handler.
    */
-  abstract path(): string;
+  path(): string;
 
   /**
    * Run request processing logic.
-   * @param req - Express HTTP request
-   * @param resp - Express HTTP response
+   * @param req - Request
    */
-  abstract handle(req: Request, resp: Response): Promise<EndpointResponder>;
+  handle(req: EndpointRequest<I>): Promise<EndpointResponder>;
 }
-

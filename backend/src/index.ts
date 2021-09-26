@@ -2,9 +2,13 @@ import * as express from "express";
 import * as bodyParser from "body-parser";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import mongo from "mongodb";
 import Ajv from "ajv";
 import dumbPasswords from "dumb-passwords";
+import "reflect-metadata"; // For TypeORM
+import {
+  createConnection as createORMConnection,
+  Connection as DBConnection,
+} from "typeorm";
 
 import {
   EnvConfig,
@@ -34,16 +38,6 @@ const AUTH_TOKEN_AUDIENCE = "game-deals";
  * Number of rounds to salt passwords when hashing with bcrypt.
  */
 const BCRYPT_SALT_ROUNDS = 10;
-
-/**
- * Error codes returned by the API.
- */
-const ERROR_CODES = {
-  /**
-   * Indicates the API client must reset their password before continuing.
-   */
-  must_reset_password: "must_reset_password",
-};
 
 /**
  * @param date To convert.
@@ -80,14 +74,19 @@ function passwordAllowed(plainText: string): string | null {
  * API responses use JSON encoded bodies.
  * 
  * If an API error occurs the "error" response field will contain a user friendly error. If it is an error which the API client is supposed to recognize and change its behavior based on, and the response HTTP code doesn't clearly indicate the problem (ex., like how "401 Anauthorized" is clear), the "error_code" field will be present (see ERROR_CODES for all relevant values).
- * 
- * Data is stored in MongoDB in the "admins" and "game_deals" collections. Documents meet the ADMIN_SCHEMA and GAME_DEAL_SCHEMA respectively.
+
+ * Data is stored in Postgres, see the ./models module.
  */
 class Server {
   /**
    * Server configuration values.
    */
   cfg: Config;
+
+  /**
+   * Database connection.
+   */
+  dbConn: null | DBConnection;
 
   /**
    * Base Express server.
@@ -100,6 +99,7 @@ class Server {
    */
   constructor(cfg: Config) {
     this.cfg = cfg;
+    this.dbConn = null;
 
     // this.dbClient = new mongo.MongoClient(this.cfg.mongoURI, { useUnifiedTopology: true });
 
@@ -111,6 +111,7 @@ class Server {
 
     Endpoints({
       cfg,
+      db: this.db,
     }).forEach((handler) => {
       this.app[handler.method()](handler.path(), wrapHandler(handler));
     });
@@ -191,7 +192,27 @@ class Server {
   }
 
   /**
-   * Log requests. Sets req.mwLogReqStartT as the start time.
+   * Connects to database if not already connected.
+   * @returns Database connection.
+   */
+  async db(): Promise<DBConnection> {
+    if (this.dbConn === null) {
+      this.dbConn = await createORMConnection({
+        type: "postgres",
+        host: this.cfg.db.host,
+        port: this.cfg.db.port,
+        username: this.cfg.db.username,
+        password: this.cfg.db.password,
+        database: this.cfg.db.database,
+        synchronize: this.cfg.db.synchronize,
+      });
+    }
+
+    return this.dbConn;        
+  }
+
+  /**
+   * Log requests.
    */
   mwLog(req, res, next) {
     console.log(`${req.method} ${req.path}`);
