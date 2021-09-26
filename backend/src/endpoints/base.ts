@@ -40,6 +40,9 @@ export type HTTPMethod = "all" | "get" | "post" | "put" | "delete" | "patch" | "
  */
 export function wrapHandler<I>(handler: EndpointHandler<I>): (req: Request, resp: Response) => Promise<void> {
   return async (req: Request, resp: Response): Promise<void> => {
+    console.log(`${handler.method()} ${handler.path()}`);
+    const startT = new Date().getTime();
+    
     // Build request
     const epReq = {
       req: req,
@@ -60,6 +63,11 @@ export function wrapHandler<I>(handler: EndpointHandler<I>): (req: Request, resp
 
     // Respond
     await epResp.respond(resp);
+
+    const endT = new Date().getTime();
+    const dt = endT - startT;
+    
+    console.log(`${handler.method()} ${handler.path()} => ${epResp.status()} ${dt}ms`);
   };
 }
 

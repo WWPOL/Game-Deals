@@ -52,7 +52,7 @@ export class DecoderParser<I> implements BodyParser<I> {
     }
 
     throw MkEndpointError({
-      error: `Failed to parse request body: ${dReporter.report(decoded)}`,
+      error: `Failed to parse request body: ${dReporter.report(decoded).join(", ")}`,
       http_status: 400,
     });
   }

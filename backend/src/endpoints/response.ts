@@ -9,6 +9,11 @@ import {
  */
 export interface EndpointResponder {
   /**
+   * The HTTP status of the response.
+   */
+  status(): number;
+  
+  /**
    * Performs the action of responding to the request.
    */
   respond(resp: Response): Promise<void>;
@@ -22,7 +27,7 @@ export class JSONResponder<T> implements EndpointResponder {
   /**
    * HTTP status code.
    */
-  status: number;
+  httpStatus: number;
 
   /**
    * JSON response data.
@@ -31,19 +36,26 @@ export class JSONResponder<T> implements EndpointResponder {
 
   /**
    * Initialize a JSON responder.
-   * @param status - Status code.
+   * @param httpStatus - HttpStatus code.
    * @param data - Response data.
    */
-  constructor(status: number, data: T) {
-    this.status = status;
+  constructor(httpStatus: number, data: T) {
+    this.httpStatus = httpStatus;
     this.data = data;
+  }
+
+  /**
+   * @returns HTTP status of response.
+   */
+  status(): number {
+    return this.httpStatus;
   }
 
   /**
    * Set the response HTTP status code and send the JSON body.
    */
   async respond(resp: Response): Promise<void> {
-    resp.status(this.status).json(this.data);
+    resp.status(this.httpStatus).json(this.data);
   }
 }
 
@@ -67,38 +79,43 @@ export class ErrorResponder implements EndpointResponder {
   /**
    * The error which occurred.
    */
-  error: EndpointError | any;
+  errResp: ErrorResponse;
+
+  /**
+   * HTTP status.
+   */
+  httpStatus: number;
 
   /**
    * Initialize error responder.
    */
   constructor(error: EndpointError | any) {
-    this.error = error;
+    if (error._tag === "endpoint_error") {
+      this.errResp = {
+        error: error.error,
+        error_code: error.error_code,
+      };
+      this.httpStatus = error.http_status;
+    } else {
+      this.errResp = {
+        error: "An unknown internal error occurred",
+      };
+      this.httpStatus = 500;
+    }
+  }
+
+  /**
+   * @returns HTTP status.
+   */
+  status(): number {
+    return this.httpStatus;
   }
 
   /**
    * Send the error to the user via a JSONResponder.
    */
   async respond(resp: Response): Promise<void> {
-    const err = (function(error): { errResp: ErrorResponse, httpStatus: number } {
-      if (error._tag === "endpoint_error") {
-        return {
-          errResp: {
-            error: error.error,
-            error_code: error.error_code,
-          },
-          httpStatus: error.http_status,
-        };
-      }
-
-      return {
-        errResp: {
-          error: "An unknown internal error occurred",
-        },
-        httpStatus: 500,
-      };
-    })(this.error);
-    const jsonResponder = new JSONResponder(err.httpStatus, err.errResp);
+    const jsonResponder = new JSONResponder(this.httpStatus, this.errResp);
     await jsonResponder.respond(resp);
   }
 }

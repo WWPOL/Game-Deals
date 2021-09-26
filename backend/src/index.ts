@@ -101,12 +101,9 @@ class Server {
     this.cfg = cfg;
     this.dbConn = null;
 
-    // this.dbClient = new mongo.MongoClient(this.cfg.mongoURI, { useUnifiedTopology: true });
-
     // Setup express HTTP API
     this.app = express();
 
-    this.app.use(this.mwLog);
     this.app.use(bodyParser.json());
 
     Endpoints({
@@ -209,23 +206,6 @@ class Server {
     }
 
     return this.dbConn;        
-  }
-
-  /**
-   * Log requests.
-   */
-  mwLog(req, res, next) {
-    console.log(`${req.method} ${req.path}`);
-
-    const startT = new Date().getTime();
-    
-    next();
-
-    const endT = new Date().getTime();
-
-    const dt = endT - startT;
-
-    console.log(`${req.method} ${req.path} => ${dt}ms`);
   }
 }
 
