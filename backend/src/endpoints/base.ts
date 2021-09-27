@@ -11,6 +11,10 @@ import {
   EndpointResponder,
   ErrorResponder,
 } from "./response";
+import {
+  Logger,
+  ConsoleLogger,
+} from "../logger";
  
 /**
  * Data required to setup an endpoint handler.
@@ -25,6 +29,11 @@ export type EndpointCtx = {
    * @returns Database connection.
    */
   db: () => Promise<DBConnection>;
+
+  /**
+   * Logger.
+   */
+  log: Logger;
 }
 
 /**
@@ -40,11 +49,9 @@ export type HTTPMethod = "all" | "get" | "post" | "put" | "delete" | "patch" | "
  */
 export function wrapHandler<I>(handler: EndpointHandler<I>): (req: Request, resp: Response) => Promise<void> {
   return async (req: Request, resp: Response): Promise<void> => {
-    const log = (msg: string) => {
-      console.log(`${handler.method()} ${handler.path()} ${msg}`);
-    };
+    const log = new ConsoleLogger(`${handler.method()} ${handler.path()}`);
     
-    log("");
+    log.info("");
     const startT = new Date().getTime();
     
     // Build request
@@ -61,7 +68,9 @@ export function wrapHandler<I>(handler: EndpointHandler<I>): (req: Request, resp
       try {
         return await handler.handle(epReq);
       } catch (e) {
-        log(`=> error=${e}`);
+        if (e._tag !== "endpoint_error") {
+          log.error(e);
+        }
         return new ErrorResponder(e);
       }
     })();
@@ -72,27 +81,85 @@ export function wrapHandler<I>(handler: EndpointHandler<I>): (req: Request, resp
     const endT = new Date().getTime();
     const dt = endT - startT;
     
-    log(`=> ${epResp.status()} ${dt}ms`);
+    log.info(`=> ${epResp.status()} ${dt}ms`);
   };
 }
 
-export class BaseEndpoint {
+/**
+ * Specifies the network location of an endpoint for use by BaseEndpoint.
+ * @typeParam I - Request body input type.
+ */
+export type BaseEndpointSpec<I> = {
   /**
-   * Endpoint context
+   * The HTTP method to be handled.
+   */
+  method: HTTPMethod;
+
+  /**
+   * The URL path the endpoint will handle.
+   */
+  path: string;
+
+  /**
+   * Factory function which initializes a body parser.
+   */
+  bodyParserFactory: () => BodyParser<I>;
+}
+
+/**
+ * Implements some helpful behavior for all endpoints to use.
+ * @typeParam I - Request body input type.
+ */
+export class BaseEndpoint<I> {
+  /**
+   * Endpoint context.
    */
   cfg: Config;
+
+  /**
+   * The specification of network location of the endpoint.
+   */
+  spec: BaseEndpointSpec<I>;
 
   /**
    * @returns Database connection.
    */
   _dbFn: () => Promise<DBConnection>;
+  
+  /**
+   * Logger for endpoint.
+   */
+  log: Logger;
 
   /**
    * Initializes an endpoint handler.
    */
-  constructor(ctx: EndpointCtx) {
+  constructor(ctx: EndpointCtx, spec: BaseEndpointSpec<I>) {
     this.cfg = ctx.cfg;
+    this.spec = spec;
     this._dbFn = ctx.db;
+    this.log = ctx.log.child(`${this.spec.method} ${this.spec.path}`);
+  }
+
+  /**
+   * @returns The body parser used to process request body.
+   */
+  bodyParser(): BodyParser<I> {
+    return this.spec.bodyParserFactory();
+  }
+
+  /**
+   * @returns HTTP method endpoint uses.
+   */
+  method(): HTTPMethod {
+    return this.spec.method;
+  }
+
+  /**
+   * @returns URL path location of endpoint.
+   */
+  path(): string {
+    return this.spec.path;
   }
 
   /**

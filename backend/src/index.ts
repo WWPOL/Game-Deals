@@ -1,9 +1,5 @@
 import * as express from "express";
 import * as bodyParser from "body-parser";
-import jwt from "jsonwebtoken";
-import * as bcrypt from "bcrypt";
-import Ajv from "ajv";
-import dumbPasswords from "dumb-passwords";
 import "reflect-metadata"; // For TypeORM
 import {
   createConnection as createORMConnection,
@@ -14,13 +10,13 @@ import {
   EnvConfig,
   Config,
 } from "./config";
+import { ConsoleLogger } from "./logger";
 import { Endpoints } from "./endpoints";
 import { wrapHandler } from "./endpoints/base";
+import { passwordsHash } from "./security";
 import { User } from "./models/user";
 import { Game } from "./models/game";
 import { Deal } from "./models/deal";
-
-const ajv = new Ajv();
 
 /**
  * The number of items which should be returned by queries.
@@ -28,44 +24,11 @@ const ajv = new Ajv();
 const QUERY_LIMIT = 20;
 
 /**
- * Algorithm to use when signing JWT authentication tokens.
- */
-const AUTH_TOKEN_JWT_ALGORITHM = "HS256";
-
-/**
- * Audience to use when signing JWT authentication tokens.
- */
-const AUTH_TOKEN_AUDIENCE = "game-deals";
-
-/**
- * Number of rounds to salt passwords when hashing with bcrypt.
- */
-const BCRYPT_SALT_ROUNDS = 10;
-
-/**
  * @param date To convert.
  * @returns Unix timestamp for date.
  */
 function unixTime(date: Date): number {
   return Math.floor(date.getTime() / 1000);
-}
-
-/**
- * Determines if a password is allowed.
- * Doesn't allow passwords less than 8 characters or common passwords.
- * @param plainText Plain text password to check.
- * @returns String describing problem with password or null if password is ok.
- */
-function passwordAllowed(plainText: string): string | null {
-  if (plainText.length < 8) {
-    return "must be longer than 8 characters";
-  } else if (dumbPasswords.check(plainText) === true) {
-    const rate = dumbPasswords.rateOfUsage(plainText);
-    const percent = (rate.frequency / 100000) * 100;
-    return `this password is used in about ${percent}% of hacked accounts on the internet, please use something more secure`;
-  }
-
-  return null;
 }
 
 /**
@@ -112,6 +75,7 @@ class Server {
     Endpoints({
       cfg,
       db: this.db,
+      log: new ConsoleLogger("HTTP API"),
     }).forEach((handler) => {
       this.app[handler.method()](handler.path(), wrapHandler(handler));
     });
@@ -226,8 +190,9 @@ class Server {
       try {
         const admin = new User();
         admin.username = "admin";
-        admin.password_hash = await bcrypt.hash("admin", BCRYPT_SALT_ROUNDS);
+        admin.password_hash = await passwordsHash("admin");
         admin.must_reset_password = true;
+        
         await admin.save();
       } catch (e) {
         throw new Error(`Failed to insert initial admin user into database: ${e}`);

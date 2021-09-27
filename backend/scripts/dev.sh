@@ -10,6 +10,9 @@ declare -ri EXIT_START=21
 
 log "Backend invocation"
 
+log "GAME_DEALS_DB_AUTO_MIGRATE='$GAME_DEALS_DB_AUTO_MIGRATE'"
+
+
 if file_newer "$BACKEND_DIR/node_modules" "$BACKEND_DIR/yarn.lock"; then
   run_log "yarn install" "$EXIT_INSTALL" "Failed to install dependencies"
 else

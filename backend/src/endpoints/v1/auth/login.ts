@@ -1,13 +1,26 @@
 import * as t from "io-ts";
 import {
+  timingSafeEqual,
+} from "crypto";
+
+import {
+  passwordsCompare,
+  passwordsHash,
+  passwordsCheckRequirements,
+  jwtSign,
+} from "../../../security";
+import {
   BaseEndpoint,
-  HTTPMethod,
+  EndpointCtx,
 } from "../../base";
 import {
   EndpointRequest,
-  BodyParser,
   DecoderParser,
 } from "../../request";
+import {
+  MkEndpointError,
+  ErrorCode,
+} from "../../error";
 import { JSONResponder } from "../../response";
 import { User } from "../../../models/user";
 
@@ -19,8 +32,8 @@ const LoginReqShape = t.type({
   password: t.string,
 
   /**
-  * If provided the user's password will be changed. This is required if the .must_reset_password field is true on the user.
-  */
+   * If provided the user's password will be changed. This is required if the .must_reset_password field is true on the user.
+   */
   new_password: t.union([t.string, t.undefined]),
 });
 type LoginReq = t.TypeOf<typeof LoginReqShape>;
@@ -38,136 +51,111 @@ type LoginResp = {
 /**
  * Login. Optionally change password.
  */
-export class LoginEndpoint extends BaseEndpoint {
-  bodyParser(): BodyParser<LoginReq> {
-    return new DecoderParser(LoginReqShape);
-  }
-
-  method(): HTTPMethod {
-    return "post";
-  }
-
-  path() {
-    return "/api/v1/auth/login";
+export class LoginEndpoint extends BaseEndpoint<LoginReq> {
+  constructor(ctx: EndpointCtx) {
+    super(ctx, {
+      method: "post",
+      path: "/api/v1/auth/login",
+      bodyParserFactory: () => new DecoderParser(LoginReqShape),
+    });
   }
 
   async handle(req: EndpointRequest<LoginReq>): Promise<JSONResponder<LoginResp>> {
     const body = req.body();
     
-    console.log("users=", await User.find());
+    // Get user
+    let user = await User.findOne({
+      username: body.username,
+    });
 
-    return new JSONResponder(200, { auth_token: "123" });
+    if (user === null) {
+      throw MkEndpointError({
+        http_status: 401,
+        error: "unauthorized",
+      });
+    }
 
-    // // Get user
-    // let user = null;
-    // try {
-    //   user = await this.db.admins.findOne({
-    //     username: req.body.username,
-    //   });
-    // } catch (e) {
-    //   console.trace(`Failed to retrieve a user: ${e}`);
-    //   res.status(500).json({
-    //     error: "internal error",
-    //   });
-    //   return;
-    // }
+    // Check password
+    try {
+      let passwordOk = await passwordsCompare({
+        plaintext: body.password,
+        hash: user.password_hash,
+      });
+      if (passwordOk === false) {
+        throw MkEndpointError({
+          http_status: 401,
+          error: "unauthorized",
+        });
+      }
+    } catch (e) {
+      this.log.error(`Failed to compare password for username=${body.username}`, e);
+      throw MkEndpointError({
+        http_status: 401,
+        error: "unauthorized",
+      });
+    }
 
-    // if (user === null) {
-    //   res.status(401).json({
-    //     error: "unauthorized",
-    //   });
-    //   return;
-    // }
+    // Set new password if needed
+    if (user.must_reset_password === true && body.new_password === undefined) {
+      throw MkEndpointError({
+        http_status: 401,
+        error: "user must reset their password before logging in",
+        error_code: ErrorCode.MustResetPassword,
+      });
+    }
 
-    // // Check password
-    // try {
-    //   let passwordOk = await bcrypt.compare(req.body.password, user.password_hash)
-    //   if (passwordOk === false) {
-    //     res.status(401).json({
-    //       error: "unauthorized",
-    //     });
-    //     return;
-    //   }
-    // } catch (e) {
-    //   res.status(401).json({
-    //     error: "unauthorized",
-    //   });
-    //   return;
-    // }
+    if (body.new_password !== undefined) {
+      // Check the new password is allowed
+      if (body.password.length === body.new_password.length && timingSafeEqual(Buffer.from(body.password), Buffer.from(body.new_password))) {
+        throw MkEndpointError({
+          http_status: 400,
+          error: "failed to set new password: cannot be same as current",
+        });
+      }
+      
+      const newPwOk = passwordsCheckRequirements(body.new_password);
+      if (newPwOk.ok === false) {
+        throw MkEndpointError({
+          http_status: 400,
+          error: `failed to set new password: ${newPwOk.error}`,
+        });
+      }
 
-    // // Set new password if needed
-    // if (user.must_reset_password === true && req.body.new_password === undefined) {
-    //   res.status(401).json({
-    //     error: "user must reset their password before logging in",
-    //     error_code: ERROR_CODES.must_reset_password,
-    //   });
-    //   return;
-    // }
+      // Hash the password
+      const newPwHash = await (async function() {
+        try {
+          return await passwordsHash(body.new_password);
+        } catch (e) {
+          this.log.error(`Failed to hash new password: ${e}`);
 
-    // if (req.body.new_password !== undefined) {
-    //   // Check the new password is allowed
-    //   const newPwOk = passwordAllowed(req.body.new_password);
-    //   if (newPwOk !== null) {
-    //     res.status(400).json({
-    //       error: `failed to set new password: ${newPwOk}`,
-    //     });
-    //     return;
-    //   }
+          throw MkEndpointError({
+            http_status: 500,
+            error: "internal error",
+          });
+        }
+      })();
 
-    //   // Hash the password
-    //   let newPwHash = null;
-    //   try {
-    //     newPwHash = await bcrypt.hash(req.body.new_password, BCRYPT_SALT_ROUNDS);
-    //   } catch (e) {
-    //     console.trace(`Failed to hash new password: ${e}`);
-
-    //     res.status(500).json({
-    //       error: "internal error",
-    //     });
-    //     return;
-    //   }
-
-    //   // Save the new password
-    //   try {
-    //     await this.db.admins.updateOne({
-    //       _id: user._id,
-    //     }, {
-    //       $set: {
-    //         password_hash: newPwHash,
-    //         must_reset_password: false,
-    //       },
-    //     });
-    //   } catch (e) {
-    //     console.trace(`Failed to set new password: ${e}`);
+      // Save the new password
+      try {
+        user.password_hash = newPwHash;
+        user.must_reset_password = false;
         
-    //     res.status(500).json({
-    //       error: "internal error",
-    //     });
-    //     return;
-    //   }
-    // }
+        await user.save();
+      } catch (e) {
+        this.log.error(`Failed to set new password: ${e}`);
 
-    // // Generate authentication token
-    // const token = await new Promise((resolve, reject) => {
-    //   jwt.sign({
-    //     aud: AUTH_TOKEN_AUDIENCE,
-    //     iss: AUTH_TOKEN_AUDIENCE,
-    //     sub: user._id,
-    //   }, this.cfg.authTokenSecret, {
-    //     algorithm: AUTH_TOKEN_JWT_ALGORITHM,
-    //     expiresIn: '2w',
-    //   }, (err, token) => {
-    //     if (err !== undefined && err !== null) {
-    //       reject(err);
-    //       return;
-    //     }
+        throw MkEndpointError({
+          http_status: 500,
+          error: "internal error",
+        });
+      }
+    }
 
-    //     resolve(token);
-    //   });
-    // });
+    // Generate authentication token
+    const token = await jwtSign(this.cfg, user.id);
 
-    // res.json({
-    //   auth_token: token,
-    // });
+    return new JSONResponder(200, {
+      auth_token: token,
+    });
   }
 }

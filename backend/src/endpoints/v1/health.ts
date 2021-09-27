@@ -1,6 +1,6 @@
 import {
   BaseEndpoint,
-  HTTPMethod,
+  EndpointCtx,
 } from "../base";
 import {
   BodyParser,
@@ -16,20 +16,16 @@ export type HealthResp = {
   /**
    * Indicates if the API should be used.
    */
-  ok: boolean,
-}
+  ok: boolean;
+};
 
-export class HealthEndpoint extends BaseEndpoint {
-  bodyParser(): BodyParser<void> {
-    return VoidParser;
-  }
-  
-  method(): HTTPMethod {
-    return "get";
-  }
-  
-  path() {
-    return "/api/v1/health";
+export class HealthEndpoint extends BaseEndpoint<void> {
+  constructor(ctx: EndpointCtx) {
+    super(ctx, {
+      method: "get",
+      path: "/api/v1/health",
+      bodyParserFactory: () => VoidParser,
+    });
   }
 
   async handle(req: EndpointRequest<void>): Promise<JSONResponder<HealthResp>> {
