@@ -76,19 +76,11 @@ export class LoginEndpoint extends BaseEndpoint<LoginReq> {
     }
 
     // Check password
-    try {
-      let passwordOk = await passwordsCompare({
-        plaintext: body.password,
-        hash: user.password_hash,
-      });
-      if (passwordOk === false) {
-        throw MkEndpointError({
-          http_status: 401,
-          error: "unauthorized",
-        });
-      }
-    } catch (e) {
-      this.log.error(`Failed to compare password for username=${body.username}`, e);
+    const passwordOk = await passwordsCompare({
+      plaintext: body.password,
+      hash: user.password_hash,
+    });
+    if (passwordOk === false) {
       throw MkEndpointError({
         http_status: 401,
         error: "unauthorized",
@@ -126,7 +118,7 @@ export class LoginEndpoint extends BaseEndpoint<LoginReq> {
         try {
           return await passwordsHash(body.new_password);
         } catch (e) {
-          this.log.error(`Failed to hash new password: ${e}`);
+          this.log.error(`Failed to hash new password`, e);
 
           throw MkEndpointError({
             http_status: 500,
@@ -142,7 +134,7 @@ export class LoginEndpoint extends BaseEndpoint<LoginReq> {
         
         await user.save();
       } catch (e) {
-        this.log.error(`Failed to set new password: ${e}`);
+        this.log.error(`Failed to set new password`, e);
 
         throw MkEndpointError({
           http_status: 500,
