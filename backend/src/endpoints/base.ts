@@ -15,11 +15,17 @@ import {
   Logger,
   ConsoleLogger,
 } from "../logger";
+import { AuthorizationClient } from "../authorization";
  
 /**
  * Data required to setup an endpoint handler.
  */
 export type EndpointCtx = {
+  /**
+   * Logger.
+   */
+  log: Logger;
+  
   /**
    * Backend configuration.
    */
@@ -31,9 +37,9 @@ export type EndpointCtx = {
   db: () => Promise<DBConnection>;
 
   /**
-   * Logger.
+   * Used to enforce authorization.
    */
-  log: Logger;
+  authorization: AuthorizationClient;
 }
 
 /**
@@ -112,6 +118,11 @@ export type BaseEndpointSpec<I> = {
  */
 export class BaseEndpoint<I> {
   /**
+   * Logger for endpoint.
+   */
+  log: Logger;
+
+  /**
    * Endpoint context.
    */
   cfg: Config;
@@ -127,9 +138,9 @@ export class BaseEndpoint<I> {
   _dbFn: () => Promise<DBConnection>;
   
   /**
-   * Logger for endpoint.
+   * Used to enforce authorization.
    */
-  log: Logger;
+  authorization: AuthorizationClient;
 
   /**
    * Initializes an endpoint handler.
@@ -139,6 +150,7 @@ export class BaseEndpoint<I> {
     this.spec = spec;
     this._dbFn = ctx.db;
     this.log = ctx.log.child(`${this.spec.method} ${this.spec.path}`);
+    this.authorization = ctx.authorization;
   }
 
   /**

@@ -11,6 +11,7 @@ import {
   Config,
 } from "./config";
 import { ConsoleLogger } from "./logger";
+import { AuthorizationClient } from "./authorization";
 import { Endpoints } from "./endpoints";
 import { wrapHandler } from "./endpoints/base";
 import { passwordsHash } from "./encryption";
@@ -76,6 +77,7 @@ class Server {
       cfg,
       db: this.db,
       log: new ConsoleLogger("HTTP API"),
+      authorization: new AuthorizationClient(),
     }).forEach((handler) => {
       this.app[handler.method()](handler.path(), wrapHandler(handler));
     });
