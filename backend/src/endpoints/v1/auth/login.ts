@@ -8,7 +8,7 @@ import {
   passwordsHash,
   passwordsCheckRequirements,
   jwtSign,
-} from "../../../security";
+} from "../../../encryption";
 import {
   BaseEndpoint,
   EndpointCtx,
