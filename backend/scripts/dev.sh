@@ -5,8 +5,8 @@ declare -r REPO_DIR=$(realpath "$BACKEND_DIR/../")
 
 source "$REPO_DIR/scripts/common.sh"
 
-declare -ri EXIT_INSTALL=20
-declare -ri EXIT_START=21
+declare -ri EXIT_INSTALL=120
+declare -ri EXIT_START=121
 
 log "Backend invocation"
 
