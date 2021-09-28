@@ -6,12 +6,17 @@ import {
   OneToMany,
 } from "typeorm";
 
+import {
+  UniqueResource,
+  APIURI,
+  APIURIResource,
+} from "./index";
 import { Deal } from "./deal";
 
 @Entity()
-export class Game extends BaseEntity {
+export class Game extends BaseEntity implements UniqueResource {
   @PrimaryGeneratedColumn()
-  id: string;
+  id: number;
 
   @Column()
   name: string;
@@ -21,4 +26,11 @@ export class Game extends BaseEntity {
 
   @OneToMany(() => Deal, (deal: Deal) => deal.game)
   deals: Deal[];
+
+  /**
+   * @returns A unique identifier.
+   */
+  uri(): APIURI {
+    return new APIURI(APIURIResource.Game, this.id.toString());
+  }
 }

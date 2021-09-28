@@ -6,11 +6,16 @@ import {
   ManyToOne,
 } from "typeorm";
 
+import {
+  UniqueResource,
+  APIURI,
+  APIURIResource,
+} from "./index";
 import { User } from "./user";
 import { Game } from "./game";
 
 @Entity()
-export class Deal extends BaseEntity {
+export class Deal extends BaseEntity implements UniqueResource {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -25,4 +30,11 @@ export class Deal extends BaseEntity {
 
   @Column()
   end_date: Date;
+
+  /**
+   * @returns A unique identifier.
+   */
+  uri(): APIURI {
+    return new APIURI(APIURIResource.Deal, this.id.toString());
+  }
 }

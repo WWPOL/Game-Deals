@@ -1,23 +1,18 @@
 import * as express from "express";
 import * as bodyParser from "body-parser";
 import "reflect-metadata"; // For TypeORM
-import {
-  createConnection as createORMConnection,
-  Connection as DBConnection,
-} from "typeorm";
-
+import { Connection as DBConnection } from "typeorm";
 import {
   EnvConfig,
   Config,
 } from "./config";
 import { ConsoleLogger } from "./logger";
+import { createDBConnection } from "./models";
 import { AuthorizationClient } from "./authorization";
 import { Endpoints } from "./endpoints";
 import { wrapHandler } from "./endpoints/base";
 import { passwordsHash } from "./encryption";
 import { User } from "./models/user";
-import { Game } from "./models/game";
-import { Deal } from "./models/deal";
 
 /**
  * The number of items which should be returned by queries.
@@ -74,10 +69,10 @@ class Server {
     this.app.use(bodyParser.json());
 
     Endpoints({
-      cfg,
+      cfg: this.cfg,
       db: this.db,
       log: new ConsoleLogger("HTTP API"),
-      authorization: new AuthorizationClient(),
+      authorization: new AuthorizationClient(this.cfg),
     }).forEach((handler) => {
       this.app[handler.method()](handler.path(), wrapHandler(handler));
     });
@@ -163,20 +158,7 @@ class Server {
    */
   async db(): Promise<DBConnection> {
     if (this.dbConn === null) {
-      this.dbConn = await createORMConnection({
-        type: "postgres",
-        host: this.cfg.db.host,
-        port: this.cfg.db.port,
-        username: this.cfg.db.username,
-        password: this.cfg.db.password,
-        database: this.cfg.db.database,
-        synchronize: this.cfg.db.synchronize,
-        entities: [
-          User,
-          Game,
-          Deal,
-        ],
-      });
+      this.dbConn = await createDBConnection(this.cfg);
     }
 
     return this.dbConn;        
