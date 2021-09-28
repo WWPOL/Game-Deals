@@ -57,6 +57,7 @@ export class AuthorizationClient {
     if (this._enforcer === null) {
       const adapter = await TypeORMAdapter.newAdapter(connectionConfig(this.cfg));
       this._enforcer = await newEnforcer(path.join(__dirname, "./model.conf"), adapter);
+      await this._enforcer.loadPolicy();
     }
 
     return this._enforcer;
