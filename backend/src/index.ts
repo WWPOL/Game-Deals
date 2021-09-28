@@ -206,7 +206,14 @@ class Server {
   }
 
   try {
-    await server.authorization.enforcer();
+    const enforcer = await server.authorization.enforcer();
+    
+    console.log("getAllObjects", await enforcer.getAllObjects());
+
+    // sub, obj, act
+    enforcer.addPolicies([
+      ["gamedeals://role/admin", "gamedeals://user/*", "^CREATE|RETRIEVE|UPDATE|DELETE$"]
+    ]);
   } catch (e) {
     console.error(`Failed to setup authorization enforcer`, e);
     return;
