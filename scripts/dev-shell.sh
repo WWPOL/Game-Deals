@@ -30,12 +30,18 @@ if [ -z "$svc" ]; then
   die "SVC argument required"
 fi
 
-container=""
+compose_svc=""
+bin=("bash")
+
 case "$svc" in
-  frontend) container=frontend ;;
-  backend) container=backend ;;
+  postgres)
+    compose_svc=postgres
+    bin=("psql" "--username" "devgamedeals" "--host" "postgres")
+    ;;
+  frontend) compose_svc=frontend ;;
+  backend) compose_svc=backend ;;
   *) die "Invalid SVC value" ;;
 esac
 
 set -x
-docker-compose exec "$container" bash
+docker-compose run --rm "$compose_svc" "${bin[@]}"

@@ -6,6 +6,7 @@ services:
       POSTGRES_USER: devgamedeals
       POSTGRES_PASSWORD: devgamedeals
       POSTGRES_DB: devgamedeals
+      PGPASSWORD: devgamedeals # For psql
     volumes:
       - "postgresdata:/var/lib/postgresql/data/"
     restart: always
