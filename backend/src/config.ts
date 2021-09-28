@@ -1,7 +1,17 @@
 /**
+ * Typing _tag field value for the Config type.
+ */
+export const TAG_CONFIG = "config";
+
+/**
  * Server configuration.
  */
 export type Config = {
+  /**
+   * Indicates that this data structure is a Config type.
+   */
+  _tag: "config";
+  
   /**
    * Port on which to run HTTP API.
    * Env key: GAME_DEALS_HTTP_PORT
@@ -64,6 +74,7 @@ export type DBConfig = {
 
 export function EnvConfig(): Config {
   return {
+    _tag: TAG_CONFIG,
     httpPort: parseInt(process.env.GAME_DEALS_HTTP_PORT) || 8001,
     db: {
       host: process.env.GAME_DEALS_DB_HOST || "postgres",

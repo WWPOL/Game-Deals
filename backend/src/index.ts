@@ -51,6 +51,11 @@ class Server {
   dbConn: null | DBConnection;
 
   /**
+   * Authorization client.
+   */
+  authorization: AuthorizationClient;
+
+  /**
    * Base Express server.
    */
   app: express.Application;
@@ -62,6 +67,7 @@ class Server {
   constructor(cfg: Config) {
     this.cfg = cfg;
     this.dbConn = null;
+    this.authorization = new AuthorizationClient(this.cfg);
 
     // Setup express HTTP API
     this.app = express();
@@ -72,7 +78,7 @@ class Server {
       cfg: this.cfg,
       db: this.db,
       log: new ConsoleLogger("HTTP API"),
-      authorization: new AuthorizationClient(this.cfg),
+      authorization: this.authorization,
     }).forEach((handler) => {
       this.app[handler.method()](handler.path(), wrapHandler(handler));
     });
@@ -191,24 +197,34 @@ class Server {
 (async function() {
   const server = new Server(EnvConfig());
 
+  // Call lazily initialized clients
   try {
     await server.db();
   } catch (e) {
-    console.error(`Failed to connect to database: ${e}`);
+    console.error(`Failed to connect to database`, e);
     return;
   }
 
+  try {
+    await server.authorization.enforcer();
+  } catch (e) {
+    console.error(`Failed to setup authorization enforcer`, e);
+    return;
+  }
+
+  // Ensure at least an admin user exists
   try {
     await server.initAdmin();
   } catch (e) {
-    console.error(`Failed to initialize first admin user: ${e}`);
+    console.error(`Failed to initialize first admin user`, e);
     return;
   }
 
+  // Run HTTP API
   try {
     await server.httpListen();
   } catch (e) {
-    console.error(`Failed to start the HTTP API: ${e}`);
+    console.error(`Failed to start the HTTP API`, e);
     return;
   }
   

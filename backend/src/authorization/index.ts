@@ -2,10 +2,14 @@ import {
   newEnforcer,
   Enforcer,
 } from "casbin";
+import { getConnection as getDBConnection } from "typeorm";
 import TypeORMAdapter from "typeorm-adapter";
+
+import * as path from "path";
 
 import { Config } from "../config";
 import {
+  createDBConnection,
   connectionConfig,
   UniqueResource,
 } from "../models";
@@ -51,11 +55,8 @@ export class AuthorizationClient {
    */
   async enforcer(): Promise<Enforcer> {
     if (this._enforcer === null) {
-      const adapter = TypeORMAdapter.newAdapter({
-        ...connectionConfig(this.cfg),
-        database: `${this.cfg.db.database}-${AUTHORIZATION_DATABASE_BASE}`,
-      });
-      this._enforcer = await newEnforcer("./model.conf", adapter);
+      const adapter = await TypeORMAdapter.newAdapter(connectionConfig(this.cfg));
+      this._enforcer = await newEnforcer(path.join(__dirname, "./model.conf"), adapter);
     }
 
     return this._enforcer;
@@ -69,6 +70,6 @@ export class AuthorizationClient {
    * @returns True if action is allowed, false otherwise.
    */
   async isAllowed(who: User, resource: UniqueResource, action: AuthorizationAction): Promise<boolean> {
-    return false; // TODO
+    return await (await this.enforcer()).enforce(who.uri().toString(), resource.uri().toString(), action);
   }
 }

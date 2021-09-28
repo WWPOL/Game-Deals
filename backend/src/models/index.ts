@@ -8,9 +8,15 @@ import { Game } from "./game";
 import { Deal } from "./deal";
 
 /**
+ * Typing _tag field for the ConnectionConfig type.
+ */
+export const TAG_CONNECTION_CONFIG = "connection_config";
+
+/**
  * Database configuration values needed to connect to a database with TypeORM.
  */
 export type ConnectionConfig = {
+  _tag: "connection_config";
   type: "postgres";
   host: string;
   port: number;
@@ -26,6 +32,7 @@ export type ConnectionConfig = {
  */
 export function connectionConfig(cfg: Config): ConnectionConfig {
   return {
+    _tag: TAG_CONNECTION_CONFIG,
     type: "postgres",
     host: cfg.db.host,
     port: cfg.db.port,
@@ -40,10 +47,19 @@ export function connectionConfig(cfg: Config): ConnectionConfig {
  * @param cfg - Application configuration.
  * @returns Database configuration.
  */
-export async function createDBConnection(cfg: Config): Promise<Connection> {
+export async function createDBConnection(cfg: Config | ConnectionConfig): Promise<Connection> {
+  const connConf = (function() {
+    if (cfg?._tag === TAG_CONNECTION_CONFIG) {
+      return cfg;
+    } else {
+      return {
+        ...connectionConfig(cfg),
+        synchronize: cfg.db.synchronize,
+      };
+    }
+  })();
   return await createORMConnection({
-    ...connectionConfig(cfg),
-    synchronize: cfg.db.synchronize,
+    ...connConf,
     entities: [
       User,
       Game,
