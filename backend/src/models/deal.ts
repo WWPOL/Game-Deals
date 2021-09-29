@@ -14,6 +14,9 @@ import {
 import { User } from "./user";
 import { Game } from "./game";
 
+/**
+ * An opportunity to obtain ownership of a game.
+ */
 @Entity()
 export class Deal extends BaseEntity implements UniqueResource {
   @PrimaryGeneratedColumn()
@@ -37,4 +40,29 @@ export class Deal extends BaseEntity implements UniqueResource {
   uri(): APIURI {
     return new APIURI(APIURIResource.Deal, this.id.toString());
   }
+}
+
+/**
+ * Deal authorization actions.
+ */
+export enum DealAction {
+  /**
+   * Create a deal.
+   */
+  Create = "create",
+
+  /**
+   * Retrieve a deal.
+   */
+  Retrieve = "retrieve",
+
+  /**
+   * Update a deal.
+   */
+  Update = "update",
+
+  /**
+   * Delete a deal.
+   */
+  Delete = "delete",
 }

@@ -2,6 +2,9 @@ import {
   createConnection as createORMConnection,
   Connection,
 } from "typeorm";
+
+import url from "url";
+
 import { Config } from "../config";
 import { User } from "./user";
 import { Game } from "./game";
@@ -69,6 +72,11 @@ export async function createDBConnection(cfg: Config | ConnectionConfig): Promis
 }
 
 /**
+ * A type of database model types.
+ */
+export type ResourceModelType = User | Game | Deal;
+
+/**
  * The URI schema used by APIURIs,
  */
 export const API_URI_SCHEMA = "gamedeals";
@@ -77,11 +85,42 @@ export const API_URI_SCHEMA = "gamedeals";
  * Resource types for the API URI.
  */
 export enum APIURIResource {
+  /**
+   * A {@link User}.
+   */
   User = "user",
+
+  /**
+   * A {@link Game}.
+   */
   Game = "game",
+
+  /**
+   * A {@link Deal}.
+   */
   Deal = "deal",
+
+  /**
+   * An authorization role.
+   */
+  Role = "role",
 }
 
+/**
+ * Convert a ResourceModelType to an APIURIResource.
+ * Cannot ever return APIURIResource.Role, as this is not a ResourceModelType.
+ * @param modelType - The resource model type to convert.
+ * @returns The corresponding APIURIResource enum value.
+ */
+export function apiURIResourceFromModelType(modelType: ResourceModelType): APIURIResource {
+  if (modelType instanceof User) {
+    return APIURIResource.User;
+  } else if (modelType instanceof Game) {
+    return APIURIResource.Game;
+  } else {
+    return APIURIResource.Deal;
+  }
+}
 
 /**
  * A custom URI used by the API.
@@ -93,11 +132,11 @@ export class APIURI {
   resource: APIURIResource;
 
   /**
-   * URI path.
+   * ID or pattern of specific resource.
    */
-  path: string;
+  path?: string;
 
-  constructor(resource: APIURIResource, path: string) {
+  constructor(resource: APIURIResource, path?: string) {
     this.resource = resource;
     this.path = path;
   }
@@ -106,7 +145,14 @@ export class APIURI {
    * @returns String representation of URI.
    */
   toString(): string {
-    return `${API_URI_SCHEMA}://${this.resource}/${this.path}`
+    const u = new url.URL();
+    u.protocol = API_URI_SCHEMA;
+    u.hostname = this.resource;
+    if (this.path) {
+      u.pathname = this.path;
+    }
+    
+    return u.toString();
   }
 }
 

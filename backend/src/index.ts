@@ -171,6 +171,19 @@ class Server {
   }
 
   /**
+   * Initializes all authorization and authentication components.
+   * Sets up authorization policies. 
+   * Creates an initial admin user if one does not exist.
+   */
+  async initAuthAuth(): Promise<void> {
+    // Setup authoriztion policies
+    await server.authorization.init();
+    
+    // Ensure at least an admin user exists
+    await server.initAdmin();
+  }
+
+  /**
    * Initializes an admin user if none exists.
    */
   async initAdmin(): Promise<void> {
@@ -197,7 +210,7 @@ class Server {
 (async function() {
   const server = new Server(EnvConfig());
 
-  // Call lazily initialized clients
+  // Call lazily initialized clients so we know if anything will fail immediately
   try {
     await server.db();
   } catch (e) {
@@ -206,24 +219,9 @@ class Server {
   }
 
   try {
-    const enforcer = await server.authorization.enforcer();
-    
-    console.log("getAllObjects", await enforcer.getAllObjects());
-
-    // sub, obj, act
-    enforcer.addPolicies([
-      ["gamedeals://role/admin", "gamedeals://user/*", "^CREATE|RETRIEVE|UPDATE|DELETE$"]
-    ]);
+    await server.initAuthAuth();
   } catch (e) {
-    console.error(`Failed to setup authorization enforcer`, e);
-    return;
-  }
-
-  // Ensure at least an admin user exists
-  try {
-    await server.initAdmin();
-  } catch (e) {
-    console.error(`Failed to initialize first admin user`, e);
+    console.error(`Failed to setup authorization and authentication`, e);
     return;
   }
 
