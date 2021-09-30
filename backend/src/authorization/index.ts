@@ -173,7 +173,7 @@ class RBACPolicy implements Policy {
   /**
    * Initializes an RBAC policy.
    */
-  constructor(logicalName: string, description: string, sub: APIURI, obj: APIURI, act: AuthorizationAction[]) {
+  constructor(logicalName: string, description: string, sub: RBACSubjectType, obj: APIURI, act: AuthorizationAction[]) {
     this.logicalName = logicalName;
     this.descriptionTxt = description;
     this.sub = sub;
@@ -255,7 +255,7 @@ const POLICIES = [
     policyType: PolicyType.ABAC,
     policies: [
       new ABACPolicy(
-        "user/non_secure",
+        "user/self/non_secure",
         "Users can view and edit non-secure details.",
         "r.sub = r.obj", // request user = request object
         APIURIResource.User, // Only users
@@ -265,7 +265,7 @@ const POLICIES = [
         ]
       ),
       new ABACPolicy(
-        "user/secure",
+        "user/self/secure",
         "Users can view and change their secure details.",
         "r.sub = r.obj", // request user = request object
         APIURIResource.User, // Only users
@@ -280,8 +280,8 @@ const POLICIES = [
     policyType: PolicyType.RBAC,
     policies: [
       new RBACPolicy(
-        "game/retrieve"
-        "Users can retrieve games."
+        "game/retrieve",
+        "Users can retrieve games.",
         RBACSubjectRoleSelf,
         new APIURI(APIURIResource.Game, "/*"),
         [ GameAction.Retrieve ],
@@ -299,6 +299,21 @@ const POLICIES = [
     ],
   },
 ];
+
+/**
+ * A request to perform actions on a resource.
+ */
+export type AuthorizationRequest = {
+  /**
+   * The resource on which to perform actions.
+   */
+  resourceURI: APIURI;
+
+  /**
+   * Actions requesting to be performed.
+   */
+  actions: AuthorizationAction[];
+};
 
 /**
  * Client which enforces authorization decisions.
@@ -355,7 +370,36 @@ export class AuthorizationClient {
    * @param action - What is supposed to be done.
    * @returns True if action is allowed, false otherwise.
    */
-  async isAllowed(who: User, resource: UniqueResource, action: AuthorizationAction): Promise<boolean> {
-    return await (await this.enforcer()).enforce(who.uri().toString(), resource.uri().toString(), action);
+  async isAllowed(who: User, reqs: AuthorizationRequest[]): Promise<boolean> {
+    const enforcer = await this.enforcer();
+
+    // Aggregate all actions for each resource
+    let resActions: { [key: string]: Set<AuthorizationAction> } = {};
+
+    for (let req of reqs) {
+      const resURI = req.resourceURI.toString();
+      
+      if (!(resURI in resActions)) {
+        resActions[resURI] = new Set();
+      }
+
+      // Union req actions
+      resActions[resURI] = new Set([
+        ...Array.from(resActions[resURI]),
+        ...req.actions,
+      ]);
+    }
+
+    // Enforce actions for each resource
+    const enforced = await Promise.all(Object.keys(resActions).map(async (resURI: string): Promise<boolean> => {
+      return enforcer.enforce([
+        who.uri().toString(),
+        resURI,
+        authorizationActionArrRegex(Array.from(resActions[resURI])),
+      ]);
+    }));
+
+    const failedEnforce = enforced.filter(result => result === false);
+    return failedEnforce.length === 0;
   }
 }

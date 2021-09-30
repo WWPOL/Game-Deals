@@ -5,8 +5,8 @@ repo_dir=$(realpath "$frontend_dir/../")
 
 source "$repo_dir/scripts/common.sh"
 
-readonly -ri EXIT_INSTALL=20
-readonly -ri EXIT_START=21
+declare -ri EXIT_INSTALL=20
+declare -ri EXIT_START=21
 
 log "Frontend invocation"
 

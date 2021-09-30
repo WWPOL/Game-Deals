@@ -53,7 +53,7 @@ class Server {
   /**
    * Authorization client.
    */
-  authorization: AuthorizationClient;
+  authorizationClient: AuthorizationClient;
 
   /**
    * Base Express server.
@@ -67,7 +67,7 @@ class Server {
   constructor(cfg: Config) {
     this.cfg = cfg;
     this.dbConn = null;
-    this.authorization = new AuthorizationClient(this.cfg);
+    this.authorizationClient = new AuthorizationClient(this.cfg);
 
     // Setup express HTTP API
     this.app = express();
@@ -78,7 +78,7 @@ class Server {
       cfg: this.cfg,
       db: this.db,
       log: new ConsoleLogger("HTTP API"),
-      authorization: this.authorization,
+      authorizationClient: this.authorizationClient,
     }).forEach((handler) => {
       this.app[handler.method()](handler.path(), wrapHandler(handler));
     });
@@ -177,7 +177,7 @@ class Server {
    */
   async initAuthAuth(): Promise<void> {
     // Setup authoriztion policies
-    await this.authorization.init();
+    await this.authorizationClient.init();
     
     // Ensure at least an admin user exists
     await this.initAdmin();

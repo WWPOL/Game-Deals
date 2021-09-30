@@ -11,11 +11,17 @@ import {
   EndpointResponder,
   ErrorResponder,
 } from "./response";
+import { MkEndpointError } from "./error";
 import {
   Logger,
   ConsoleLogger,
 } from "../logger";
-import { AuthorizationClient } from "../authorization";
+import {
+  AuthorizationClient,
+  AuthorizationRequest,
+} from "../authorization";
+import { authenticateReq } from "../authentication";
+import { User } from "../models/user";
  
 /**
  * Data required to setup an endpoint handler.
@@ -39,7 +45,7 @@ export type EndpointCtx = {
   /**
    * Used to enforce authorization.
    */
-  authorization: AuthorizationClient;
+  authorizationClient: AuthorizationClient;
 }
 
 /**
@@ -69,8 +75,32 @@ export function wrapHandler<I>(handler: EndpointHandler<I>): (req: Request, resp
       },
     };
 
-    // Handle
     const epResp = await (async function(): Promise<EndpointResponder> {
+      // Authenticate and Authorize
+      const who = await authenticateReq(req);
+      const authReqs = handler.authorization(epReq, who);
+      if (authReqs.length > 0) {
+        // Endpoint does have authorization requirements
+        
+        if (who !== null) {
+          // If user authenticated then check authorization
+          const isAuthorized = await this.authorizationClient.isAllowed(authReqs);
+          if (isAuthorized === false) {
+            return new ErrorResponder(MkEndpointError({
+              http_status: 403,
+              error: "unauthorized."
+            }));
+          }
+        } else {
+          // User not authenticated
+          return new ErrorResponder(MkEndpointError({
+            http_status: 401,
+            error: "unauthenticated.",
+          }));
+        }
+      }
+      
+      // Handle
       try {
         return await handler.handle(epReq);
       } catch (e) {
@@ -140,7 +170,7 @@ export class BaseEndpoint<I> {
   /**
    * Used to enforce authorization.
    */
-  authorization: AuthorizationClient;
+  authorizationClient: AuthorizationClient;
 
   /**
    * Initializes an endpoint handler.
@@ -150,7 +180,7 @@ export class BaseEndpoint<I> {
     this.spec = spec;
     this._dbFn = ctx.db;
     this.log = ctx.log.child(`${this.spec.method} ${this.spec.path}`);
-    this.authorization = ctx.authorization;
+    this.authorizationClient = ctx.authorizationClient;
   }
 
   /**
@@ -202,6 +232,12 @@ export interface EndpointHandler<I> {
    * @returns HTTP path of HTTP requests to handler.
    */
   path(): string;
+
+  /**
+   * @param req - Request
+   * @returns A list of authorization requests which describe the actions required to utilize the endpoint.
+   */
+  authorization(req: EndpointRequest<I>, user: User): AuthorizationRequest[];
 
   /**
    * Run request processing logic.

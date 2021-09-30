@@ -145,7 +145,7 @@ export class APIURI {
    * @returns String representation of URI.
    */
   toString(): string {
-    const u = new url.URL("");
+    const u = new url.URL(`${API_URI_SCHEMA}://${this.resource}`);
     u.protocol = API_URI_SCHEMA;
     u.hostname = this.resource;
     if (this.path) {

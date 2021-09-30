@@ -8,6 +8,8 @@ import {
   EndpointRequest,
 } from "../request";
 import { JSONResponder } from "../response";
+import { AuthorizationRequest } from "../../authorization";
+import { User } from "../../models/user";
 
 /**
  * Health endpoint response.
@@ -26,6 +28,10 @@ export class HealthEndpoint extends BaseEndpoint<void> {
       path: "/api/v1/health",
       bodyParserFactory: () => VoidParser,
     });
+  }
+
+  authorization(req: EndpointRequest<void>, user: User): AuthorizationRequest[] {
+    return [];
   }
 
   async handle(req: EndpointRequest<void>): Promise<JSONResponder<HealthResp>> {

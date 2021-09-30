@@ -21,8 +21,16 @@ import {
   MkEndpointError,
   ErrorCode,
 } from "../../error";
+import { AuthorizationRequest } from "../../../authorization";
 import { JSONResponder } from "../../response";
-import { User } from "../../../models/user";
+import {
+  APIURI,
+  APIURIResource,
+} from "../../../models";
+import {
+  User,
+  UserAction,
+} from "../../../models/user";
 
 /**
  * Login endpoint request body shape.
@@ -58,6 +66,17 @@ export class LoginEndpoint extends BaseEndpoint<LoginReq> {
       path: "/api/v1/auth/login",
       bodyParserFactory: () => new DecoderParser(LoginReqShape),
     });
+  }
+
+  authorization(req: EndpointRequest<LoginReq>, user: User): AuthorizationRequest[] {
+    return [
+      {
+        resourceURI: new APIURI(APIURIResource.User, "/*"),
+        actions: [
+          UserAction.Create,
+        ],
+      },
+    ];
   }
 
   async handle(req: EndpointRequest<LoginReq>): Promise<JSONResponder<LoginResp>> {
