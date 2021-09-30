@@ -41,7 +41,7 @@ export class Game extends BaseEntity implements UniqueResource {
 /**
  * Game authorization actions.
  */
-export enum GameAction = {
+export enum GameAction {
   /**
    * Create a game.
    */

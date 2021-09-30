@@ -6,7 +6,7 @@ import { getConnection as getDBConnection } from "typeorm";
 import TypeORMAdapter from "typeorm-adapter";
 
 import * as path from "path";
-import url from "url";
+import * as url from "url";
 
 import { Config } from "../config";
 import {
@@ -34,20 +34,27 @@ import {
 /**
  * An action which can be applied to a resource.
  */
-export type AuthorizationAction<R: ResourceModelType> = R extends User ? UserAction : (Game ? GameAction : DealAction);
+export type AuthorizationAction = UserAction | GameAction | DealAction;
+
+/**
+ * Create a regular expression which matches an array of authorization actions.
+ * @returns Regular expression which matches only the authorization actions in arr.
+ */
+function authorizationActionArrRegex(arr: AuthorizationAction[]): string {
+  return `^arr.join("|")$`;
+}
 
 /**
  * An extension of APIURI for authorization uses.
  * Can store information about an action.
- * @typeParam R - Resource type.
  */
-export class AuthorizationURI<R: ResourceModelType> extends APIURI {
+export class AuthorizationURI extends APIURI {
   /**
    * The authorization action.
    */
-  action?: AuthorizationAction<R>;
+  action?: AuthorizationAction;
 
-  constructor(resource: APIURIResource, path?: string, action?: AuthorizationAction<R>) {
+  constructor(resource: APIURIResource, path?: string, action?: AuthorizationAction) {
     super(resource, path);
     this.action = action;
   }
@@ -57,12 +64,24 @@ export class AuthorizationURI<R: ResourceModelType> extends APIURI {
    */
   toString() {
     const u = url.parse(super.toString());
-    if (action) {
+    if (this.action) {
       u.hash = this.action;
     }
 
     return u.toString();
   }
+}
+
+export enum PolicyType {
+  /**
+   * Role based access controll.
+   */
+  RBAC = "p",
+
+  /**
+   * Attribute based access control.
+   */
+  ABAC = "p1",
 }
 
 /**
@@ -74,11 +93,11 @@ const AUTHORIZATION_DATABASE_BASE = "authorization";
  * Holds policies for a certain policy matching model.
  * @typeParam T - The type of policy definitions for this policy model.
  */
-type NamedPolicies<T: Policy> = {
+type NamedPolicies<T extends Policy> = {
   /**
    * The name of the policy model.
    */
-  policyType: string;
+  policyType: PolicyType;
 
   /**
    * The policies for this policy model.
@@ -91,6 +110,11 @@ type NamedPolicies<T: Policy> = {
  */
 export interface Policy {
   /**
+   * @returns Short logical name of policy, should not change.
+   */
+  name(): string;
+  
+  /**
    * @returns Developer oriented description of the policy.
    */
   description(): string;
@@ -102,10 +126,30 @@ export interface Policy {
 }
 
 /**
- * A role based access control policy.
- * @typeParam R - Resource type of object whos access is being controlled.
+ * Indicates that the subject of an RBAC policy should be the role which this subject is part of.
+ * This is used to make policies which give permissions to a role using the APIURI system.
  */
-class RBACPolicy<R: ResourceModelType> implements Policy {
+type RBACSubjectRoleSelfType = "role/self";
+
+/**
+ * Only meaning / value of {@link RBACSubjectRoleSelfType} type.
+ */
+const RBACSubjectRoleSelf: RBACSubjectRoleSelfType = "role/self";
+
+/**
+ * Type which indicates the subject of a RBAC policy.
+ */
+type RBACSubjectType = APIURI | RBACSubjectRoleSelfType;
+
+/**
+ * A role based access control policy.
+ */
+class RBACPolicy implements Policy {
+  /**
+   * Logical name of policy.
+   */
+  logicalName: string;
+  
   /**
    * Developer focused description of the policy.
    */
@@ -114,7 +158,7 @@ class RBACPolicy<R: ResourceModelType> implements Policy {
   /**
    * Subject who is being granted access.
    */
-  sub: APIURI;
+  sub: RBACSubjectType;
 
   /**
    * Object to which access is being controlled.
@@ -124,16 +168,21 @@ class RBACPolicy<R: ResourceModelType> implements Policy {
   /**
    * The action which is being allowed to take place on the object.
    */
-  act: AuthorizationAction<R>;
+  act: AuthorizationAction[];
 
   /**
    * Initializes an RBAC policy.
    */
-  constructor(description: string, sub: APIURI, obj: APIURI, act: AuthorizationAction<R>) {
+  constructor(logicalName: string, description: string, sub: APIURI, obj: APIURI, act: AuthorizationAction[]) {
+    this.logicalName = logicalName;
     this.descriptionTxt = description;
     this.sub = sub;
     this.obj = obj;
     this.act = act;
+  }
+
+  name(): string {
+    return this.logicalName;
   }
 
   description(): string {
@@ -141,14 +190,19 @@ class RBACPolicy<R: ResourceModelType> implements Policy {
   }
 
   policyTuple(): string[] {
-    return [this.sub.toString(), this.obj.toString(), this.act];
+    return [this.sub.toString(), this.obj.toString(), authorizationActionArrRegex(this.act)];
   }
-];
+}
 
 /**
  * An attribute based access control policy.
  */
 class ABACPolicy {
+  /**
+   * Logical name of policy.
+   */
+  logicalName: string;
+  
   /**
    * Developer focused description of the policy.
    */
@@ -162,21 +216,26 @@ class ABACPolicy {
   /**
    * Object to which access is being controlled.
    */
-  obj: string;
+  obj: APIURIResource;
 
   /**
    * The action which is being allowed to take place on the object.
    */
-  act: string;
+  act: AuthorizationAction[];
 
   /**
    * Initializes ABAC policy.
    */
-  constructor(description: string, sub_rule: string, obj: string, act: string) {
+  constructor(logicalName: string, description: string, sub_rule: string, obj: APIURIResource, act: AuthorizationAction[]) {
+    this.logicalName = logicalName;
     this.descriptionTxt = description;
     this.sub_rule = sub_rule;
     this.obj = obj;
     this.act = act;
+  }
+
+  name(): string {
+    return this.logicalName;
   }
 
   description(): string {
@@ -184,17 +243,59 @@ class ABACPolicy {
   }
 
   policyTuple(): string[] {
-    return [this.sub_rule, this.obj, this.act];
+    return [this.sub_rule, this.obj, authorizationActionArrRegex(this.act)];
   }
-];
+}
 
 /**
  * The authorization policies to use to enforce access.
  */
 const POLICIES = [
   {
-    policyType: "p",
+    policyType: PolicyType.ABAC,
     policies: [
+      new ABACPolicy(
+        "user/non_secure",
+        "Users can view and edit non-secure details.",
+        "r.sub = r.obj", // request user = request object
+        APIURIResource.User, // Only users
+        [
+          UserAction.RetrieveSecure,
+          UserAction.UpdateNonSecure,
+        ]
+      ),
+      new ABACPolicy(
+        "user/secure",
+        "Users can view and change their secure details.",
+        "r.sub = r.obj", // request user = request object
+        APIURIResource.User, // Only users
+        [
+          UserAction.RetrieveSecure,
+          UserAction.UpdateSecure,
+        ]
+      ),
+    ],
+  },
+  {
+    policyType: PolicyType.RBAC,
+    policies: [
+      new RBACPolicy(
+        "game/retrieve"
+        "Users can retrieve games."
+        RBACSubjectRoleSelf,
+        new APIURI(APIURIResource.Game, "/*"),
+        [ GameAction.Retrieve ],
+      ),
+      new RBACPolicy(
+        "game/publish",
+        "Users can create and update games.",
+        RBACSubjectRoleSelf,
+        new APIURI(APIURIResource.Game, "/*"),
+        [
+          GameAction.Create,
+          GameAction.Update,
+        ],
+      ),
     ],
   },
 ];
@@ -242,13 +343,9 @@ export class AuthorizationClient {
   async init(): Promise<void> {
     const enforcer = await this.enforcer();
 
-    POLICIES.forEach(async (namedPolicies: NamedPolicies): Promise<void> => {
-      await enforcer.addNamedPolicies(namedPolicies.policyType, namedPolicies.policies);
+    POLICIES.forEach(async (namedPolicies: NamedPolicies<any>): Promise<void> => {
+      await enforcer.addNamedPolicies(namedPolicies.policyType, namedPolicies.policies.map(p => p.policyTuple()));
     });
-    // sub, obj, act
-    // enforcer.addPolicies([
-    //   ["gamedeals://role/admin", "gamedeals://user/*", "^CREATE|RETRIEVE|UPDATE|DELETE$"]
-    // ]);
   }
 
   /**

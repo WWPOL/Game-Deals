@@ -177,10 +177,10 @@ class Server {
    */
   async initAuthAuth(): Promise<void> {
     // Setup authoriztion policies
-    await server.authorization.init();
+    await this.authorization.init();
     
     // Ensure at least an admin user exists
-    await server.initAdmin();
+    await this.initAdmin();
   }
 
   /**

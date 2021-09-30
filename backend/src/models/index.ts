@@ -3,7 +3,7 @@ import {
   Connection,
 } from "typeorm";
 
-import url from "url";
+import * as url from "url";
 
 import { Config } from "../config";
 import { User } from "./user";
@@ -145,7 +145,7 @@ export class APIURI {
    * @returns String representation of URI.
    */
   toString(): string {
-    const u = new url.URL();
+    const u = new url.URL("");
     u.protocol = API_URI_SCHEMA;
     u.hostname = this.resource;
     if (this.path) {
