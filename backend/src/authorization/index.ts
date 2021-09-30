@@ -41,7 +41,7 @@ export type AuthorizationAction = UserAction | GameAction | DealAction;
  * @returns Regular expression which matches only the authorization actions in arr.
  */
 function authorizationActionArrRegex(arr: AuthorizationAction[]): string {
-  return `^arr.join("|")$`;
+  return `^${arr.join("|")}$`;
 }
 
 /**
@@ -190,7 +190,14 @@ class RBACPolicy implements Policy {
   }
 
   policyTuple(): string[] {
-    return [this.sub.toString(), this.obj.toString(), authorizationActionArrRegex(this.act)];
+    const subURI = (function() {
+      if (this.sub === RBACSubjectRoleSelf) {
+        return new APIURI(APIURIResource.Role, this.logicalName);
+      } else {
+        return this.sub;
+      }
+    }).bind(this)();
+    return [subURI.toString(), this.obj.toString(), authorizationActionArrRegex(this.act)];
   }
 }
 
@@ -243,7 +250,7 @@ class ABACPolicy {
   }
 
   policyTuple(): string[] {
-    return [this.sub_rule, this.obj, authorizationActionArrRegex(this.act)];
+    return [this.sub_rule, new APIURI(this.obj).toString(), authorizationActionArrRegex(this.act)];
   }
 }
 
