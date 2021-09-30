@@ -8,8 +8,12 @@ import {
   EndpointRequest,
 } from "../request";
 import { JSONResponder } from "../response";
+import {
+  APIURI,
+  APIURIResource,
+  APIMetadataAction,
+} from "../../models";
 import { AuthorizationRequest } from "../../authorization";
-import { User } from "../../models/user";
 
 /**
  * Health endpoint response.
@@ -30,8 +34,13 @@ export class HealthEndpoint extends BaseEndpoint<void> {
     });
   }
 
-  authorization(req: EndpointRequest<void>, user: User): AuthorizationRequest[] {
-    return [];
+  authorization(req: EndpointRequest<void>): AuthorizationRequest[] {
+    return [
+      {
+        resourceURI: new APIURI(APIURIResource.APIMetadata, "/health"),
+        actions: [ APIMetadataAction.Retrieve ],
+      },
+    ];
   }
 
   async handle(req: EndpointRequest<void>): Promise<JSONResponder<HealthResp>> {

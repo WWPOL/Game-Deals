@@ -21,6 +21,10 @@ import {
   AuthorizationRequest,
 } from "../authorization";
 import { authenticateReq } from "../authentication";
+import {
+  APIURI,
+  APIURIResource,
+} from "../models";
 import { User } from "../models/user";
  
 /**
@@ -59,7 +63,7 @@ export type HTTPMethod = "all" | "get" | "post" | "put" | "delete" | "patch" | "
  * @param handler - The Endpoint handler.
  * @returns Standard express event handler which will call the endpoint handler.
  */
-export function wrapHandler<I>(handler: EndpointHandler<I>): (req: Request, resp: Response) => Promise<void> {
+export function wrapHandler<I>(ctx: EndpointCtx, handler: EndpointHandler<I>): (req: Request, resp: Response) => Promise<void> {
   return async (req: Request, resp: Response): Promise<void> => {
     const log = new ConsoleLogger(`${handler.method()} ${handler.path()}`);
     
@@ -78,27 +82,25 @@ export function wrapHandler<I>(handler: EndpointHandler<I>): (req: Request, resp
     const epResp = await (async function(): Promise<EndpointResponder> {
       // Authenticate and Authorize
       const who = await authenticateReq(req);
+      
+      const authSub = who !== null ? who.uri() : new APIURI(APIURIResource.UntrustedUser);
       const authReqs = handler.authorization(epReq, who);
-      if (authReqs.length > 0) {
-        // Endpoint does have authorization requirements
-        
-        if (who !== null) {
-          // If user authenticated then check authorization
-          const isAuthorized = await this.authorizationClient.isAllowed(authReqs);
-          if (isAuthorized === false) {
-            return new ErrorResponder(MkEndpointError({
-              http_status: 403,
-              error: "unauthorized."
-            }));
-          }
-        } else {
-          // User not authenticated
-          return new ErrorResponder(MkEndpointError({
-            http_status: 401,
-            error: "unauthenticated.",
-          }));
-        }
+      if (authReqs.length === 0) {
+        // Endpoint does not define any authorization requirements so default to no access
+        return new ErrorResponder(MkEndpointError({
+            http_status: 403,
+            error: "unauthorized."
+        }));
       }
+      // Endpoint does have authorization requirements
+      const isAuthorized = await ctx.authorizationClient.isAllowed(authSub, authReqs);
+      if (isAuthorized === false) {
+        return new ErrorResponder(MkEndpointError({
+          http_status: 403,
+          error: "unauthorized."
+        }));
+      }
+      
       
       // Handle
       try {

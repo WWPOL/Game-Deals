@@ -74,4 +74,9 @@ export enum UserAction {
    * Delete a user.
    */
   Delete = "delete",
+
+  /**
+   * Attempt to authenticate as a user.
+   */
+  Authenticate = "Authenticate"
 }

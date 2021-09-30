@@ -74,13 +74,14 @@ class Server {
 
     this.app.use(bodyParser.json());
 
-    Endpoints({
+    const epCtx = {
       cfg: this.cfg,
       db: this.db,
       log: new ConsoleLogger("HTTP API"),
       authorizationClient: this.authorizationClient,
-    }).forEach((handler) => {
-      this.app[handler.method()](handler.path(), wrapHandler(handler));
+    };
+    Endpoints(epCtx).forEach((handler) => {
+      this.app[handler.method()](handler.path(), wrapHandler(epCtx, handler));
     });
 
     // this.app.get(

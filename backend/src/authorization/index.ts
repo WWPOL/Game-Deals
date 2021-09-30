@@ -17,6 +17,7 @@ import {
   APIURIResource,
   ResourceModelType,
   apiURIResourceFromModelType,
+  APIMetadataAction,
 } from "../models";
 import {
   User,
@@ -34,7 +35,7 @@ import {
 /**
  * An action which can be applied to a resource.
  */
-export type AuthorizationAction = UserAction | GameAction | DealAction;
+export type AuthorizationAction = UserAction | GameAction | DealAction | APIMetadataAction;
 
 /**
  * Create a regular expression which matches an array of authorization actions.
@@ -254,6 +255,7 @@ class ABACPolicy {
   }
 }
 
+
 /**
  * The authorization policies to use to enforce access.
  */
@@ -286,6 +288,13 @@ const POLICIES = [
   {
     policyType: PolicyType.RBAC,
     policies: [
+      new RBACPolicy(
+        "untrusted_user/health",
+        "Allow untrusted users to view API health information.",
+        new APIURI(APIURIResource.UntrustedUser),
+        new APIURI(APIURIResource.APIMetadata, "/health"),
+        [ APIMetadataAction.Retrieve ],
+      ),
       new RBACPolicy(
         "game/retrieve",
         "Users can retrieve games.",
@@ -377,7 +386,7 @@ export class AuthorizationClient {
    * @param action - What is supposed to be done.
    * @returns True if action is allowed, false otherwise.
    */
-  async isAllowed(who: User, reqs: AuthorizationRequest[]): Promise<boolean> {
+  async isAllowed(who: APIURI, reqs: AuthorizationRequest[]): Promise<boolean> {
     const enforcer = await this.enforcer();
 
     // Aggregate all actions for each resource
@@ -399,11 +408,11 @@ export class AuthorizationClient {
 
     // Enforce actions for each resource
     const enforced = await Promise.all(Object.keys(resActions).map(async (resURI: string): Promise<boolean> => {
-      return enforcer.enforce([
-        who.uri().toString(),
+      return enforcer.enforce(
+        who.toString(),
         resURI,
         authorizationActionArrRegex(Array.from(resActions[resURI])),
-      ]);
+      );
     }));
 
     const failedEnforce = enforced.filter(result => result === false);

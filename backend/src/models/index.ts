@@ -104,6 +104,28 @@ export enum APIURIResource {
    * An authorization role.
    */
   Role = "role",
+
+  /**
+   * A user who is unauthenticated.
+   * Requests without valid authentication use this as the subject.
+   * Cannot be narrowed down with a path.
+   */
+  UntrustedUser = "untrusted_user",
+
+  /**
+   * API server metadata information.
+   */
+  APIMetadata = "api_metadata",
+}
+
+/**
+ * Actions which can be taken on API metadata.
+ */
+export enum APIMetadataAction {
+  /**
+   * View the data.
+   */
+  Retrieve = "retrieve",
 }
 
 /**
@@ -133,12 +155,23 @@ export class APIURI {
 
   /**
    * ID or pattern of specific resource.
+   * Cannot be provided if resource is APIURIResource.UntrustedUser.
    */
   path?: string;
 
+  /**
+   * Initializes an APIURI.
+   * @throws {@link Error}
+   * If resource = APIURIResource.UntrustedUser and path is not undefined.
+   * This is because an UntrustedUser is a meta API resource. It is the subject used in authorization requests if a request is unauthenticated. Thus a path specifier to indicate a specific untrusted user is not a concept that makes sense.
+   */
   constructor(resource: APIURIResource, path?: string) {
     this.resource = resource;
     this.path = path;
+
+    if (this.resource === APIURIResource.UntrustedUser && this.path) {
+      throw new Error("APIURI cannot be provided a path specifier if resource is APIURIResource.UntrustedUser");
+    }
   }
 
   /**

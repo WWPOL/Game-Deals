@@ -68,15 +68,11 @@ export class LoginEndpoint extends BaseEndpoint<LoginReq> {
     });
   }
 
-  authorization(req: EndpointRequest<LoginReq>, user: User): AuthorizationRequest[] {
-    return [
-      {
-        resourceURI: new APIURI(APIURIResource.User, "/*"),
-        actions: [
-          UserAction.Create,
-        ],
-      },
-    ];
+  /**
+   * Allow unauthenticated users 
+   */
+  authorization(req: EndpointRequest<LoginReq>): AuthorizationRequest[] {
+    return [];
   }
 
   async handle(req: EndpointRequest<LoginReq>): Promise<JSONResponder<LoginResp>> {
