@@ -3,7 +3,9 @@ import * as t from "io-ts";
 import { isRight } from "fp-ts/Either";
 import dReporter from "io-ts-reporters";
 
+import { Optional } from "../lib/optional";
 import { MkEndpointError } from "./error";
+import { User } from "../models/user";
 
 /**
  * @typeParam I - Body type.
@@ -67,6 +69,11 @@ export interface EndpointRequest<I> {
    * The Express request.
    */
   req: Request;
+
+  /**
+   * Some with a User if the request included valid authentication information. None if no or invalid authentication information was provided.
+   */
+  user: Optional<User>;
 
   /**
    * Parsed request body.

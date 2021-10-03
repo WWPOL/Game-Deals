@@ -9,6 +9,7 @@ import * as path from "path";
 import * as url from "url";
 
 import { Config } from "../config";
+import { Logger } from "../logger";
 import {
   createDBConnection,
   connectionConfig,
@@ -32,6 +33,7 @@ import {
   Game,
   GameAction,
 } from "../models/game";
+import { AuthorizationPolicy } from "../models/policy";
 
 /**
  * An action which can be applied to a resource.
@@ -351,6 +353,11 @@ export class AuthorizationClient {
    * Application configuration.
    */
   cfg: Config;
+
+  /**
+   * Output debug messages.
+   */
+  log: Logger;
   
   /**
    * Casbin enforcer if it exists yet.
@@ -361,8 +368,9 @@ export class AuthorizationClient {
    * Initializes an authorization client.
    * @param cfg - Application configuration.
    */
-  constructor(cfg: Config) {
+  constructor(cfg: Config, log: Logger) {
     this.cfg = cfg;
+    this.log = log;
     this._enforcer = null;
   }
 
@@ -386,9 +394,37 @@ export class AuthorizationClient {
   async init(): Promise<void> {
     const enforcer = await this.enforcer();
 
-    POLICIES.forEach(async (namedPolicies: NamedPolicies<any>): Promise<void> => {
-      await enforcer.addNamedPolicies(namedPolicies.policyType, namedPolicies.policies.map(p => p.policyTuple()));
+    // Create AuthorizationPolicy for each policies
+    let policyModels = [];
+    POLICIES.forEach((namedPolicies) => {
+      namedPolicies.policies.forEach((p) => {
+        const policyModel = new AuthorizationPolicy();
+        policyModel.logical_name = p.name();
+        policyModel.policy_type = namedPolicies.policyType;
+        policyModel.policy = p.policyTuple();
+
+        policyModels.push(policyModel);
+      });
     });
+
+    // Add policies which aren't present
+    let newPolicies = 0;
+    policyModels.forEach(async (p) => {
+      const foundPolicy = await AuthorizationPolicy.findOne({
+        logical_name: p.logical_name,
+      });
+
+      if (!foundPolicy) {
+        // No policy found, add policy
+        await enforcer.addNamedPolicy(p.policy_type, ...p.policy);
+
+        await p.save();
+
+        newPolicies += 1;
+      }
+    });
+
+    this.log.debug(`Added ${newPolicies} new policies`);
   }
 
   /**

@@ -6,7 +6,10 @@ import {
   EnvConfig,
   Config,
 } from "./config";
-import { ConsoleLogger } from "./logger";
+import {
+  Logger,
+  ConsoleLogger,
+} from "./logger";
 import { createDBConnection } from "./models";
 import { AuthorizationClient } from "./authorization";
 import { Endpoints } from "./endpoints";
@@ -49,6 +52,11 @@ class Server {
    * Database connection.
    */
   dbConn: null | DBConnection;
+  
+  /**
+   * Output debug messages.
+   */
+  log: Logger;
 
   /**
    * Authorization client.
@@ -67,7 +75,8 @@ class Server {
   constructor(cfg: Config) {
     this.cfg = cfg;
     this.dbConn = null;
-    this.authorizationClient = new AuthorizationClient(this.cfg);
+    this.log = new ConsoleLogger("HTTP API");
+    this.authorizationClient = new AuthorizationClient(this.cfg, this.log.child("authorization"));
 
     // Setup express HTTP API
     this.app = express();
@@ -77,7 +86,7 @@ class Server {
     const epCtx = {
       cfg: this.cfg,
       db: this.db,
-      log: new ConsoleLogger("HTTP API"),
+      log: this.log,
       authorizationClient: this.authorizationClient,
     };
     Endpoints(epCtx).forEach((handler) => {
@@ -202,8 +211,9 @@ class Server {
         throw new Error(`Failed to insert initial admin user into database: ${e}`);
       }
 
-      console.log("Inserted initial admin user with username \"admin\" and password \"admin\"");
+      this.log.debug("Inserted initial admin user with username \"admin\" and password \"admin\"");
     }
+    this.log.debug(`totalUsers=${totalUsers}`);
   }
 }
 

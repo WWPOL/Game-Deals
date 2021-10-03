@@ -95,7 +95,7 @@ export class LoginEndpoint extends BaseEndpoint<LoginReq> {
       username: body.username,
     });
     
-    if (user === null) {
+    if (!user) {
       throw MkEndpointError({
         http_status: 401,
         error: "unauthorized",

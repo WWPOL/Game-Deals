@@ -25,8 +25,8 @@ export class AuthorizationPolicy extends BaseEntity implements UniqueResource {
   @Column()
   policy_type: string;
 
-  @Column()
-  policy: string;
+  @Column("text", { array: true })
+  policy: string[];
 
   /**
    * @returns A unique identifier.

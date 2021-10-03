@@ -9,6 +9,7 @@ import { Config } from "../config";
 import { User } from "./user";
 import { Game } from "./game";
 import { Deal } from "./deal";
+import { AuthorizationPolicy } from "./policy";
 
 /**
  * Typing _tag field for the ConnectionConfig type.
@@ -67,6 +68,7 @@ export async function createDBConnection(cfg: Config | ConnectionConfig): Promis
       User,
       Game,
       Deal,
+      AuthorizationPolicy,
     ],
   });
 }

@@ -4,6 +4,11 @@ import {
 } from "typeorm";
 import { Config } from "~/config";
 import {
+  Optional,
+  None,
+  isSome,
+} from "../lib/optional";
+import {
   BodyParser,
   EndpointRequest,
 } from "./request";
@@ -65,26 +70,28 @@ export type HTTPMethod = "all" | "get" | "post" | "put" | "delete" | "patch" | "
  */
 export function wrapHandler<I>(ctx: EndpointCtx, handler: EndpointHandler<I>): (req: Request, resp: Response) => Promise<void> {
   return async (req: Request, resp: Response): Promise<void> => {
-    const log = new ConsoleLogger(`${handler.method()} ${handler.path()}`);
+    const log = new ConsoleLogger(`${handler.method().toUpperCase()} ${handler.path()}`);
     
     log.info("");
     const startT = new Date().getTime();
-    
-    // Build request
-    const epReq = {
-      req: req,
-      body: (): I => {
-        const bodyParser = handler.bodyParser();
-        return bodyParser.parse(req);
-      },
-    };
-
+   
     const epResp = await (async function(): Promise<EndpointResponder> {
       try {
-        // Authenticate and Authorize
-        const who = await authenticateReq(req);
+        // Authenticate
+        const who = await authenticateReq(ctx.cfg, req);
         
-        const authSub = who !== null ? who.uri() : new APIURI(MetaResource.UntrustedUser);
+        // Build request
+        const epReq = {
+          req: req,
+          body: (): I => {
+            const bodyParser = handler.bodyParser();
+            return bodyParser.parse(req);
+          },
+          user: who,
+        };
+        
+        // Authorize
+        const authSub = isSome(who) ? who.value.uri() : new APIURI(MetaResource.UntrustedUser);
         const authReqs = await handler.authorization(epReq);
         if (authReqs.length === 0) {
           // Endpoint does not define any authorization requirements so default to no access

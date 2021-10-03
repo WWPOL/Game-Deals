@@ -20,6 +20,53 @@ export const AUTH_TOKEN_AUDIENCE = "game-deals";
 export const BCRYPT_SALT_ROUNDS = 10;
 
 /**
+ * A JSON web token.
+ */
+export type JWTToken = {
+  /**
+   * Audience, indicates by who the token is meant to be received.
+   */
+  aud: string;
+
+  /**
+   * Issuer, indicates who issued the token.
+   */
+  iss: string;
+
+  /**
+   * Subject, the user being identified by the token.
+   */
+  sub: string;
+};
+
+/**
+ * Verify a JWT token is valid.
+ * @param cfg - Application configuration.
+ * @param tokenStr - The raw encoded JSON web token.
+ * @returns Resolves with the decoded JSON web token. Rejects if there was an error authenticating the token.
+ */
+export async function jwtVerify(cfg: Config, tokenStr: string): Promise<JWTToken> {
+  return new Promise((resolve, reject) => {
+    jwt.verify(
+      tokenStr,
+      cfg.authTokenSecret,
+      {
+        algorithms: [ AUTH_TOKEN_JWT_ALGORITHM ],
+        audience: AUTH_TOKEN_AUDIENCE,
+        issuer: AUTH_TOKEN_AUDIENCE,
+      },
+      (err, decoded) => {
+        if (err !== undefined && err !== null) {
+          reject(err);
+          return;
+        }
+
+        resolve(decoded);
+      });
+  });
+}
+
+/**
  * Sign a JWT token.
  * @param userID - The ID of the user for which the token will identify.
  */
