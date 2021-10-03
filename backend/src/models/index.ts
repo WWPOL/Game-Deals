@@ -79,12 +79,12 @@ export type ResourceModelType = User | Game | Deal;
 /**
  * The URI schema used by APIURIs,
  */
-export const API_URI_SCHEMA = "gamedeals";
+// export const API_URI_SCHEMA = "gamedeals";
 
 /**
- * Resource types for the API URI.
+ * A type of resource stored in the database.
  */
-export enum APIURIResource {
+export enum DBResource {
   /**
    * A {@link User}.
    */
@@ -100,6 +100,15 @@ export enum APIURIResource {
    */
   Deal = "deal",
 
+  /**
+   * A policy for authorization.
+   */
+  AuthorizationPolicy = "authorization_policy",
+}
+/**
+ * A resource which is not stored in the database but is data that needs to be addressed (addressed as in a postal address) by the APIURI system.
+ */
+export enum MetaResource {
   /**
    * An authorization role.
    */
@@ -119,6 +128,12 @@ export enum APIURIResource {
 }
 
 /**
+ * Resource types for the API URI.
+ */
+export type APIURIResource = DBResource | MetaResource;
+
+
+/**
  * Actions which can be taken on API metadata.
  */
 export enum APIMetadataAction {
@@ -129,19 +144,27 @@ export enum APIMetadataAction {
 }
 
 /**
- * Convert a ResourceModelType to an APIURIResource.
- * Cannot ever return APIURIResource.Role, as this is not a ResourceModelType.
- * @param modelType - The resource model type to convert.
- * @returns The corresponding APIURIResource enum value.
+ * Converts a path into the correct format.
+ * @param value - To format.
+ * @returns Path which starts with a slash and does not end with one.
  */
-export function apiURIResourceFromModelType(modelType: ResourceModelType): APIURIResource {
-  if (modelType instanceof User) {
-    return APIURIResource.User;
-  } else if (modelType instanceof Game) {
-    return APIURIResource.Game;
-  } else {
-    return APIURIResource.Deal;
+function normalizePath(value: string): string {
+  if (value.length === 0) {
+    return value;
   }
+  
+  let out = "";
+  if (value[0] !== "/") {
+    out += "/";
+  }
+
+  out += value;
+
+  if (value.length > 1 && value[value.length - 1] === "/") {
+    out = out.substring(0, value.length - 1);
+  }
+
+  return out;
 }
 
 /**
@@ -155,22 +178,22 @@ export class APIURI {
 
   /**
    * ID or pattern of specific resource.
-   * Cannot be provided if resource is APIURIResource.UntrustedUser.
+   * Cannot be provided if resource is MetaResource.UntrustedUser.
    */
   path?: string;
 
   /**
    * Initializes an APIURI.
    * @throws {@link Error}
-   * If resource = APIURIResource.UntrustedUser and path is not undefined.
+   * If resource = MetaResource.UntrustedUser and path is not undefined.
    * This is because an UntrustedUser is a meta API resource. It is the subject used in authorization requests if a request is unauthenticated. Thus a path specifier to indicate a specific untrusted user is not a concept that makes sense.
    */
   constructor(resource: APIURIResource, path?: string) {
     this.resource = resource;
     this.path = path;
 
-    if (this.resource === APIURIResource.UntrustedUser && this.path) {
-      throw new Error("APIURI cannot be provided a path specifier if resource is APIURIResource.UntrustedUser");
+    if (this.resource === MetaResource.UntrustedUser && this.path) {
+      throw new Error("APIURI cannot be provided a path specifier if resource is MetaResource.UntrustedUser");
     }
   }
 
@@ -178,14 +201,13 @@ export class APIURI {
    * @returns String representation of URI.
    */
   toString(): string {
-    const u = new url.URL(`${API_URI_SCHEMA}://${this.resource}`);
-    u.protocol = API_URI_SCHEMA;
-    u.hostname = this.resource;
+    let out = normalizePath(this.resource);
+
     if (this.path) {
-      u.pathname = this.path;
+      out += normalizePath(this.path);
     }
     
-    return u.toString();
+    return out;
   }
 }
 

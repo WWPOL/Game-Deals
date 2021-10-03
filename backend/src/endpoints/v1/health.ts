@@ -12,6 +12,7 @@ import {
   APIURI,
   APIURIResource,
   APIMetadataAction,
+  MetaResource,
 } from "../../models";
 import { AuthorizationRequest } from "../../authorization";
 
@@ -34,10 +35,10 @@ export class HealthEndpoint extends BaseEndpoint<void> {
     });
   }
 
-  authorization(req: EndpointRequest<void>): AuthorizationRequest[] {
+  async authorization(req: EndpointRequest<void>): Promise<AuthorizationRequest[]> {
     return [
       {
-        resourceURI: new APIURI(APIURIResource.APIMetadata, "/health"),
+        resourceURI: new APIURI(MetaResource.APIMetadata, "/health"),
         actions: [ APIMetadataAction.Retrieve ],
       },
     ];

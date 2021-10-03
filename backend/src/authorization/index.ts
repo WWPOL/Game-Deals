@@ -15,8 +15,9 @@ import {
   UniqueResource,
   APIURI,
   APIURIResource,
+  MetaResource,
+  DBResource,
   ResourceModelType,
-  apiURIResourceFromModelType,
   APIMetadataAction,
 } from "../models";
 import {
@@ -39,10 +40,14 @@ export type AuthorizationAction = UserAction | GameAction | DealAction | APIMeta
 
 /**
  * Create a regular expression which matches an array of authorization actions.
+ * @param arr - Array of authorization actions to create regular expression to match
+ * @param boundaryMatchers - If true then the start and end regex ("^...$") matchers will be included in the expression
  * @returns Regular expression which matches only the authorization actions in arr.
  */
-function authorizationActionArrRegex(arr: AuthorizationAction[]): string {
-  return `^${arr.join("|")}$`;
+function authorizationActionArrRegex(arr: AuthorizationAction[], boundaryMatchers?: boolean): string {
+  const startMatcher = boundaryMatchers ? "^" : "";
+  const endMatcher = boundaryMatchers ? "$" : "";
+  return `${startMatcher}${arr.join("|")}${endMatcher}`;
 }
 
 /**
@@ -193,7 +198,7 @@ class RBACPolicy implements Policy {
   policyTuple(): string[] {
     const subURI = (function() {
       if (this.sub === RBACSubjectRoleSelf) {
-        return new APIURI(APIURIResource.Role, this.logicalName);
+        return new APIURI(MetaResource.Role, this.logicalName);
       } else {
         return this.sub;
       }
@@ -267,7 +272,7 @@ const POLICIES = [
         "user/self/non_secure",
         "Users can view and edit non-secure details.",
         "r.sub = r.obj", // request user = request object
-        APIURIResource.User, // Only users
+        DBResource.User, // Only users
         [
           UserAction.RetrieveSecure,
           UserAction.UpdateNonSecure,
@@ -277,7 +282,7 @@ const POLICIES = [
         "user/self/secure",
         "Users can view and change their secure details.",
         "r.sub = r.obj", // request user = request object
-        APIURIResource.User, // Only users
+        DBResource.User, // Only users
         [
           UserAction.RetrieveSecure,
           UserAction.UpdateSecure,
@@ -291,22 +296,29 @@ const POLICIES = [
       new RBACPolicy(
         "untrusted_user/health",
         "Allow untrusted users to view API health information.",
-        new APIURI(APIURIResource.UntrustedUser),
-        new APIURI(APIURIResource.APIMetadata, "/health"),
+        new APIURI(MetaResource.UntrustedUser),
+        new APIURI(MetaResource.APIMetadata, "/health"),
         [ APIMetadataAction.Retrieve ],
+      ),
+      new RBACPolicy(
+        "untrusted_user/auth/login",
+        "Allow unstrusted users to authenticate as users.",
+        new APIURI(MetaResource.UntrustedUser),
+        new APIURI(DBResource.User, "/*"),
+        [ UserAction.Authenticate ],
       ),
       new RBACPolicy(
         "game/retrieve",
         "Users can retrieve games.",
         RBACSubjectRoleSelf,
-        new APIURI(APIURIResource.Game, "/*"),
+        new APIURI(DBResource.Game, "/*"),
         [ GameAction.Retrieve ],
       ),
       new RBACPolicy(
         "game/publish",
         "Users can create and update games.",
         RBACSubjectRoleSelf,
-        new APIURI(APIURIResource.Game, "/*"),
+        new APIURI(DBResource.Game, "/*"),
         [
           GameAction.Create,
           GameAction.Update,
@@ -411,7 +423,7 @@ export class AuthorizationClient {
       return enforcer.enforce(
         who.toString(),
         resURI,
-        authorizationActionArrRegex(Array.from(resActions[resURI])),
+        authorizationActionArrRegex(Array.from(resActions[resURI]), false),
       );
     }));
 

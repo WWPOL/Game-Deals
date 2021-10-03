@@ -10,8 +10,17 @@ import {
   jwtSign,
 } from "../../../encryption";
 import {
+  Optional,
+  Some,
+  None,
+  isSome,
+  isNone,
+  unwrapPanic,
+} from "../../../lib/optional";
+import {
   BaseEndpoint,
   EndpointCtx,
+  EndpointHandler,
 } from "../../base";
 import {
   EndpointRequest,
@@ -26,6 +35,7 @@ import { JSONResponder } from "../../response";
 import {
   APIURI,
   APIURIResource,
+  DBResource,
 } from "../../../models";
 import {
   User,
@@ -60,35 +70,53 @@ type LoginResp = {
  * Login. Optionally change password.
  */
 export class LoginEndpoint extends BaseEndpoint<LoginReq> {
+  /**
+   * The user which the requester is trying to authenticate as.
+   */
+  attemptedUser: Optional<User>;
+  
   constructor(ctx: EndpointCtx) {
     super(ctx, {
       method: "post",
       path: "/api/v1/auth/login",
       bodyParserFactory: () => new DecoderParser(LoginReqShape),
     });
+    
+    this.attemptedUser = None();
   }
 
   /**
    * Allow unauthenticated users 
    */
-  authorization(req: EndpointRequest<LoginReq>): AuthorizationRequest[] {
-    return [];
-  }
-
-  async handle(req: EndpointRequest<LoginReq>): Promise<JSONResponder<LoginResp>> {
+  async authorization(req: EndpointRequest<LoginReq>): Promise<AuthorizationRequest[]> {
     const body = req.body();
     
-    // Get user
-    let user = await User.findOne({
+    const user = await User.findOne({
       username: body.username,
     });
-
+    
     if (user === null) {
       throw MkEndpointError({
         http_status: 401,
         error: "unauthorized",
       });
     }
+
+    this.attemptedUser = Some(user);
+    
+    return [
+      {
+        resourceURI: new APIURI(DBResource.User, user.id.toString()),
+        actions: [ UserAction.Authenticate ],
+      },
+    ];
+  }
+
+  async handle(req: EndpointRequest<LoginReq>): Promise<JSONResponder<LoginResp>> {
+    const body = req.body();
+    
+    // Get user
+    let user: User = unwrapPanic(this.attemptedUser);
 
     // Check password
     const passwordOk = await passwordsCompare({

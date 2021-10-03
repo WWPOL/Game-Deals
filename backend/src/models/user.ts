@@ -10,6 +10,7 @@ import {
   UniqueResource,
   APIURI,
   APIURIResource,
+  DBResource,
 } from "./index";
 import { Deal } from "./deal";
 
@@ -37,7 +38,7 @@ export class User extends BaseEntity implements UniqueResource {
    * @returns A unique identifier.
    */
   uri(): APIURI {
-    return new APIURI(APIURIResource.User, this.id.toString());
+    return new APIURI(DBResource.User, this.id.toString());
   }
 }
 

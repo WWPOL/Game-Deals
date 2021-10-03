@@ -23,7 +23,7 @@ import {
 import { authenticateReq } from "../authentication";
 import {
   APIURI,
-  APIURIResource,
+  MetaResource,
 } from "../models";
 import { User } from "../models/user";
  
@@ -80,30 +80,30 @@ export function wrapHandler<I>(ctx: EndpointCtx, handler: EndpointHandler<I>): (
     };
 
     const epResp = await (async function(): Promise<EndpointResponder> {
-      // Authenticate and Authorize
-      const who = await authenticateReq(req);
-      
-      const authSub = who !== null ? who.uri() : new APIURI(APIURIResource.UntrustedUser);
-      const authReqs = handler.authorization(epReq, who);
-      if (authReqs.length === 0) {
-        // Endpoint does not define any authorization requirements so default to no access
-        return new ErrorResponder(MkEndpointError({
+      try {
+        // Authenticate and Authorize
+        const who = await authenticateReq(req);
+        
+        const authSub = who !== null ? who.uri() : new APIURI(MetaResource.UntrustedUser);
+        const authReqs = await handler.authorization(epReq);
+        if (authReqs.length === 0) {
+          // Endpoint does not define any authorization requirements so default to no access
+          return new ErrorResponder(MkEndpointError({
             http_status: 403,
             error: "unauthorized."
-        }));
-      }
-      // Endpoint does have authorization requirements
-      const isAuthorized = await ctx.authorizationClient.isAllowed(authSub, authReqs);
-      if (isAuthorized === false) {
-        return new ErrorResponder(MkEndpointError({
-          http_status: 403,
-          error: "unauthorized."
-        }));
-      }
-      
-      
-      // Handle
-      try {
+          }));
+        }
+        // Endpoint does have authorization requirements
+        const isAuthorized = await ctx.authorizationClient.isAllowed(authSub, authReqs);
+        if (isAuthorized === false) {
+          return new ErrorResponder(MkEndpointError({
+            http_status: 403,
+            error: "unauthorized."
+          }));
+        }
+        
+        
+        // Handle
         return await handler.handle(epReq);
       } catch (e) {
         if (e._tag !== "endpoint_error") {
@@ -239,7 +239,7 @@ export interface EndpointHandler<I> {
    * @param req - Request
    * @returns A list of authorization requests which describe the actions required to utilize the endpoint.
    */
-  authorization(req: EndpointRequest<I>, user: User): AuthorizationRequest[];
+  authorization(req: EndpointRequest<I>): Promise<AuthorizationRequest[]>;
 
   /**
    * Run request processing logic.
