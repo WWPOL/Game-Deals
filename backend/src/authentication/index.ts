@@ -35,20 +35,13 @@ export async function authenticateReq(cfg: Config, req: Request): Promise<Option
   })();
 
   // Fetch user
-  try {
-    const authUser = await User.findOne({ id: req.authToken.sub });
-    if (authUser === null) {
-      throw MkEndpointError({
-        http_status: 401,
-        error: "unauthorized",
-      });
-    }
-
-    return Some(authUser);
-  } catch (e) {
+  const authUser = await User.findOne({ id: authToken.sub });
+  if (authUser === null) {
     throw MkEndpointError({
-      http_status: 500,
-      error: "internal error",
+      http_status: 401,
+      error: "unauthorized",
     });
   }
+
+  return Some(authUser);
 }
