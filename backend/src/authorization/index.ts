@@ -288,6 +288,7 @@ const POLICIES = [
         [
           UserAction.RetrieveSecure,
           UserAction.UpdateSecure,
+          UserAction.Authenticate,
         ]
       ),
     ],
@@ -395,36 +396,66 @@ export class AuthorizationClient {
     const enforcer = await this.enforcer();
 
     // Create AuthorizationPolicy for each policies
-    let policyModels = [];
-    POLICIES.forEach((namedPolicies) => {
-      namedPolicies.policies.forEach((p) => {
+    let newPolicies = 0;
+    let updatedPolicies = 0;
+    let deletedPolicies = 0;
+    
+    await Promise.all(POLICIES.map(async (namedPolicies) => {
+      let foundPolicies = [];
+      
+      await Promise.all(namedPolicies.policies.map(async (p) => {
+        // Create AuthorizationPolicy model
         const policyModel = new AuthorizationPolicy();
         policyModel.logical_name = p.name();
         policyModel.policy_type = namedPolicies.policyType;
         policyModel.policy = p.policyTuple();
 
-        policyModels.push(policyModel);
+        // Update or add policy if not present
+        const foundPolicy = await AuthorizationPolicy.findOne({
+          policy_type: policyModel.policy_type,
+          logical_name: policyModel.logical_name,
+        });
+
+        if (!foundPolicy) {
+          // No policy found, add policy
+          await enforcer.addNamedPolicy(policyModel.policy_type, ...policyModel.policy);
+
+          await policyModel.save();
+
+          newPolicies += 1;
+        } else {          
+          if (JSON.stringify(foundPolicy.policy) !== JSON.stringify(policyModel.policy)) {
+            // Policy must be updated
+            await enforcer.removeNamedPolicy(foundPolicy.policy_type, ...foundPolicy.policy);
+            await enforcer.addNamedPolicy(policyModel.policy_type, ...policyModel.policy);
+
+            foundPolicy.policy = policyModel.policy;
+            await foundPolicy.save();
+
+            updatedPolicies += 1;
+          }
+        }
+      }));
+
+      // Delete removed policies
+      const declaredPolicyNames = namedPolicies.policies.map((declaredPolicy) => {
+        return declaredPolicy.name();
       });
-    });
+      
+      await Promise.all((await AuthorizationPolicy.find({
+        policy_type: namedPolicies.policyType,
+      })).map(async (foundPolicy) => {
+        if (!declaredPolicyNames.includes(foundPolicy.logical_name)) {
+          await foundPolicy.remove();
 
-    // Add policies which aren't present
-    let newPolicies = 0;
-    policyModels.forEach(async (p) => {
-      const foundPolicy = await AuthorizationPolicy.findOne({
-        logical_name: p.logical_name,
-      });
+          deletedPolicies += 1;
+        }
+      }));
+    }));
 
-      if (!foundPolicy) {
-        // No policy found, add policy
-        await enforcer.addNamedPolicy(p.policy_type, ...p.policy);
-
-        await p.save();
-
-        newPolicies += 1;
-      }
-    });
-
-    this.log.debug(`Added ${newPolicies} new policies`);
+    if (newPolicies > 0 || updatedPolicies > 0 || deletedPolicies > 0) {
+      this.log.debug(`Added ${newPolicies} new policies, updated ${updatedPolicies} policies, deleted ${deletedPolicies} policies`);
+    }
   }
 
   /**
