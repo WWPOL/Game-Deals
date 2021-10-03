@@ -89,7 +89,7 @@ export function wrapHandler<I>(ctx: EndpointCtx, handler: EndpointHandler<I>): (
           },
           user: who,
         };
-        
+
         // Authorize
         const authSub = isSome(who) ? who.value.uri() : new APIURI(MetaResource.UntrustedUser);
         const authReqs = await handler.authorization(epReq);

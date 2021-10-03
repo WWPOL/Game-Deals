@@ -36,7 +36,7 @@ export type JWTToken = {
   /**
    * Subject, the user being identified by the token.
    */
-  sub: string;
+  sub: number;
 };
 
 /**

@@ -213,7 +213,6 @@ class Server {
 
       this.log.debug("Inserted initial admin user with username \"admin\" and password \"admin\"");
     }
-    this.log.debug(`totalUsers=${totalUsers}`);
   }
 }
 
