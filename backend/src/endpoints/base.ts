@@ -64,6 +64,8 @@ export type HTTPMethod = "all" | "get" | "post" | "put" | "delete" | "patch" | "
 
 /**
  * Call an EndpointHandler handle method from a standard Express endpoint handler.
+ * Performs all middleware logic. Logs request details. Transforms the Express request into an Endpoint Request. Authenticates the user. Authorizes the user. 
+ * Calls the EndpointHandler handle method and uses the returned EndpointResponder to respond to the Express request.
  * @typeParam I - Request body type.
  * @param handler - The Endpoint handler.
  * @returns Standard express event handler which will call the endpoint handler.

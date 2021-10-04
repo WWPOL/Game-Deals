@@ -9,7 +9,6 @@ import { Config } from "../config";
 import { User } from "./user";
 import { Game } from "./game";
 import { Deal } from "./deal";
-import { AuthorizationPolicy } from "./policy";
 
 /**
  * Typing _tag field for the ConnectionConfig type.
@@ -68,7 +67,6 @@ export async function createDBConnection(cfg: Config | ConnectionConfig): Promis
       User,
       Game,
       Deal,
-      AuthorizationPolicy,
     ],
   });
 }
@@ -101,12 +99,8 @@ export enum DBResource {
    * A {@link Deal}.
    */
   Deal = "deal",
-
-  /**
-   * A policy for authorization.
-   */
-  AuthorizationPolicy = "authorization_policy",
 }
+
 /**
  * A resource which is not stored in the database but is data that needs to be addressed (addressed as in a postal address) by the APIURI system.
  */

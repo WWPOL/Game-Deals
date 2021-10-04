@@ -33,7 +33,6 @@ import {
   Game,
   GameAction,
 } from "../models/game";
-import { AuthorizationPolicy } from "../models/policy";
 
 /**
  * An action which can be applied to a resource.
@@ -181,7 +180,19 @@ class RBACPolicy implements Policy {
   /**
    * Initializes an RBAC policy.
    */
-  constructor(logicalName: string, description: string, sub: RBACSubjectType, obj: APIURI, act: AuthorizationAction[]) {
+  constructor({
+    logicalName,
+    description,
+    sub,
+    obj,
+    act,
+  }: {
+    readonly logicalName: string,
+    readonly description: string,
+    readonly sub: RBACSubjectType,
+    readonly obj: APIURI,
+    readonly act: AuthorizationAction[],
+  }) {
     this.logicalName = logicalName;
     this.descriptionTxt = description;
     this.sub = sub;
@@ -226,7 +237,7 @@ class ABACPolicy {
   /**
    * Casbin rule which matches subjects who can utilize this policy.
    */
-  sub_rule: string;
+  subRule: string;
 
   /**
    * Object to which access is being controlled.
@@ -241,10 +252,22 @@ class ABACPolicy {
   /**
    * Initializes ABAC policy.
    */
-  constructor(logicalName: string, description: string, sub_rule: string, obj: APIURIResource, act: AuthorizationAction[]) {
+  constructor({
+    logicalName,
+    description,
+    subRule,
+    obj,
+    act,
+  }: {
+    readonly logicalName: string,
+    readonly description: string,
+    readonly subRule: string,
+    readonly obj: APIURIResource,
+    readonly act: AuthorizationAction[],
+  }) {
     this.logicalName = logicalName;
     this.descriptionTxt = description;
-    this.sub_rule = sub_rule;
+    this.subRule = subRule;
     this.obj = obj;
     this.act = act;
   }
@@ -258,10 +281,48 @@ class ABACPolicy {
   }
 
   policyTuple(): string[] {
-    return [this.sub_rule, new APIURI(this.obj).toString(), authorizationActionArrRegex(this.act)];
+    return [this.subRule, new APIURI(this.obj).toString(), authorizationActionArrRegex(this.act)];
   }
 }
 
+/**
+ * Authorization grouping policy. Creates associations between authorization resources.
+ */
+class GroupingPolicy {
+  /**
+   * The subject which will be receiving the association.
+   */
+  sub: APIURI;
+
+  /**
+   * The authorization objects who's permissions the subject will receive.
+   */
+  inherits: APIURI[];
+
+  /**
+   * Initialize a GroupingPolicy.
+   */
+  constructor({
+    sub,
+    inherits,
+  }: {
+    readonly sub: APIURI,
+    readonly inherits: APIURI[],
+  }) {
+    this.sub = sub;
+    this.inherits = inherits;
+  }
+
+  /**
+   * @returns Tuples representing the grouping policy required to create the behavior defined by sub and inherits.
+   */
+  groupingTuples(): string[][] {
+    return this.inherits.map((inherit) => [
+      this.sub.toString(),
+      inherit.toString(),
+    ]);
+  }
+}
 
 /**
  * The authorization policies to use to enforce access.
@@ -270,65 +331,67 @@ const POLICIES = [
   {
     policyType: PolicyType.ABAC,
     policies: [
-      new ABACPolicy(
-        "user/self/non_secure",
-        "Users can view and edit non-secure details.",
-        "r.sub = r.obj", // request user = request object
-        DBResource.User, // Only users
-        [
+      new ABACPolicy({
+        logicalName: "user/self/non_secure",
+        description: "Users can view and edit non-secure details.",
+        subRule: "r.sub = r.obj", // request user = request object
+        obj: DBResource.User, // Only users
+        act: [
           UserAction.RetrieveSecure,
           UserAction.UpdateNonSecure,
-        ]
-      ),
-      new ABACPolicy(
-        "user/self/secure",
-        "Users can view and change their secure details.",
-        "r.sub = r.obj", // request user = request object
-        DBResource.User, // Only users
-        [
+        ],
+      }),
+      new ABACPolicy({
+        logicalName: "user/self/secure",
+        description: "Users can view and change their secure details.",
+        subRule: "r.sub = r.obj", // request user = request object
+        obj: DBResource.User, // Only users
+        act: [
           UserAction.RetrieveSecure,
           UserAction.UpdateSecure,
           UserAction.Authenticate,
-        ]
-      ),
+        ],
+      }),
     ],
   },
   {
     policyType: PolicyType.RBAC,
     policies: [
-      new RBACPolicy(
-        "untrusted_user/health",
-        "Allow untrusted users to view API health information.",
-        new APIURI(MetaResource.UntrustedUser),
-        new APIURI(MetaResource.APIMetadata, "/health"),
-        [ APIMetadataAction.Retrieve ],
-      ),
-      new RBACPolicy(
-        "untrusted_user/auth/login",
-        "Allow unstrusted users to authenticate as users.",
-        new APIURI(MetaResource.UntrustedUser),
-        new APIURI(DBResource.User, "/*"),
-        [ UserAction.Authenticate ],
-      ),
-      new RBACPolicy(
-        "game/retrieve",
-        "Users can retrieve games.",
-        RBACSubjectRoleSelf,
-        new APIURI(DBResource.Game, "/*"),
-        [ GameAction.Retrieve ],
-      ),
-      new RBACPolicy(
-        "game/publish",
-        "Users can create and update games.",
-        RBACSubjectRoleSelf,
-        new APIURI(DBResource.Game, "/*"),
-        [
-          GameAction.Create,
-          GameAction.Update,
-        ],
-      ),
+      new RBACPolicy({
+        logicalName: "untrusted_user/health",
+        description: "Allow untrusted users to view API health information.",
+        sub: new APIURI(MetaResource.UntrustedUser),
+        obj: new APIURI(MetaResource.APIMetadata, "/health"),
+        act: [ APIMetadataAction.Retrieve ],
+      }),
+      new RBACPolicy({
+        logicalName: "untrusted_user/auth/login",
+        description: "Allow unstrusted users to authenticate as users.",
+        sub: new APIURI(MetaResource.UntrustedUser),
+        obj: new APIURI(DBResource.User, "/*"),
+        act: [ UserAction.Authenticate ],
+      }),
+      new RBACPolicy({
+        logicalName: "user/create",
+        description: "Allow to create users.",
+        sub: RBACSubjectRoleSelf,
+        obj: new APIURI(DBResource.User),
+        act: [ UserAction.Create ],
+      }),
     ],
   },
+];
+
+/**
+ * Authorization grouping policies used to associate permissions with URIs.
+ */
+const GROUPING_POLICIES = [
+  new GroupingPolicy({
+    sub: new APIURI(MetaResource.Role, "admin"),
+    inherits: [
+      new APIURI(MetaResource.Role, "user/create"),
+    ],
+  }),
 ];
 
 /**
@@ -368,6 +431,7 @@ export class AuthorizationClient {
   /**
    * Initializes an authorization client.
    * @param cfg - Application configuration.
+   * @param log - Logger.
    */
   constructor(cfg: Config, log: Logger) {
     this.cfg = cfg;
@@ -390,72 +454,29 @@ export class AuthorizationClient {
   }
 
   /**
-   * Initializes policies.
+   * Initializes policies and groupings.
    */
   async init(): Promise<void> {
     const enforcer = await this.enforcer();
 
-    // Create AuthorizationPolicy for each policies
-    let newPolicies = 0;
-    let updatedPolicies = 0;
-    let deletedPolicies = 0;
-    
     await Promise.all(POLICIES.map(async (namedPolicies) => {
-      let foundPolicies = [];
-      
-      await Promise.all(namedPolicies.policies.map(async (p) => {
-        // Create AuthorizationPolicy model
-        const policyModel = new AuthorizationPolicy();
-        policyModel.logical_name = p.name();
-        policyModel.policy_type = namedPolicies.policyType;
-        policyModel.policy = p.policyTuple();
+      const res = await enforcer.addNamedPolicies(
+        namedPolicies.policyType,
+        namedPolicies.policies.map((p) => p.policyTuple()),
+      );
 
-        // Update or add policy if not present
-        const foundPolicy = await AuthorizationPolicy.findOne({
-          policy_type: policyModel.policy_type,
-          logical_name: policyModel.logical_name,
-        });
-
-        if (!foundPolicy) {
-          // No policy found, add policy
-          await enforcer.addNamedPolicy(policyModel.policy_type, ...policyModel.policy);
-
-          await policyModel.save();
-
-          newPolicies += 1;
-        } else {          
-          if (JSON.stringify(foundPolicy.policy) !== JSON.stringify(policyModel.policy)) {
-            // Policy must be updated
-            await enforcer.removeNamedPolicy(foundPolicy.policy_type, ...foundPolicy.policy);
-            await enforcer.addNamedPolicy(policyModel.policy_type, ...policyModel.policy);
-
-            foundPolicy.policy = policyModel.policy;
-            await foundPolicy.save();
-
-            updatedPolicies += 1;
-          }
-        }
-      }));
-
-      // Delete removed policies
-      const declaredPolicyNames = namedPolicies.policies.map((declaredPolicy) => {
-        return declaredPolicy.name();
-      });
-      
-      await Promise.all((await AuthorizationPolicy.find({
-        policy_type: namedPolicies.policyType,
-      })).map(async (foundPolicy) => {
-        if (!declaredPolicyNames.includes(foundPolicy.logical_name)) {
-          await foundPolicy.remove();
-
-          deletedPolicies += 1;
-        }
-      }));
+      if (res) {
+        this.log.debug(`Updated policy type ${namedPolicies.policyType}`);
+      }
     }));
 
-    if (newPolicies > 0 || updatedPolicies > 0 || deletedPolicies > 0) {
-      this.log.debug(`Added ${newPolicies} new policies, updated ${updatedPolicies} policies, deleted ${deletedPolicies} policies`);
-    }
+    await Promise.all(GROUPING_POLICIES.map(async (grouping) => {
+      const res = await enforcer.addGroupingPolicies(grouping.groupingTuples());
+
+      if (res) {
+        this.log.debug(`Updated policy grouping for subject ${grouping.sub}`);
+      }
+    }));
   }
 
   /**
@@ -496,5 +517,28 @@ export class AuthorizationClient {
 
     const failedEnforce = enforced.filter(result => result === false);
     return failedEnforce.length === 0;
+  }
+
+  /**
+   * Give a user an authorization role.
+   * @param userID - The ID of the user to which the role will be granted.
+   * @param roleLogicalName - The logical name of the role to grant the user.
+   * @throws {@link Error}
+   * If the role has already been granted to the user.
+   */
+  async grantRole(userID: number, roleLogicalName: string): Promise<void> {
+    const enforcer = await this.enforcer();
+
+    const grouping = new GroupingPolicy({
+      sub: new APIURI(DBResource.User, userID.toString()),
+      inherits: [
+        new APIURI(MetaResource.Role, roleLogicalName),
+      ],
+    });
+    
+    const res = await enforcer.addGroupingPolicies(grouping.groupingTuples());
+    if (!res) {
+      throw new Error(`User ${userID} has already been granted the role "${roleLogicalName}".`);
+    }
   }
 }
