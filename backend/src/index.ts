@@ -183,12 +183,16 @@ class Server {
     if (totalUsers === 0) {
       // Setup an initial admin user
       try {
+        // Create user
         const admin = new User();
         admin.username = "admin";
         admin.password_hash = await passwordsHash("admin");
         admin.must_reset_password = true;
         
         await admin.save();
+
+        // Grant admin privileges
+        await this.authorizationClient.grantRole(admin.id, "admin");
       } catch (e) {
         throw new Error(`Failed to insert initial admin user into database: ${e}`);
       }
