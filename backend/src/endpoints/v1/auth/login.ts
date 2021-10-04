@@ -54,6 +54,7 @@ const LoginReqShape = t.type({
    */
   new_password: t.union([t.string, t.undefined]),
 });
+
 type LoginReq = t.TypeOf<typeof LoginReqShape>;
 
 /**

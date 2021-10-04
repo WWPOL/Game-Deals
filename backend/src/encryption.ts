@@ -127,8 +127,8 @@ export function passwordsCheckRequirements(plainText: string): { ok: true } | { 
       ok: false,
       error: "must be longer than 8 characters",
     };
-  } else if (dumbPasswords.Check(plainText) === true) {
-    const rate = dumbPasswords.RateOfUsage(plainText);
+  } else if (dumbPasswords.check(plainText) === true) {
+    const rate = dumbPasswords.rateOfUsage(plainText);
     const percent = (rate.frequency / 100000) * 100;
     return {
       ok: false,

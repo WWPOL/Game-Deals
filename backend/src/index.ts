@@ -93,24 +93,6 @@ class Server {
       this.app[handler.method()](handler.path(), wrapHandler(epCtx, handler));
     });
 
-    // this.app.get(
-    //   "/api/v1/health",
-    //   this.epHealth.bind(this));
-    
-    // this.app.post(
-    //   "/api/v1/login",
-    //   this.mwValidateBodyFactory(ajv.compile({
-    //     type: "object",
-    //     properties: {
-    //       username: { type: "string" },
-    //       password: { type: "string" },
-    //       new_password: { type: "string" },
-    //     },
-    //     required: [ "username", "password" ],
-    //     additionalProperties: false,
-    //   })).bind(this),
-    //   this.epLogin.bind(this));
-
     // this.app.post(
     //   "/api/v1/admin",
     //   this.mwAuthenticate.bind(this),
