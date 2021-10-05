@@ -72,9 +72,10 @@ export type HTTPMethod = "all" | "get" | "post" | "put" | "delete" | "patch" | "
  */
 export function wrapHandler<I>(ctx: EndpointCtx, handler: EndpointHandler<I>): (req: Request, resp: Response) => Promise<void> {
   return async (req: Request, resp: Response): Promise<void> => {
-    const log = new ConsoleLogger(`${handler.method().toUpperCase()} ${handler.path()}`);
+    const log = ctx.log.child(handler.constructor.name);
+    const routeStr = `${handler.method().toUpperCase()} ${handler.path()}`;
+    log.info(routeStr);
     
-    log.info("");
     const startT = new Date().getTime();
    
     const epResp = await (async function(): Promise<EndpointResponder> {
@@ -116,7 +117,7 @@ export function wrapHandler<I>(ctx: EndpointCtx, handler: EndpointHandler<I>): (
         return await handler.handle(epReq);
       } catch (e) {
         if (e._tag !== "endpoint_error") {
-          log.error(e);
+          log.error(routeStr, e);
         }
         return new ErrorResponder(e);
       }
@@ -128,7 +129,7 @@ export function wrapHandler<I>(ctx: EndpointCtx, handler: EndpointHandler<I>): (
     const endT = new Date().getTime();
     const dt = endT - startT;
     
-    log.info(`=> ${epResp.status()} ${dt}ms`);
+    log.info(routeStr, `=> ${epResp.status()} ${dt}ms`);
   };
 }
 
@@ -184,7 +185,7 @@ export class BaseEndpoint<I> {
   constructor(ctx: EndpointCtx, spec: BaseEndpointSpec<I>) {
     this.cfg = ctx.cfg;
     this.spec = spec;
-    this.log = ctx.log.child(`${this.spec.method} ${this.spec.path}`);
+    this.log = ctx.log.child(`${this.constructor.name}`);
     this.authorizationClient = ctx.authorizationClient;
   }
 

@@ -20,4 +20,4 @@ else
 fi
 
 log "Starting server"
-run_log "yarn dev" "$EXIT_START" "Failed to start server"
+run_check "yarn dev" "$EXIT_START" "Failed to start server"

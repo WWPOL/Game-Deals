@@ -60,11 +60,12 @@ class Server {
   
   /**
    * Initializes the server.
-   * @param {Config} cfg Application configuration from CFG.
+   * @param cfg - Application configuration from CFG.
+   * @param log - Used to output debug messages.
    */
-  constructor(cfg: Config) {
+  constructor(cfg: Config, log: Logger) {
     this.cfg = cfg;
-    this.log = new ConsoleLogger("HTTP API");
+    this.log = log;
     this.authorizationClient = new AuthorizationClient(this.cfg, this.log.child("authorization"));
 
     // Setup express HTTP API
@@ -125,10 +126,10 @@ class Server {
    */
   async httpListen(): Promise<void> {
     // Start server
-    console.log(`Opening HTTP API listener on :${this.cfg.httpPort}`);
+    this.log.info(`Opening HTTP API listener on :${this.cfg.httpPort}`);
     
     const server = this.app.listen(this.cfg.httpPort, () => {
-      console.log("Listening for HTTP API");
+      this.log.info(`Servering listening on :${this.cfg.httpPort}`);
     });
 
     return new Promise((resolve, reject) => {
@@ -183,37 +184,46 @@ class Server {
         throw new Error(`Failed to insert initial admin user into database: ${e}`);
       }
 
-      this.log.debug("Inserted initial admin user with username \"admin\" and password \"admin\"");
+      this.log.info("Inserted initial admin user with username \"admin\" and password \"admin\"");
     }
   }
 }
 
 // Start server
 (async function() {
-  const server = new Server(EnvConfig());
+  const log = new ConsoleLogger("");
+  
+  const server = new Server(EnvConfig(), log.child("server"));
 
-  // Call lazily initialized clients so we know if anything will fail immediately
+  // Initialize Database
+  log.info("Connecting to database");
+  
   try {
     await server.initDB();
   } catch (e) {
-    console.error(`Failed to connect to database`, e);
+    log.error(`Failed to connect to database`, e);
     return;
   }
-  
+
+  log.info("Connected to database");
+
+  // Initialize authentication and authorization
   try {
     await server.initAuthAuth();
   } catch (e) {
-    console.error(`Failed to setup authorization and authentication`, e);
+    log.error(`Failed to setup authorization and authentication`, e);
     return;
   }
+
+  log.info("Initialized authentication and authorization");
 
   // Run HTTP API
   try {
     await server.httpListen();
   } catch (e) {
-    console.error(`Failed to start the HTTP API`, e);
+    log.error(`Failed to start the HTTP API`, e);
     return;
   }
   
-  console.log("Gracefully exiting");
+  log.info("Gracefully exiting");
 })();
