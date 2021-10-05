@@ -372,6 +372,13 @@ const POLICIES = [
         act: [ UserAction.Authenticate ],
       }),
       new RBACPolicy({
+        logicalName: "untrusted_user/deal",
+        description: "Allow untrusted users to get deals.",
+        sub: new APIURI(MetaResource.UntrustedUser),
+        obj: new APIURI(DBResource.Deal, "/*"),
+        act: [ DealAction.Retrieve ],
+      }),
+      new RBACPolicy({
         logicalName: "user/create",
         description: "Allow to create users.",
         sub: RBACSubjectRoleSelf,
@@ -389,6 +396,7 @@ const GROUPING_POLICIES = [
   new GroupingPolicy({
     sub: new APIURI(MetaResource.Role, "admin"),
     inherits: [
+      new APIURI(MetaResource.UntrustedUser),
       new APIURI(MetaResource.Role, "user/create"),
     ],
   }),
