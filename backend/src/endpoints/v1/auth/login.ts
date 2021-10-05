@@ -190,7 +190,7 @@ export class LoginEndpoint extends BaseEndpoint<LoginReq> {
     // Generate authentication token
     const token = await jwtSign(this.cfg, user.id);
 
-    return new JSONResponder(200, {
+    return new JSONResponder({
       auth_token: token,
     });
   }

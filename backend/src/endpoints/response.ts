@@ -39,7 +39,7 @@ export class JSONResponder<T> implements EndpointResponder {
    * @param httpStatus - HttpStatus code.
    * @param data - Response data.
    */
-  constructor(httpStatus: number, data: T) {
+  constructor(data: T, httpStatus: number = 200) {
     this.httpStatus = httpStatus;
     this.data = data;
   }
@@ -115,7 +115,7 @@ export class ErrorResponder implements EndpointResponder {
    * Send the error to the user via a JSONResponder.
    */
   async respond(resp: Response): Promise<void> {
-    const jsonResponder = new JSONResponder(this.httpStatus, this.errResp);
+    const jsonResponder = new JSONResponder(this.errResp, this.httpStatus);
     await jsonResponder.respond(resp);
   }
 }

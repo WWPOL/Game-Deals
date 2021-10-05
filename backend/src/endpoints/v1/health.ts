@@ -45,7 +45,7 @@ export class HealthEndpoint extends BaseEndpoint<void> {
   }
 
   async handle(req: EndpointRequest<void>): Promise<JSONResponder<HealthResp>> {
-    return new JSONResponder(200, {
+    return new JSONResponder({
       ok: true,
     });
   }
