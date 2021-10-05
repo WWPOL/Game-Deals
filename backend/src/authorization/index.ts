@@ -113,9 +113,19 @@ type NamedPolicies<T extends Policy> = {
 };
 
 /**
+ * A type which provides information about the implementing resource, which can be used to get a sense of the type's current logical identity, and its internal state.
+ */
+export interface ReconcileResource {
+  /**
+   * @returns A string value which is always the same given the implementor's internal state.
+   */
+  hash(): string;
+}
+
+/**
  * A type of policy rule type.
  */
-export interface Policy {
+export interface Policy extends ReconcileResource {
   /**
    * @returns Short logical name of policy, should not change.
    */
@@ -218,6 +228,10 @@ class RBACPolicy implements Policy {
     }).bind(this)();
     return [subURI.toString(), this.obj.toString(), authorizationActionArrRegex(this.act)];
   }
+
+  hash(): string {
+    return this.policyTuple().join(",");
+  }
 }
 
 /**
@@ -283,44 +297,68 @@ class ABACPolicy {
   policyTuple(): string[] {
     return [this.subRule, new APIURI(this.obj).toString(), authorizationActionArrRegex(this.act)];
   }
+
+  hash(): string {
+    return this.policyTuple().join(",");
+  }
 }
 
 /**
  * Authorization grouping policy. Creates associations between authorization resources.
  */
-class GroupingPolicy {
+class GroupingPolicy implements ReconcileResource {
   /**
    * The subject which will be receiving the association.
    */
   sub: APIURI;
 
   /**
-   * The authorization objects who's permissions the subject will receive.
+   * The authorization object who's permissions the subject will receive.
    */
-  inherits: APIURI[];
+  inherit: APIURI;
 
   /**
    * Initialize a GroupingPolicy.
    */
   constructor({
     sub,
+    inherit,
+  }: {
+    readonly sub: APIURI,
+    readonly inherit: APIURI,
+  }) {
+    this.sub = sub;
+    this.inherit = inherit;
+  }
+
+  /**
+   * Create multuple grouping policies with the same subject and different inherit values.
+   * @param sub - The subject which will be recieving the association.
+   * @param inherit - The authorization object who's permissions the subject will receive.
+   * @returns An array of grouping policies which represent the arguments.
+   */
+  static CreateMultiple({
+    sub,
     inherits,
   }: {
     readonly sub: APIURI,
     readonly inherits: APIURI[],
-  }) {
-    this.sub = sub;
-    this.inherits = inherits;
+  }): GroupingPolicy[] {
+    return inherits.map((inherit) => new GroupingPolicy({ sub, inherit }));
   }
 
   /**
-   * @returns Tuples representing the grouping policy required to create the behavior defined by sub and inherits.
+   * @returns Tuple representing the grouping policy.
    */
-  groupingTuples(): string[][] {
-    return this.inherits.map((inherit) => [
+  groupingTuple(): string[] {
+    return [
       this.sub.toString(),
-      inherit.toString(),
-    ]);
+      this.inherit.toString(),
+    ];
+  }
+
+  hash(): string {
+    return this.groupingTuple().join(",");
   }
 }
 
@@ -393,10 +431,9 @@ const POLICIES = [
  * Authorization grouping policies used to associate permissions with URIs.
  */
 const GROUPING_POLICIES = [
-  new GroupingPolicy({
+  ...GroupingPolicy.CreateMultiple({
     sub: new APIURI(MetaResource.Role, "admin"),
     inherits: [
-      new APIURI(MetaResource.UntrustedUser),
       new APIURI(MetaResource.Role, "user/create"),
     ],
   }),
@@ -416,6 +453,52 @@ export type AuthorizationRequest = {
    */
   actions: AuthorizationAction[];
 };
+
+/**
+ * Reconcile state of a multiple ReconcileResource resources.
+ * @typeParam T - The type of the resource which is being reconciled.
+ * @param desired - The desired state of all resources of the type.
+ * @param listAll - A function which lists all hashes of a current resources type.
+ * @param addMany - A function which adds the provided resources.
+ * @param deleteMany - A function which deletes the provided resources by their hash.
+ * @returns An object describing the operations which were taken to reconcile the state. The added key is a set of resource hashes which were created, the deleted key is a set of resource hashes which were deleted.
+ */
+async function Reconcile<T extends ReconcileResource>({
+  desired,
+  listAll,
+  addMany,
+  deleteMany,
+}: {
+  readonly desired: T[];
+  readonly listAll: () => Promise<string[]>;
+  readonly addMany: (resources: T[]) => Promise<void>;
+  readonly deleteMany: (resources: string[]) => Promise<void>;
+}): Promise<{ added: Set<string>, deleted: Set<string> }> {
+  // Get the current state of resources
+  const currentIDs = new Set(await listAll());
+  
+  const desiredIDs = new Set<string>();
+  const desiredHashMap = {};
+  
+  desired.forEach((desired) => {
+    const hash = desired.hash();
+    
+    desiredIDs.add(hash);
+    desiredHashMap[hash] = desired;
+  });
+  // Compute the difference between desired and current state
+  const missingIDs = new Set(Array.from(desiredIDs).filter(desiredID => !currentIDs.has(desiredID)));
+  const extraIDs = new Set(Array.from(currentIDs).filter(currentID => !desiredIDs.has(currentID)));
+
+  // Take action to reconcile the state
+  await deleteMany(Array.from(extraIDs));
+  await addMany(Array.from(missingIDs).map((id) => desiredHashMap[id]));
+
+  return {
+    added: missingIDs,
+    deleted: extraIDs,
+  };
+}
 
 /**
  * Client which enforces authorization decisions.
@@ -468,23 +551,54 @@ export class AuthorizationClient {
     const enforcer = await this.enforcer();
 
     await Promise.all(POLICIES.map(async (namedPolicies) => {
-      const res = await enforcer.addNamedPolicies(
-        namedPolicies.policyType,
-        namedPolicies.policies.map((p) => p.policyTuple()),
-      );
+      const res = await Reconcile<Policy>({
+        desired: namedPolicies.policies,
+        listAll: async (): Promise<string[]> => {
+          return (await enforcer.getNamedPolicy(namedPolicies.policyType)).map((p) => p.join(","));
+        },
+        addMany: async (resources: Policy[]): Promise<void> => {
+          await enforcer.addNamedPolicies(
+            namedPolicies.policyType,
+            resources.map((p) => p.policyTuple()),
+          );
+        },
+        deleteMany: async (ids: string[]): Promise<void> => {
+          await enforcer.removeNamedPolicies(
+            namedPolicies.policyType,
+            ids.map((id) => id.split(",")),
+          );
+        },
+      });
 
-      if (res) {
-        this.log.debug(`Updated policy type ${namedPolicies.policyType}`);
+      if (res.deleted.size > 0) {
+        this.log.debug(`Deleted policies for ${namedPolicies.policyType}`, Array.from(res.deleted));
+      }
+
+      if (res.added.size > 0) {
+        this.log.debug(`Added policies for ${namedPolicies.policyType}`, Array.from(res.added));
       }
     }));
 
-    await Promise.all(GROUPING_POLICIES.map(async (grouping) => {
-      const res = await enforcer.addGroupingPolicies(grouping.groupingTuples());
+    const groupingRes = await Reconcile<GroupingPolicy>({
+      desired: GROUPING_POLICIES,
+      listAll: async (): Promise<string[]> => {
+        return (await enforcer.getGroupingPolicy()).map((g) => g.join(","));
+      },
+      addMany: async (resources: GroupingPolicy[]): Promise<void> => {
+        await enforcer.addGroupingPolicies(resources.map((r) => r.groupingTuple()));
+      },
+      deleteMany: async (resources: string[]): Promise<void> => {
+        await enforcer.removeGroupingPolicies(resources.map((r) => r.split(",")));
+      },
+    });
 
-      if (res) {
-        this.log.debug(`Updated policy grouping for subject ${grouping.sub}`);
-      }
-    }));
+    if (groupingRes.deleted.size > 0) {
+      this.log.debug("Deleted groupings", Array.from(groupingRes.deleted));
+    }
+
+    if (groupingRes.added.size > 0) {
+      this.log.debug("Added groupings", Array.from(groupingRes.added));
+    }                                                 
   }
 
   /**
@@ -549,12 +663,10 @@ export class AuthorizationClient {
 
     const grouping = new GroupingPolicy({
       sub: new APIURI(DBResource.User, userID.toString()),
-      inherits: [
-        new APIURI(MetaResource.Role, roleLogicalName),
-      ],
+      inherit: new APIURI(MetaResource.Role, roleLogicalName),
     });
     
-    const res = await enforcer.addGroupingPolicies(grouping.groupingTuples());
+    const res = await enforcer.addGroupingPolicy(...grouping.groupingTuple());
     if (!res) {
       throw new Error(`User ${userID} has already been granted the role "${roleLogicalName}".`);
     }
