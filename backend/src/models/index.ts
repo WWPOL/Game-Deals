@@ -136,7 +136,7 @@ export enum APIMetadataAction {
   /**
    * View the data.
    */
-  Retrieve = "retrieve",
+  Retrieve = "apimeta#retrieve",
 }
 
 /**

@@ -46,20 +46,20 @@ export enum GameAction {
   /**
    * Create a game.
    */
-  Create = "create",
+  Create = "game#create",
 
   /**
    * Retrieve a game's details.
    */
-  Retrieve = "retrieve",
+  Retrieve = "game#retrieve",
 
   /**
    * Update a game's details.
    */
-  Update = "update",
+  Update = "game#update",
 
   /**
    * Delete a game.
    */
-  Delete = "delete",
+  Delete = "game#delete",
 }

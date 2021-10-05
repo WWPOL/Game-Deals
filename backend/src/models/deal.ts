@@ -50,20 +50,20 @@ export enum DealAction {
   /**
    * Create a deal.
    */
-  Create = "create",
+  Create = "deal#create",
 
   /**
    * Retrieve a deal.
    */
-  Retrieve = "retrieve",
+  Retrieve = "deal#retrieve",
 
   /**
    * Update a deal.
    */
-  Update = "update",
+  Update = "deal#update",
 
   /**
    * Delete a deal.
    */
-  Delete = "delete",
+  Delete = "deal#delete",
 }

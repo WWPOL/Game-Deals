@@ -49,35 +49,35 @@ export enum UserAction {
   /**
    * Make a new user.
    */
-  Create = "create",
+  Create = "user#create",
 
   /**
    * View non-secure details about a user.
    */
-  RetrieveNonSecure = "retrieve_non_secure",
+  RetrieveNonSecure = "user#retrieve_non_secure",
 
   /**
    * View secure details about a user.
    */
-  RetrieveSecure = "retrieve_secure",
+  RetrieveSecure = "user#retrieve_secure",
 
   /**
    * Update a user's details. This does not include password changes.
    */
-  UpdateNonSecure = "update_non_secure",
+  UpdateNonSecure = "user#update_non_secure",
 
   /**
    * Update a user's secure details like password and must reset password.
    */
-  UpdateSecure = "update_secure",
+  UpdateSecure = "user#update_secure",
 
   /**
    * Delete a user.
    */
-  Delete = "delete",
+  Delete = "user#delete",
 
   /**
    * Attempt to authenticate as a user.
    */
-  Authenticate = "Authenticate"
+  Authenticate = "user#authenticate"
 }
