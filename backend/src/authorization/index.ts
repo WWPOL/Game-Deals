@@ -515,7 +515,17 @@ export class AuthorizationClient {
       );
     }));
 
-    const failedEnforce = enforced.filter(result => result === false);
+    const failedEnforce = enforced.map((result, i) => {
+      if (result === false) {
+        return reqs[i];
+      }
+    }).filter(v => v !== undefined);
+    
+      // filter(result => result === false);
+    if (failedEnforce.length > 0) {
+      this.log.info(`${who.toString()} was denied authorization to perform action(s): ${JSON.stringify(failedEnforce)}`);
+    }
+    
     return failedEnforce.length === 0;
   }
 
