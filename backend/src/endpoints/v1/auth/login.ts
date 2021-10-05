@@ -149,11 +149,15 @@ export class LoginEndpoint extends BaseEndpoint<LoginReq> {
         });
       }
       
-      const newPwOk = passwordsCheckRequirements(body.new_password);
+      const newPwOk = passwordsCheckRequirements({
+        username: body.username,
+        password: body.new_password,
+      });
       if (newPwOk.ok === false) {
         throw MkEndpointError({
           http_status: 400,
           error: `failed to set new password: ${newPwOk.error}`,
+          error_code: ErrorCode.NotMeetPasswordRequirements,
         });
       }
 

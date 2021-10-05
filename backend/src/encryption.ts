@@ -118,17 +118,31 @@ export async function passwordsCompare({
 /**
  * Determines if a password is allowed.
  * Doesn't allow passwords less than 8 characters or common passwords.
- * @param plainText Plain text password to check.
+ * @param password Plain text password to check.
  * @returns The ok key indicates if password meets requirements, if it doens't then the error field indicates why.
  */
-export function passwordsCheckRequirements(plainText: string): { ok: true } | { ok: false, error: string } {
-  if (plainText.length < 8) {
+export function passwordsCheckRequirements({
+  username,
+  password,
+}: {
+  readonly username: string;
+  readonly password: string;
+}): { ok: true } | { ok: false, error: string } {
+  // No same username and password
+  if (username === password) {
+    return {
+      ok: false,
+      error: "password cannot be the same as the username",
+    };
+  } else if (password.length < 8) {
+    // No short passwords
     return {
       ok: false,
       error: "must be longer than 8 characters",
     };
-  } else if (dumbPasswords.check(plainText) === true) {
-    const rate = dumbPasswords.rateOfUsage(plainText);
+  } else if (dumbPasswords.check(password) === true) {
+    // No obvious passwords
+    const rate = dumbPasswords.rateOfUsage(password);
     const percent = (rate.frequency / 100000) * 100;
     return {
       ok: false,

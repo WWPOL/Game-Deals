@@ -6,6 +6,11 @@ export enum ErrorCode {
    * Indicates the API client must reset their password before continuing.
    */
   MustResetPassword = "must_reset_password",
+
+  /**
+   * Indicates the API client cannot create a user because the password does not meet requirements. The error field will container a user friendly message.
+   */
+  NotMeetPasswordRequirements = "not_meet_password_requirements",
 };
 
 /**
