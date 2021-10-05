@@ -49,11 +49,6 @@ class Server {
   cfg: Config;
 
   /**
-   * Database connection.
-   */
-  dbConn: null | DBConnection;
-  
-  /**
    * Output debug messages.
    */
   log: Logger;
@@ -74,7 +69,6 @@ class Server {
    */
   constructor(cfg: Config) {
     this.cfg = cfg;
-    this.dbConn = null;
     this.log = new ConsoleLogger("HTTP API");
     this.authorizationClient = new AuthorizationClient(this.cfg, this.log.child("authorization"));
 
@@ -85,7 +79,6 @@ class Server {
 
     const epCtx = {
       cfg: this.cfg,
-      db: this.db,
       log: this.log,
       authorizationClient: this.authorizationClient,
     };
@@ -150,17 +143,15 @@ class Server {
     });
   }
 
+  
   /**
-   * Connects to database if not already connected.
+   * Connects to database.
    * @returns Database connection.
    */
-  async db(): Promise<DBConnection> {
-    if (this.dbConn === null) {
-      this.dbConn = await createDBConnection(this.cfg);
-    }
-
-    return this.dbConn;        
+  async initDB(): Promise<DBConnection> {
+    return await createDBConnection(this.cfg);
   }
+
 
   /**
    * Initializes all authorization and authentication components.
@@ -208,12 +199,12 @@ class Server {
 
   // Call lazily initialized clients so we know if anything will fail immediately
   try {
-    await server.db();
+    await server.initDB();
   } catch (e) {
     console.error(`Failed to connect to database`, e);
     return;
   }
-
+  
   try {
     await server.initAuthAuth();
   } catch (e) {

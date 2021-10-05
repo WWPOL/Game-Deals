@@ -47,11 +47,6 @@ export type EndpointCtx = {
   cfg: Config;
 
   /**
-   * @returns Database connection.
-   */
-  db: () => Promise<DBConnection>;
-
-  /**
    * Used to enforce authorization.
    */
   authorizationClient: AuthorizationClient;
@@ -172,11 +167,6 @@ export class BaseEndpoint<I> {
    * The specification of network location of the endpoint.
    */
   spec: BaseEndpointSpec<I>;
-
-  /**
-   * @returns Database connection.
-   */
-  _dbFn: () => Promise<DBConnection>;
   
   /**
    * Used to enforce authorization.
@@ -189,7 +179,6 @@ export class BaseEndpoint<I> {
   constructor(ctx: EndpointCtx, spec: BaseEndpointSpec<I>) {
     this.cfg = ctx.cfg;
     this.spec = spec;
-    this._dbFn = ctx.db;
     this.log = ctx.log.child(`${this.spec.method} ${this.spec.path}`);
     this.authorizationClient = ctx.authorizationClient;
   }
@@ -213,14 +202,6 @@ export class BaseEndpoint<I> {
    */
   path(): string {
     return this.spec.path;
-  }
-
-  /**
-   * Provides access to the database.
-   * @returns Database connection.
-   */
-  async db(): Promise<DBConnection> {
-    return await this._dbFn();
   }
 }
 
