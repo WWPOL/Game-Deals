@@ -210,6 +210,32 @@ class RBACPolicy implements Policy {
     this.act = act;
   }
 
+  /**
+   * Create multiple RBAC policies for different subjects.
+   * @returns Array of RBAC policies required to give the subjects the permissions specified.
+   */
+  static CreateMultiple({
+    logicalName,
+    description,
+    subs,
+    obj,
+    act,
+  }: {
+    readonly logicalName: string,
+    readonly description: string,
+    readonly subs: RBACSubjectType[],
+    readonly obj: APIURI,
+    readonly act: AuthorizationAction[],
+  }): RBACPolicy[] {
+    return subs.map((sub) => new RBACPolicy({
+      logicalName: `${logicalName}/${sub}`,
+      description: `${description} (${sub})`,
+      sub,
+      obj,
+      act,
+    }));
+  }
+
   name(): string {
     return this.logicalName;
   }
@@ -395,27 +421,40 @@ const POLICIES = [
   {
     policyType: PolicyType.RBAC,
     policies: [
-      new RBACPolicy({
+      /**
+       * Permissions for API endpoints which unauthorized users should be able to access.
+       */
+      ...RBACPolicy.CreateMultiple({
         logicalName: "untrusted_user/health",
         description: "Allow untrusted users to view API health information.",
-        sub: new APIURI(MetaResource.UntrustedUser),
+        subs: [
+          new APIURI(MetaResource.UntrustedUser),
+          new APIURI(DBResource.User, "/*"),
+        ],
         obj: new APIURI(MetaResource.APIMetadata, "/health"),
         act: [ APIMetadataAction.Retrieve ],
       }),
-      new RBACPolicy({
+      ...RBACPolicy.CreateMultiple({
         logicalName: "untrusted_user/auth/login",
         description: "Allow unstrusted users to authenticate as users.",
-        sub: new APIURI(MetaResource.UntrustedUser),
+        subs: [
+          new APIURI(MetaResource.UntrustedUser),
+          new APIURI(DBResource.User, "/*"),
+        ],
         obj: new APIURI(DBResource.User, "/*"),
         act: [ UserAction.Authenticate ],
       }),
-      new RBACPolicy({
+      ...RBACPolicy.CreateMultiple({
         logicalName: "untrusted_user/deal",
         description: "Allow untrusted users to get deals.",
-        sub: new APIURI(MetaResource.UntrustedUser),
+        subs: [
+          new APIURI(MetaResource.UntrustedUser),
+          new APIURI(DBResource.User, "/*"),
+        ],
         obj: new APIURI(DBResource.Deal, "/*"),
         act: [ DealAction.Retrieve ],
       }),
+      
       new RBACPolicy({
         logicalName: "user/create",
         description: "Allow to create users.",
@@ -461,7 +500,7 @@ export type AuthorizationRequest = {
  * @param listAll - A function which lists all hashes of a current resources type.
  * @param addMany - A function which adds the provided resources.
  * @param deleteMany - A function which deletes the provided resources by their hash.
- * @returns An object describing the operations which were taken to reconcile the state. The added key is a set of resource hashes which were created, the deleted key is a set of resource hashes which were deleted.
+ * @returns An object describing the operations which were taken to reconcile the state. The changed key is true if any changes were required to reconcile the state, false if no changes were run. The added key is a set of resource hashes which were created, the deleted key is a set of resource hashes which were deleted.
  */
 async function Reconcile<T extends ReconcileResource>({
   desired,
@@ -473,7 +512,7 @@ async function Reconcile<T extends ReconcileResource>({
   readonly listAll: () => Promise<string[]>;
   readonly addMany: (resources: T[]) => Promise<void>;
   readonly deleteMany: (resources: string[]) => Promise<void>;
-}): Promise<{ added: Set<string>, deleted: Set<string> }> {
+}): Promise<{ changed: boolean, added: Set<string>, deleted: Set<string> }> {
   // Get the current state of resources
   const currentIDs = new Set(await listAll());
   
@@ -495,6 +534,7 @@ async function Reconcile<T extends ReconcileResource>({
   await addMany(Array.from(missingIDs).map((id) => desiredHashMap[id]));
 
   return {
+    changed: missingIDs.size > 0 || extraIDs.size > 0,
     added: missingIDs,
     deleted: extraIDs,
   };
@@ -598,7 +638,7 @@ export class AuthorizationClient {
 
     if (groupingRes.added.size > 0) {
       this.log.debug("Added groupings", Array.from(groupingRes.added));
-    }                                                 
+    }
   }
 
   /**
