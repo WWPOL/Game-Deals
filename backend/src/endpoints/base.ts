@@ -31,6 +31,11 @@ import {
   MetaResource,
 } from "../models";
 import { User } from "../models/user";
+
+/**
+ * The number of items which should be returned by queries.
+ */
+export const QUERY_LIMIT = 20;
  
 /**
  * Data required to setup an endpoint handler.

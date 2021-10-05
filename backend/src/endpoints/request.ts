@@ -80,3 +80,31 @@ export interface EndpointRequest<I> {
    */
   body(): I;
 }
+
+/**
+ * Parse request query parameters.
+ * @typeParam T - Type of parsed query parameters.
+ * @param req - Express request from which to parse query parameters.
+ * @param decoder - Defines the shape of the expected query parameters.
+ * @returns Parsed query parameter values.
+ * @throws {@link error#EndpointError}
+ * If the query parameters do not match the required shape.
+ */
+export function decodeQueryParams<T>({
+  req,
+  decoder,
+}: {
+  readonly req: EndpointRequest<any>;
+  readonly decoder: t.Decoder<unknown, T>;
+}): T {
+  const decoded = decoder.decode(req.req.query);
+
+  if (isRight(decoded)) {
+    return decoded.right;
+  }
+
+  throw MkEndpointError({
+    http_status: 400,
+    error: `invalid query parameters: ${dReporter.report(decoded).join(", ")}`,
+  });
+}

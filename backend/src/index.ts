@@ -18,11 +18,6 @@ import { passwordsHash } from "./encryption";
 import { User } from "./models/user";
 
 /**
- * The number of items which should be returned by queries.
- */
-const QUERY_LIMIT = 20;
-
-/**
  * @param date To convert.
  * @returns Unix timestamp for date.
  */
