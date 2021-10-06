@@ -1,6 +1,6 @@
 import * as t from "io-ts";
 import * as tt from "io-ts-types";
-import { date } from "io-ts-types/date";
+import { DateFromUnixTime } from "io-ts-types/DateFromUnixTime";
 
 import {
   BaseEndpoint,
@@ -33,7 +33,7 @@ const CreateDealReqShape = t.type({
   /**
    * Information about the new game deal.
    */
-  game_deal: t.type({
+  deal: t.type({
     /**
      * ID of the game involved in the deal.
      */
@@ -42,12 +42,12 @@ const CreateDealReqShape = t.type({
     /**
      * Start date of new deal.
      */
-    start_date: date,
+    start_date: DateFromUnixTime,
 
     /**
      * End date of the new deal.
      */
-    end_date: date,
+    end_date: DateFromUnixTime,
   }),
 });
 
@@ -60,7 +60,12 @@ type CreateDealResp = {
   /**
    * The created game deal.
    */
-  deal: Deal,
+  deal: {
+    id: number,
+    author_id: number,
+    start_date: Date,
+    end_date: Date,
+  };
 };
 
 /**
@@ -88,21 +93,28 @@ export class CreateDeal extends BaseEndpoint<CreateDealReq> {
     const body = req.body();
 
     // Find game referred to in request
-    const game = await Game.findOne(body.game_deal.game_id);
+    const game = await Game.findOne(body.deal.game_id);
     if (game === null) {
       throw MkEndpointError({
         http_status: 404,
-        error: `Game with ID ${body.game_deal.game_id} does not exist`,
+        error: `Game with ID ${body.deal.game_id} does not exist`,
       });
     }
 
     const deal = new Deal();
     deal.author = unwrapPanic(req.user);
     deal.game = game;
-    deal.start_date = body.game_deal.start_date;
-    deal.end_date = body.game_deal.end_date;
+    deal.start_date = body.deal.start_date;
+    deal.end_date = body.deal.end_date;
     await deal.save();
 
-    return new JSONResponder({ deal });
+    return new JSONResponder({
+      deal: {
+        id: deal.id,
+        author_id: deal.author.id,
+        start_date: deal.start_date,
+        end_date: deal.end_date,
+      },
+    });
   }
 }
