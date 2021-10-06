@@ -3,10 +3,10 @@ import {
   EndpointHandler,
 } from "../../base";
 
-import { CreateAdmin } from "./create";
+import { CreateUser } from "./create";
 
 export function Endpoints(ctx: EndpointCtx): EndpointHandler<any>[] {
   return [
-    new CreateAdmin(ctx),
+    new CreateUser(ctx),
   ];
 }

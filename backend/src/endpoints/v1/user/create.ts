@@ -28,11 +28,11 @@ import {
 } from "../../../models/user";
 
 /**
- * Create admin request.
+ * Create user request.
  */
-const CreateAdminReqShape = t.type({
+const CreateUserReqShape = t.type({
   /**
-   * The new admin user's username.
+   * The new user's username.
    */
   username: t.string,
 
@@ -42,31 +42,31 @@ const CreateAdminReqShape = t.type({
   invite_password: t.string,
 });
 
-type CreateAdminReq = t.TypeOf<typeof CreateAdminReqShape>;
+type CreateUserReq = t.TypeOf<typeof CreateUserReqShape>;
 
 /**
- * Create admin response.
+ * Create user response.
  */
-type CreateAdminResp = {
+type CreateUserResp = {
   /**
    * ID of the newly created user.
    */
-  new_admin_id: number;
+  new_user_id: number;
 };
 
 /**
- * Create an admin user. Requires the new user to change their password after they first login.
+ * Create a user. Requires the new user to change their password after they first login.
  */
-export class CreateAdmin extends BaseEndpoint<CreateAdminReq> {
+export class CreateUser extends BaseEndpoint<CreateUserReq> {
   constructor(ctx: EndpointCtx) {
     super(ctx, {
       method: "post",
-      path: "/api/v1/admin",
-      bodyParserFactory: () => new DecoderParser(CreateAdminReqShape),
+      path: "/api/v1/user",
+      bodyParserFactory: () => new DecoderParser(CreateUserReqShape),
     });
   }
 
-  async authorization(req: EndpointRequest<CreateAdminReq>): Promise<AuthorizationRequest[]> {
+  async authorization(req: EndpointRequest<CreateUserReq>): Promise<AuthorizationRequest[]> {
     return [
       {
         resourceURI: new APIURI(DBResource.User),
@@ -75,7 +75,7 @@ export class CreateAdmin extends BaseEndpoint<CreateAdminReq> {
     ];
   }
   
-  async handle(req: EndpointRequest<CreateAdminReq>): Promise<JSONResponder<CreateAdminResp>> {
+  async handle(req: EndpointRequest<CreateUserReq>): Promise<JSONResponder<CreateUserResp>> {
     const body = req.body();
     
     // Check the new password is allowed
@@ -86,7 +86,7 @@ export class CreateAdmin extends BaseEndpoint<CreateAdminReq> {
     if (newPwOk.ok === false) {
       throw MkEndpointError({
         http_status: 400,
-        error: `failed to create new admin: invite password is not allowed: ${newPwOk.error}`,
+        error: `failed to create new user: invite password is not allowed: ${newPwOk.error}`,
         error_code: ErrorCode.NotMeetPasswordRequirements,
       });
     }
@@ -94,7 +94,7 @@ export class CreateAdmin extends BaseEndpoint<CreateAdminReq> {
     // Hash the password
     const pwHash = await passwordsHash(body.invite_password);
 
-    // Insert admin user
+    // Insert user
     const user = new User()
     user.username = body.username;
     user.password_hash = pwHash;
@@ -103,7 +103,7 @@ export class CreateAdmin extends BaseEndpoint<CreateAdminReq> {
     await user.save();
 
     return new JSONResponder({
-      new_admin_id: user.id,
+      new_user_id: user.id,
     });
   }
 }
