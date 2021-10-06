@@ -58,6 +58,9 @@ const ListDealsReqParamsShape = t.type({
 
 type ListDealsReqParams = t.TypeOf<typeof ListDealsReqParamsShape>;
 
+/**
+ * List game deals.
+ */
 export class ListDeals extends BaseEndpoint<void> {
   constructor(ctx: EndpointCtx) {
     super(ctx, {

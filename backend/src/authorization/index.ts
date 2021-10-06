@@ -462,6 +462,13 @@ const POLICIES = [
         obj: new APIURI(DBResource.User),
         act: [ UserAction.Create ],
       }),
+      new RBACPolicy({
+        logicalName: "deal/create",
+        description: "Allow to create deals.",
+        sub: RBACSubjectRoleSelf,
+        obj: new APIURI(DBResource.Deal),
+        act: [ DealAction.Create ],
+      }),
     ],
   },
 ];
@@ -474,6 +481,7 @@ const GROUPING_POLICIES = [
     sub: new APIURI(MetaResource.Role, "admin"),
     inherits: [
       new APIURI(MetaResource.Role, "user/create"),
+      new APIURI(MetaResource.Role, "deal/create"),
     ],
   }),
 ];

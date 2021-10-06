@@ -82,24 +82,6 @@ class Server {
       this.app[handler.method()](handler.path(), wrapHandler(epCtx, handler));
     });
 
-    // this.app.post(
-    //   "/api/v1/admin",
-    //   this.mwAuthenticate.bind(this),
-    //   this.mwValidateBodyFactory(ajv.compile({
-    //     type: "object",
-    //     properties: {
-    //       username: { type: "string" },
-    //       invite_password: { type: "string" },
-    //     },
-    //     required: [ "username", "invite_password" ],
-    //     additionalProperties: false,
-    //   })),
-    //   this.epCreateAdmin.bind(this));
-    
-    // this.app.get(
-    //   "/api/v1/game_deal",
-    //   this.epListGameDeals.bind(this));
-
     // let createGameDealSchema = GAME_DEAL_SCHEMA;
     // delete createGameDealSchema.properties.author_id;
     // createGameDealSchema.required.splice(createGameDealSchema.required.indexOf("author_id"), 1);

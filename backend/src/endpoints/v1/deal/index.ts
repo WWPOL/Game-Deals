@@ -4,6 +4,7 @@ import {
 } from "../../base";
 
 import { ListDeals } from "./list";
+import { CreateDeal } from "./create";
 
 /**
  * @returns Game deal endpoints.
@@ -11,5 +12,6 @@ import { ListDeals } from "./list";
 export function Endpoints(ctx: EndpointCtx): EndpointHandler<any>[] {
   return [
     new ListDeals(ctx),
+    new CreateDeal(ctx),
   ];
 }
