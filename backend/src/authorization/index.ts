@@ -598,6 +598,7 @@ export class AuthorizationClient {
   async init(): Promise<void> {
     const enforcer = await this.enforcer();
 
+    // Create initial policies
     await Promise.all(POLICIES.map(async (namedPolicies) => {
       const res = await Reconcile<Policy>({
         desired: namedPolicies.policies,
@@ -627,10 +628,13 @@ export class AuthorizationClient {
       }
     }));
 
+    // Create initial groupings
     const groupingRes = await Reconcile<GroupingPolicy>({
       desired: GROUPING_POLICIES,
       listAll: async (): Promise<string[]> => {
-        return (await enforcer.getGroupingPolicy()).map((g) => g.join(","));
+        return (await enforcer.getGroupingPolicy())
+          .filter((g) => !g[0].match(/^\/user\/.*$/)) // Do not delete user groupings
+          .map((g) => g.join(","));
       },
       addMany: async (resources: GroupingPolicy[]): Promise<void> => {
         await enforcer.addGroupingPolicies(resources.map((r) => r.groupingTuple()));
