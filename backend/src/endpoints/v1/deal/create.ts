@@ -94,7 +94,7 @@ export class CreateDeal extends BaseEndpoint<CreateDealReq> {
 
     // Find game referred to in request
     const game = await Game.findOne(body.deal.game_id);
-    if (game === null) {
+    if (game === undefined) {
       throw MkEndpointError({
         http_status: 404,
         error: `Game with ID ${body.deal.game_id} does not exist`,
