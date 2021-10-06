@@ -35,8 +35,8 @@ export async function authenticateReq(cfg: Config, req: Request): Promise<Option
   })();
 
   // Fetch user
-  const authUser = await User.findOne({ id: authToken.sub });
-  if (authUser === null) {
+  const authUser = await User.findOne(authToken.sub);
+  if (authUser === undefined) {
     throw MkEndpointError({
       http_status: 401,
       error: "unauthorized",
