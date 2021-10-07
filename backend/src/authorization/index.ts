@@ -389,6 +389,69 @@ class GroupingPolicy implements ReconcileResource {
 }
 
 /**
+ * RBAC permissions for API endpoints which unauthorized users should be able to access.
+ */
+const UNTRUSTED_USERS_RBAC_POLICIES = [
+  ...RBACPolicy.CreateMultiple({
+    logicalName: "untrusted_user/health",
+    description: "Allow untrusted users to view API health information.",
+    subs: [
+      new APIURI(MetaResource.UntrustedUser),
+      new APIURI(DBResource.User, "/*"),
+    ],
+    obj: new APIURI(MetaResource.APIMetadata, "/health"),
+    act: [ APIMetadataAction.Retrieve ],
+  }),
+  ...RBACPolicy.CreateMultiple({
+    logicalName: "untrusted_user/auth/login",
+    description: "Allow unstrusted users to authenticate as users.",
+    subs: [
+      new APIURI(MetaResource.UntrustedUser),
+      new APIURI(DBResource.User, "/*"),
+    ],
+    obj: new APIURI(DBResource.User, "/*"),
+    act: [ UserAction.Authenticate ],
+  }),
+  ...RBACPolicy.CreateMultiple({
+    logicalName: "untrusted_user/deal",
+    description: "Allow untrusted users to get deals.",
+    subs: [
+      new APIURI(MetaResource.UntrustedUser),
+      new APIURI(DBResource.User, "/*"),
+    ],
+    obj: new APIURI(DBResource.Deal, "/*"),
+    act: [ DealAction.Retrieve ],
+  }),
+];
+
+/**
+ * RBAC permissions for admin users only.
+ */
+const ADMIN_RBAC_POLICIES = [
+  new RBACPolicy({
+    logicalName: "user/create",
+    description: "Allow to create users.",
+    sub: RBACSubjectRoleSelf,
+    obj: new APIURI(DBResource.User),
+    act: [ UserAction.Create ],
+  }),
+  new RBACPolicy({
+    logicalName: "user/non_secure/retrieve",
+    description: "Allow to retrieve non-secure details about users.",
+    sub: RBACSubjectRoleSelf,
+    obj: new APIURI(DBResource.User, "/*"),
+    act: [ UserAction.RetrieveNonSecure ],
+  }),
+  new RBACPolicy({
+    logicalName: "deal/create",
+    description: "Allow to create deals.",
+    sub: RBACSubjectRoleSelf,
+    obj: new APIURI(DBResource.Deal),
+    act: [ DealAction.Create ],
+  }),
+];
+
+/**
  * The authorization policies to use to enforce access.
  */
 const POLICIES = [
@@ -421,54 +484,8 @@ const POLICIES = [
   {
     policyType: PolicyType.RBAC,
     policies: [
-      /**
-       * Permissions for API endpoints which unauthorized users should be able to access.
-       */
-      ...RBACPolicy.CreateMultiple({
-        logicalName: "untrusted_user/health",
-        description: "Allow untrusted users to view API health information.",
-        subs: [
-          new APIURI(MetaResource.UntrustedUser),
-          new APIURI(DBResource.User, "/*"),
-        ],
-        obj: new APIURI(MetaResource.APIMetadata, "/health"),
-        act: [ APIMetadataAction.Retrieve ],
-      }),
-      ...RBACPolicy.CreateMultiple({
-        logicalName: "untrusted_user/auth/login",
-        description: "Allow unstrusted users to authenticate as users.",
-        subs: [
-          new APIURI(MetaResource.UntrustedUser),
-          new APIURI(DBResource.User, "/*"),
-        ],
-        obj: new APIURI(DBResource.User, "/*"),
-        act: [ UserAction.Authenticate ],
-      }),
-      ...RBACPolicy.CreateMultiple({
-        logicalName: "untrusted_user/deal",
-        description: "Allow untrusted users to get deals.",
-        subs: [
-          new APIURI(MetaResource.UntrustedUser),
-          new APIURI(DBResource.User, "/*"),
-        ],
-        obj: new APIURI(DBResource.Deal, "/*"),
-        act: [ DealAction.Retrieve ],
-      }),
-      
-      new RBACPolicy({
-        logicalName: "user/create",
-        description: "Allow to create users.",
-        sub: RBACSubjectRoleSelf,
-        obj: new APIURI(DBResource.User),
-        act: [ UserAction.Create ],
-      }),
-      new RBACPolicy({
-        logicalName: "deal/create",
-        description: "Allow to create deals.",
-        sub: RBACSubjectRoleSelf,
-        obj: new APIURI(DBResource.Deal),
-        act: [ DealAction.Create ],
-      }),
+      ...UNTRUSTED_USERS_RBAC_POLICIES,
+      ...ADMIN_RBAC_POLICIES,
     ],
   },
 ];
@@ -481,6 +498,7 @@ const GROUPING_POLICIES = [
     sub: new APIURI(MetaResource.Role, "admin"),
     inherits: [
       new APIURI(MetaResource.Role, "user/create"),
+      new APIURI(MetaResource.Role, "user/non_secure/retrieve"),
       new APIURI(MetaResource.Role, "deal/create"),
     ],
   }),

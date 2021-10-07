@@ -43,6 +43,14 @@ export class User extends BaseEntity implements UniqueResource {
 }
 
 /**
+ * The non-secure data fields of a user.
+ */
+export interface IUserNonSecure {
+  id: number;
+  username: string;
+}
+
+/**
  * Authorization actions for a user.
  */
 export enum UserAction {
