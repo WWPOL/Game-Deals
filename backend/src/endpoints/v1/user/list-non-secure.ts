@@ -1,5 +1,6 @@
 import * as t from "io-ts";
-import { fromNullable } from 'io-ts-types/lib/fromNullable'
+import { fromNullable } from "io-ts-types/lib/fromNullable";
+import { IntFromString } from "io-ts-types/lib/IntFromString";
 
 import {
   BaseEndpoint,
@@ -32,7 +33,7 @@ const ListUsersQueryParamsShape = t.type({
    * Identifier number of users to retrieve.
    * If not provided then all users are retrieved.
    */
-  id: fromNullable(t.array(t.number), []),
+  id: fromNullable(t.array(IntFromString), []),
 });
 
 /**
@@ -47,6 +48,7 @@ type ListUsersResp = {
 
 /**
  * Retrieves non-secure information about user(s).
+ * Results are sorted in ascending order by the user's ID.
  */
 export class ListUsersNonSecure extends BaseEndpoint<void> {
   /**
@@ -92,8 +94,19 @@ export class ListUsersNonSecure extends BaseEndpoint<void> {
   }
 
   async handle(req: EndpointRequest<void>): Promise<JSONResponder<ListUsersResp>> {
+    const queryBuilder = User.createQueryBuilder("user");
+
+    // If filtering by ID
+    if (this.listUserIDs.length > 0) {
+      queryBuilder.where("user.id IN (:...ids)", { ids: this.listUserIDs });
+    }
+
+    queryBuilder.orderBy("user.id");
+
+    const users = await queryBuilder.getMany();
+    
     return new JSONResponder({
-      users: [],
+      users: users.map((user) => user.toNonSecure()),
     });
   }
 }

@@ -40,6 +40,16 @@ export class User extends BaseEntity implements UniqueResource {
   uri(): APIURI {
     return new APIURI(DBResource.User, this.id.toString());
   }
+
+  /**
+   * @returns All the non-secure data for a user.
+   */
+  toNonSecure(): IUserNonSecure {
+    return {
+      id: this.id,
+      username: this.username,
+    };
+  }
 }
 
 /**
