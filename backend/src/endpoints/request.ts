@@ -1,6 +1,9 @@
 import { Request } from "express";
 import * as t from "io-ts";
-import { isRight } from "fp-ts/Either";
+import {
+  isRight,
+  isLeft,
+} from "fp-ts/Either";
 import dReporter from "io-ts-reporters";
 
 import { Optional } from "../lib/optional";
@@ -85,8 +88,9 @@ export interface EndpointRequest<I> {
  * Parse request query parameters.
  * @typeParam T - Type of parsed query parameters.
  * @param req - Express request from which to parse query parameters.
- * @param decoder - Defines the shape of the expected query parameters.
- * @returns Parsed query parameter values.
+ * @param decoder - Defines the shape of the expected query parameters. Be aware that all query parameter values are strings, so to get other types from strings one must use io-ts-types/lib/*FromString decoders (ex., to get an integer use io-ts-types/lib/IntFromString).
+ * @param listKeys - An array of query parameter key names which are expected to be lists. This will tell the function to try and make them lists before decoding.
+ * @returns Parsed query parameter values. The values of each query parameter list item cannot contain commas.
  * @throws {@link error#EndpointError}
  * If the query parameters do not match the required shape.
  */
@@ -97,7 +101,11 @@ export function decodeQueryParams<T>({
   readonly req: EndpointRequest<any>;
   readonly decoder: t.Decoder<unknown, T>;
 }): T {
-  const decoded = decoder.decode(req.req.query);
+  // Try to parse query parameters to lists if need be
+  const queryParams = decodeQueryParamsLists(req.req.query, decoder);
+
+  // Decode
+  const decoded = decoder.decode(queryParams);
 
   if (isRight(decoded)) {
     return decoded.right;
@@ -107,4 +115,30 @@ export function decodeQueryParams<T>({
     http_status: 400,
     error: `invalid query parameters: ${dReporter.report(decoded).join(", ")}`,
   });
+}
+
+/**
+ * Using the type hints from the decoder this function tries to make appropriate query parameter keys into lists.
+ */
+function decodeQueryParamsLists(queryParams: { [key: string]: any }, decoder: any): { [key: string]: any } {
+  // If the decoder is not for an interface (aka object) then there's nothing this function can do
+  if (decoder._tag !== "InterfaceType") {
+    return queryParams;
+  }
+  
+  return Object.fromEntries(Object.keys(queryParams).map((key) => {
+    // If there is no field in the decoder for this query param then ignore
+    if (!Object.keys(decoder.props).includes(key)) {
+      return [key, queryParams[key]];
+    }
+
+    // If not an array then ignore
+    const propDecoder = decoder.props[key];
+
+    if (propDecoder._tag !== "ArrayType") {
+      return [key, queryParams[key]];
+    }
+
+    return [key, queryParams[key].split(",")];
+  }));
 }
