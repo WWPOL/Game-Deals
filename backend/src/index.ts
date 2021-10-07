@@ -81,8 +81,6 @@ class Server {
     Endpoints(epCtx).forEach((handler) => {
       this.app[handler.method()](handler.path(), wrapHandler(epCtx, handler));
     });
-
-    // this.app.get("/api/v1/admin/:id", this.epGetAdmin.bind(this));
   }
 
   /**
