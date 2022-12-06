@@ -10,7 +10,7 @@ declare -ri EXIT_START=21
 
 log "Frontend invocation"
 
-if file_newer "$frontend_dir/node_modules" "$frontend_dir/yarn.lock"; then
+if [[ ! -d "$frontend_dir/node_modules" ]] || file_newer "$frontend_dir/node_modules" "$frontend_dir/yarn.lock"; then
   run_log "yarn install" "$EXIT_INSTALL" "Failed to install dependencies"
 else
   log "Yarn dependencies up to date"

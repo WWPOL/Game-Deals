@@ -13,7 +13,7 @@ log "Backend invocation"
 log "GAME_DEALS_DB_AUTO_MIGRATE='$GAME_DEALS_DB_AUTO_MIGRATE'"
 
 
-if file_newer "$BACKEND_DIR/node_modules" "$BACKEND_DIR/yarn.lock"; then
+if [[ ! -d "$BACKEND_DIR/node_modules" ]] || file_newer "$BACKEND_DIR/node_modules" "$BACKEND_DIR/yarn.lock"; then
   run_log "yarn install" "$EXIT_INSTALL" "Failed to install dependencies"
 else
   log "Yarn dependencies up to date"
