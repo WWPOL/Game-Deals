@@ -38,7 +38,7 @@ The site is a NodeJs server and React frontend.
 A development environment can be run via Docker Compose:
 
 ```
-./scripts/dev.sh
+docker compose up -d
 ```
 
 Access the frontend and backend via `localhost:8000`.
@@ -52,8 +52,12 @@ A Nginx proxy container runs on port `8000`. Access the backend via the `/api/` 
 The backend's configuration is provided via the environment variables:
 
 - `GAME_DEALS_HTTP_PORT` (Integer, Default: `8000`): Port on which to run HTTP API
-- `GAME_DEALS_MONGO_URI` (String, Default: `mongodb://127.0.0.1/`): URI used to connect to MongoDB
-- `GAME_DEALS_MONGO_DB_NAME` (String, Default: `dev-game-deals`): Name of the MongoDB database in which to store data.
+- `GAME_DEALS_DB_HOST` (String, Default: `postgres`): Name by which Postgres can be accessed via network
+- `GAME_DEALS_DB_PORT` (Integer, Default: `5432`): Port on which Postgres server is listening
+- `GAME_DEALS_DB_USERNAME` (String, Default: `devgamedeals`): Name of user with which to authenticate with Postgres
+- `GAME_DEALS_DB_PASSWORD` (String, Default: `devgamedeals`): Password used to authenticate with Postgres
+- `GAME_DEALS_DB_DATABASE` (String, Default: `devgamedeals`): Name of database to connect to in Postgres
+- `GAME_DEALS_DB_AUTO_MIGRATE` (String, Default: ``): If non-empty then the database is auto-migrated, dangerous in production
 - `GAME_DEALS_AUTH_TOKEN_SECRET` (String, Default: `thisisaverybadsecret`): Secret key used to sign authentication tokens.
 
 ## Initial Admin User
