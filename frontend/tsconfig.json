@@ -4,7 +4,8 @@
     "paths": {
       "~*": [ "./*" ]
     },
-    "jsx": "react"
+    "jsx": "react",
+    "lib": [ "ES6", "DOM" ]
   },
   "include": [ "src/**/*" ],
   "files": [
