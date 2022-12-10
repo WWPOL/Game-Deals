@@ -23,6 +23,8 @@ services:
     volumes:
       - "./:/mnt"
     command: ./scripts/dev.sh
+    ports:
+      - "8003:8003" # Hot reload web socket
     restart: always
   backend:
     image: node:latest
