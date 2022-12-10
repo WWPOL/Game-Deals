@@ -1,4 +1,11 @@
 import * as E from "fp-ts/Either";
+import * as D from "io-ts/Decoder";
+
+import {
+  FriendlyError,
+  EndpointError,
+  UnauthorizedError,
+} from "./errors";
 
 export const ERROR_CODE_MUST_RESET_PASSWORD = "must_reset_password";
 
@@ -29,20 +36,23 @@ export class API {
 
   /**
    * Make a HTTP API request.
-   * @param {string} method HTTP method for request.
-   * @param {string} path API endpoint to call.
-   * @param {object} [body] API request data to encode as JSON. Pass undefined to not encode a body.
-   * @param {object} [fetchOpts] Additional fetch options. The `method` field will always be overriden by the `method` argument. The `Content-Type` header and request `body` will be overriden if the `body` argument is provided. The __body_sensitive field can be set to true which will cause any error messages not to include the body. The "Authorization" header is censored by default.
-   * @returns {Promise} Always resolves with an Either type where left is an error and right is the fetch response. A reject here indicates a fatal error the logic did not anticipate. The left error will either:
+   * @typeParam R - The type which the response will be decoded into.
+   * @param method - HTTP method for request.
+   * @param path - API endpoint to call.
+   * @param respDecoder - A io-ts decoder used to parse the API response into a type.
+   * @param body - API request data to encode as JSON. Pass undefined to not encode a body.
+   * @param fetchOpts - Additional fetch options. The `method` field will always be overriden by the `method` argument. The `Content-Type` header and request `body` will be overriden if the `body` argument is provided. The __body_sensitive field can be set to true which will cause any error messages not to include the body. The "Authorization" header is censored by default.
+   * @returns Always resolves with an Either type where left is an error and right is the decoded response. A reject here indicates a fatal error the logic did not anticipate. The left error will either:
    * - Error: If an error occurs while making the API request.
    * - EndpointError: If the API returned an error response.
    */
-  async fetch(
+  async fetch<R>(
     method: "POST" | "GET" | "PUT" | "DELETE",
     path: string,
+    respDecoder: D.Decoder<unknown, R>,
     body?: { [key: string]: any },
     opts?: InternalFetchOpts,
-  ): Promise<E.Either<Error | EndpointError, Response>> {
+  ): Promise<E.Either<Error | EndpointError, R>> {
     let fetchOpts: RequestInit = opts || {};
 
     // Set method
@@ -86,7 +96,11 @@ export class API {
       return E.left(new EndpointError(respBody.error, respBody.error_code));
     }
 
-    return E.right(resp);
+    // Decode
+    return E.match(
+      (e: D.DecodeError) => E.left(new Error(`failed to decode response: ${e}`)),
+      (r: R) => E.right(r),
+    )(respDecoder.decode(resp.json()));
   }
 
   /**
@@ -212,82 +226,5 @@ export class API {
         this.setError("sorry, something unexpected happened while retrieving an admin's information");
       }
     }
-  }
-}
-
-/**
- * An error which can be shown to the user. All other errors will be hidden behind a console.error call and a "internal error" message for the user.
- */
-export class FriendlyError extends Error {
-  /**
-   * Creates a new FriendlyError.
-   * @param msg User friendly error message. Should not contain any jargon. This message will be transformed so that it always starts with a capital letter and ends with a period (or other punctuation if already present).
-   */
-  constructor(msg: string) {
-    // Capitalize first letter
-    msg = msg[0].toUpperCase() + msg.slice(1);
-
-    // Ensure ends with punctuation
-    const endI = msg.length - 1;
-    if ([".", "?", "!"].indexOf(msg[endI]) === -1) {
-      msg += ".";
-    }
-    
-    super(msg);
-    this.name = "FriendlyError";
-  }
-}
-
-/**
- * Indicates an API endpoint request returned an error response.
- */
-export class EndpointError extends Error {
-  /**
-   * Contains a user friendly message.
-   */
-  error: string;
-
-  /**
-   * Machine code for a specific condition which API clients are supposed to have knowledge of, it can be undefined if the server did not return one.
-   */
-  error_code: string;
-
-  /**
-   * Create an EndpointError.
-   * @param {string} error See error property.
-   * @param {string} error_code See error_code property.
-   * @returns {EndpointError} New error.
-   */
-  constructor(error, error_code) {
-    super(`The API returned an error response: error=${error}, error_code=${error_code}`);
-    this.name = "EndpointError";
-
-    this.error = error;
-    this.error_code = error_code;
-  }
-}
-
-/**
- * Indicates the API client does not have permission to perform the specified action.
- */
-export class UnauthorizedError extends EndpointError {
-  /**
-   * Creates a new UnauthorizedError.
-   * @param {string} msg A short technical message about what was not authorized. 
-   * @returns {UnauthorizedError} New error.
-   */
-  constructor(error, errorCode) {
-    super(error, errorCode);
-
-    this.name = "UnauthorizedError";
-  }
-
-  /**
-   * Constructs a FriendlyError to show to the user.
-   * @param {string} action A user friendly description of the action which was taking place.
-   * @returns {FriendlyError} Describing what happened and how the user is unauthorized.
-   */
-  asFriendlyError(action) {
-    return new FriendlyError(`you do not have permission to ${action}`);
   }
 }
