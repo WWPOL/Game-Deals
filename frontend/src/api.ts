@@ -1,3 +1,5 @@
+import * as E from "fp-ts/Either";
+
 export const ERROR_CODE_MUST_RESET_PASSWORD = "must_reset_password";
 
 /**
@@ -12,23 +14,16 @@ interface InternalFetchOpts extends RequestInit {
  */
 export class API {
   /**
-   * Function which displays the error msg argument to the user.
-   */
-  setError: (msg: string) => void;
-
-  /**
    * Function which returns an API authentication token. The action argument should be a user friendly description of requires authorization. If the user is not logged in this function should request login information from the user and use the login API endpoint to obtain an API authentication token.
    */
   getAuth: () => Promise<string>;
 
   /**
    * Create a new API client.
-   * @param {function(msg)} setError Set setError prop.
    * @param {async function(action)} getAuth Set getAuth property.
    * @returns {API} New API client.
    */
-  constructor(setError, getAuth) {
-    this.setError = setError;
+  constructor(getAuth: () => Promise<string>) {
     this.getAuth = getAuth;
   }
 
@@ -38,16 +33,16 @@ export class API {
    * @param {string} path API endpoint to call.
    * @param {object} [body] API request data to encode as JSON. Pass undefined to not encode a body.
    * @param {object} [fetchOpts] Additional fetch options. The `method` field will always be overriden by the `method` argument. The `Content-Type` header and request `body` will be overriden if the `body` argument is provided. The __body_sensitive field can be set to true which will cause any error messages not to include the body. The "Authorization" header is censored by default.
-   * @returns {Promise} Resolves with the response. Rejects with API errors.
-   * @throws {Error} If an error occurs while making the API request.
-   * @throws {EndpointError} If the API returned an error response.
+   * @returns {Promise} Always resolves with an Either type where left is an error and right is the fetch response. A reject here indicates a fatal error the logic did not anticipate. The left error will either:
+   * - Error: If an error occurs while making the API request.
+   * - EndpointError: If the API returned an error response.
    */
   async fetch(
     method: "POST" | "GET" | "PUT" | "DELETE",
     path: string,
     body?: { [key: string]: any },
     opts?: InternalFetchOpts,
-  ) {
+  ): Promise<E.Either<Error | EndpointError, Response>> {
     let fetchOpts: RequestInit = opts || {};
 
     // Set method
@@ -57,7 +52,7 @@ export class API {
     if (!fetchOpts.headers) {
       fetchOpts.headers = {};
     }
-    
+
     if (body !== undefined) {
       fetchOpts.headers["Content-Type"] = "application/json";
       fetchOpts.body = JSON.stringify(body);
@@ -77,21 +72,21 @@ export class API {
         fetchOpts.headers.Authorization = "***censored***";
       }
     } catch(e) {
-      throw new Error(`failed to make HTTP API request ${JSON.stringify(fetchOpts)}: ${e}`);
+      return E.left(new Error(`failed to make HTTP API request ${JSON.stringify(fetchOpts)}: ${e}`));
     }
 
     // Ensure success result
     if (resp.status === 401) {
       const respBody = await resp.json();
       
-      throw new UnauthorizedError(`options=${JSON.stringify(fetchOpts)}`, respBody.error_code);
+      return E.left(new UnauthorizedError(`options=${JSON.stringify(fetchOpts)}`, respBody.error_code));
     } else if (resp.status !== 200) {
       const respBody = await resp.json();
       
-      throw new EndpointError(respBody.error, respBody.error_code);
+      return E.left(new EndpointError(respBody.error, respBody.error_code));
     }
 
-    return resp;
+    return E.right(resp);
   }
 
   /**
@@ -103,6 +98,7 @@ export class API {
    * @throws {Error} If login failed.
    */
   async login(username, password, new_password) {
+    
     try {
       const resp = await this.fetch("POST", "/api/v1/auth/login", { username, password, new_password }, { bodySensitive: true });
 
@@ -137,18 +133,18 @@ export class API {
 
   /**
    * List game deals.
-   * @param {number} offset List offset index.
-   * @param {boolean} [expired] Include expired deals. Defaults to false.
+   * @param offset List offset index.
+   * @param [expired] Include expired deals. Defaults to false.
    * @returns {Promise} Resolves with game deals array. Rejects with error.
    * @throws {Error} If listing game deals fails.
    */
-  async listGameDeals(offset, expired) {
+  async listGameDeals(offset: number, expired?: boolean) {
     if (expired === undefined) {
       expired = false;
     }
     
     try {
-      const resp = await this.fetch("GET", `/api/v1/deals?expired=${expired}`);
+      const resp = await this.fetch("GET", `/api/v1/deal?expired=${expired}`);
 
       const body = await resp.json();
       return body.game_deals;
