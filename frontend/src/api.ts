@@ -48,17 +48,17 @@ export class API {
     body?: { [key: string]: any },
     opts?: InternalFetchOpts,
   ) {
-    let fetchOpts: RequestInit = { ...opts };
+    let fetchOpts: RequestInit = opts || {};
 
     // Set method
     fetchOpts.method = method;
     
     // Encode body
+    if (!fetchOpts.headers) {
+      fetchOpts.headers = {};
+    }
+    
     if (body !== undefined) {
-      if (!fetchOpts.headers) {
-        fetchOpts.headers = {};
-      }
-
       fetchOpts.headers["Content-Type"] = "application/json";
       fetchOpts.body = JSON.stringify(body);
     }
@@ -69,7 +69,7 @@ export class API {
       resp = await fetch(path, fetchOpts);
 
       // Censor body after request is made
-      if (opts.bodySensitive === true) {
+      if (opts?.bodySensitive === true) {
         fetchOpts.body = "***censored***";
       }
 
