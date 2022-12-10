@@ -1,11 +1,26 @@
 export const ERROR_CODE_MUST_RESET_PASSWORD = "must_reset_password";
 
 /**
+ * Options which can be used to configure API fetch requests.
+ */
+interface InternalFetchOpts extends RequestInit {
+  bodySensitive?: boolean
+}
+
+/**
  * API client.
- * @property {function(msg)} setError Function which displays the error msg argument to the user.
- * @property {async function(action)} getAuth Function which returns an API authentication token. The action argument should be a user friendly description of requires authorization. If the user is not logged in this function should request login information from the user and use the login API endpoint to obtain an API authentication token.
  */
 export class API {
+  /**
+   * Function which displays the error msg argument to the user.
+   */
+  setError: (msg: string) => void;
+
+  /**
+   * Function which returns an API authentication token. The action argument should be a user friendly description of requires authorization. If the user is not logged in this function should request login information from the user and use the login API endpoint to obtain an API authentication token.
+   */
+  getAuth: () => Promise<string>;
+
   /**
    * Create a new API client.
    * @param {function(msg)} setError Set setError prop.
@@ -22,58 +37,54 @@ export class API {
    * @param {string} method HTTP method for request.
    * @param {string} path API endpoint to call.
    * @param {object} [body] API request data to encode as JSON. Pass undefined to not encode a body.
-   * @param {object} [opts] Additional fetch options. The `method` field will always be overriden by the `method` argument. The `Content-Type` header and request `body` will be overriden if the `body` argument is provided. The __body_sensitive field can be set to true which will cause any error messages not to include the body. The "Authorization" header is censored by default.
+   * @param {object} [fetchOpts] Additional fetch options. The `method` field will always be overriden by the `method` argument. The `Content-Type` header and request `body` will be overriden if the `body` argument is provided. The __body_sensitive field can be set to true which will cause any error messages not to include the body. The "Authorization" header is censored by default.
    * @returns {Promise} Resolves with the response. Rejects with API errors.
    * @throws {Error} If an error occurs while making the API request.
    * @throws {EndpointError} If the API returned an error response.
    */
-  async fetch(method, path, body, opts) {
-    if (opts === undefined) {
-      opts = {};
-    }
-
-    // Check __body_sensitive
-    let bodySensitive = false;
-    if (opts.__body_sensitive === true) {
-      bodySensitive = true;
-      delete opts.__body_sensitive;
-    }
+  async fetch(
+    method: "POST" | "GET" | "PUT" | "DELETE",
+    path: string,
+    body?: { [key: string]: any },
+    opts?: InternalFetchOpts,
+  ) {
+    let fetchOpts: RequestInit = { ...opts };
 
     // Set method
-    opts.method = method;
+    fetchOpts.method = method;
     
     // Encode body
     if (body !== undefined) {
-      if (opts.headers === undefined) {
-        opts.headers = {};
+      if (!fetchOpts.headers) {
+        fetchOpts.headers = {};
       }
 
-      opts.headers["Content-Type"] = "application/json";
-      opts.body = JSON.stringify(body);
+      fetchOpts.headers["Content-Type"] = "application/json";
+      fetchOpts.body = JSON.stringify(body);
     }
 
     // Make request
     let resp = undefined;
     try {
-      resp = await fetch(path, opts);
+      resp = await fetch(path, fetchOpts);
 
       // Censor body after request is made
-      if (bodySensitive === true) {
-        opts.body = "***censored***";
+      if (opts.bodySensitive === true) {
+        fetchOpts.body = "***censored***";
       }
 
-      if (opts.headers !== undefined && opts.headers.Authorization !== undefined && opts.headers.Authorization.length > 0) {
-        opts.headers.Authorization = "***censored***";
+      if ("Authorization" in fetchOpts.headers && fetchOpts.headers.Authorization.length > 0) {
+        fetchOpts.headers.Authorization = "***censored***";
       }
     } catch(e) {
-      throw new Error(`failed to make HTTP API request ${JSON.stringify(opts)}: ${e}`);
+      throw new Error(`failed to make HTTP API request ${JSON.stringify(fetchOpts)}: ${e}`);
     }
 
     // Ensure success result
     if (resp.status === 401) {
       const respBody = await resp.json();
       
-      throw new UnauthorizedError(`options=${JSON.stringify(opts)}`, respBody.error_code);
+      throw new UnauthorizedError(`options=${JSON.stringify(fetchOpts)}`, respBody.error_code);
     } else if (resp.status !== 200) {
       const respBody = await resp.json();
       
@@ -93,7 +104,7 @@ export class API {
    */
   async login(username, password, new_password) {
     try {
-      const resp = await this.fetch("POST", "/api/v0/login", { username, password, new_password }, { __body_sensitive: true });
+      const resp = await this.fetch("POST", "/api/v1/auth/login", { username, password, new_password }, { bodySensitive: true });
 
       const body = await resp.json();
 
@@ -137,7 +148,7 @@ export class API {
     }
     
     try {
-      const resp = await this.fetch("GET", `/api/v0/game_deal?expired=${expired}`);
+      const resp = await this.fetch("GET", `/api/v1/deals?expired=${expired}`);
 
       const body = await resp.json();
       return body.game_deals;
@@ -145,7 +156,7 @@ export class API {
       console.trace(`Failed to list game deals: ${e}`);
       
       if (e instanceof EndpointError) {
-        this.setError(new FriendlyError(e.error));
+        this.setError(new FriendlyError(e.error).toString());
       } else {
         this.setError("sorry, something unexpected went wrong when trying to get a list game deals");
       }
@@ -163,7 +174,7 @@ export class API {
 
     // Make API request
     try {
-      const resp = await this.fetch("POST", "/api/v0/game_deal", { game_deal: deal }, {
+      const resp = await this.fetch("POST", "/api/v1/deals", { game_deal: deal }, {
         headers: {
           "Authorization": authToken,
         },
@@ -176,7 +187,7 @@ export class API {
       console.trace(`Failed to create a game deal=${JSON.stringify(deal)}, error=${e}`);
       
       if (e instanceof FriendlyError) {
-        this.setError(e);
+        this.setError(e.toString());
       } else {
         this.setError("sorry, something unexpected happened while create the new game deal");
       }
@@ -191,7 +202,7 @@ export class API {
    */
   async getAdmin(id) {
     try {
-      const resp = await this.fetch("GET", `/api/v0/admin/${id}`);
+      const resp = await this.fetch("GET", `/api/v1/admin/${id}`);
 
       const body = await resp.json();
       
@@ -200,7 +211,7 @@ export class API {
       console.trace(`failed to retrieve admin by ID "${id}": ${e}`);
       
       if (e instanceof FriendlyError) {
-        this.setError(e);
+        this.setError(e.toString());
       } else {
         this.setError("sorry, something unexpected happened while retrieving an admin's information");
       }
@@ -214,12 +225,11 @@ export class API {
 export class FriendlyError extends Error {
   /**
    * Creates a new FriendlyError.
-   * @param {string} msg User friendly error message. Should not contain any jargon. This message will be transformed so that it always starts with a capital letter and ends with a period (or other punctuation if already present).
-   * @returns {FriendlyError} New error to show to user.
+   * @param msg User friendly error message. Should not contain any jargon. This message will be transformed so that it always starts with a capital letter and ends with a period (or other punctuation if already present).
    */
-  constructor(msg) {
+  constructor(msg: string) {
     // Capitalize first letter
-    msg[0] = msg[0].toUpperCase();
+    msg = msg[0].toUpperCase() + msg.slice(1);
 
     // Ensure ends with punctuation
     const endI = msg.length - 1;
@@ -234,10 +244,18 @@ export class FriendlyError extends Error {
 
 /**
  * Indicates an API endpoint request returned an error response.
- * @property {string} error Contains a user friendly message.
- * @property {string} [error_code] Machine code for a specific condition which API clients are supposed to have knowledge of, it can be undefined if the server did not return one.
  */
 export class EndpointError extends Error {
+  /**
+   * Contains a user friendly message.
+   */
+  error: string;
+
+  /**
+   * Machine code for a specific condition which API clients are supposed to have knowledge of, it can be undefined if the server did not return one.
+   */
+  error_code: string;
+
   /**
    * Create an EndpointError.
    * @param {string} error See error property.

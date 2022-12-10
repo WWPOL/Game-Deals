@@ -78,7 +78,10 @@ class Server {
       log: this.log,
       authorizationClient: this.authorizationClient,
     };
+
+    this.log.debug("Registering API endpoints");
     Endpoints(epCtx).forEach((handler) => {
+      this.log.debug(`${handler.method()} ${handler.path()}`);
       this.app[handler.method()](handler.path(), wrapHandler(epCtx, handler));
     });
   }
