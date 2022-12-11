@@ -125,7 +125,7 @@ const Ctxs = ({ header, children }) => {
     localStorage.removeItem(LOCAL_STORAGE_API_AUTH_TOKEN_KEY);
   };
 
-  const api = new API(setError, getAuth);
+  const api = new API(getAuth);
   
   return (
     <ErrorCtx.Provider value={{ error, setError }}>
