@@ -98,7 +98,7 @@ interface FetchOpts<A, O = A, I = unknown> {
     // Query parameters
     let path = opts.path;
     if (opts.queryParams) {
-      const filteredOpts = Object.entries(opts.queryParams).filter((k, v) => v !== undefined).reduce((acc, entry) => {
+      const filteredOpts = Object.entries(opts.queryParams).filter(entry => entry[1] !== undefined).reduce((acc, entry) => {
         acc[entry[0]] = entry[1];
         return acc;
       }, {});
@@ -133,7 +133,13 @@ interface FetchOpts<A, O = A, I = unknown> {
 
   // Decode
   return E.match(
-    (e: T.Errors) => E.left(new Error(`failed to decode response: ${e}`)),
+    (e: T.Errors) => {
+      const fieldErrs = e.map(vErr => {
+        const keys = vErr.context.map(ctx => `${ctx.key || "<unknown key>"} (was ${ctx.actual || "<unknown value>"})`).join(", ");
+        return `for ${keys}: ${vErr.message}`;
+      }).join(", ");
+      return E.left(new Error(`failed to decode response: ${fieldErrs}`));
+    },
     (r: A) => E.right(r),
-  )(opts.respDecoder.decode(resp.json()));
+  )(opts.respDecoder.decode(await resp.json()));
 }
