@@ -1,9 +1,6 @@
-import * as E from "fp-ts/Either";
 import * as T from "io-ts";
 
-import {
-  apiFetch,
-} from "./fetch";
+import { apiFetch } from "./fetch";
 import { DealC } from "./shapes";
 
 /**

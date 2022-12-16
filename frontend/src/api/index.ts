@@ -9,6 +9,7 @@ import {
 
 import { login } from "./login";
 import { listGameDeals } from "./list-game-deals";
+import { createGameDeal } from "./create-game-deal";
 
 export const ERROR_CODE_MUST_RESET_PASSWORD = "must_reset_password";
 
@@ -28,37 +29,6 @@ export class API {
    */
   constructor(getAuth: () => Promise<string>) {
     this.getAuth = getAuth;
-  }
-
-  /**
-   * Create a new game deal.
-   * @param {GameDeal} deal The game deal to create.
-   * @returns {Promise} Resolves with created game deal, rejects with error.
-   * @throws {Error} If creating game deal fails.
-   */
-  async createGameDeal(deal) {
-    const authToken = await this.getAuth();
-
-    // Make API request
-    try {
-      const resp = await this.fetch("POST", "/api/v1/deals", { game_deal: deal }, {
-        headers: {
-          "Authorization": authToken,
-        },
-      });
-
-      const body = await resp.json();
-
-      return body.game_deal;
-    } catch (e) {
-      console.trace(`Failed to create a game deal=${JSON.stringify(deal)}, error=${e}`);
-      
-      if (e instanceof FriendlyError) {
-        this.setError(e.toString());
-      } else {
-        this.setError("sorry, something unexpected happened while create the new game deal");
-      }
-    }
   }
 
   /**
@@ -89,4 +59,5 @@ export class API {
 export default {
   login,
   listGameDeals,
+  createGameDeal,
 }

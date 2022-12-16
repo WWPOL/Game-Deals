@@ -8,3 +8,5 @@ export const DealC = T.type({
   start_date: DT.DateFromNumber,
   end_date: DT.DateFromNumber,
 });
+
+export type Deal = T.TypeOf<typeof DealC>;
