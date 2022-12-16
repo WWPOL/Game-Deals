@@ -17,15 +17,17 @@ import {
   Typography,
 } from "antd";
 const { Title } = Typography;
+import * as E from "fp-ts/Either";
 
 import {
-  APICtx,
   ErrorCtx,
 } from "~/App";
 import {
   GoDashGameDeals,
 } from "~/pages/Dashboard";
 import { InputMoney } from "~/components/InputMoney";
+import api from "~api";
+import { CreateGameDealResp } from "~api/create-game-deal";
 
 const DshEl = styled.div`
 display: flex;
@@ -111,7 +113,6 @@ flex-grow: 1;
 `;
 
 export function DashboardNewGameDeal() {
-  const api = useContext(APICtx);
   const { setError } = useContext(ErrorCtx);
   const history = useHistory();
 
@@ -127,14 +128,21 @@ export function DashboardNewGameDeal() {
   const onFinish = async (values) => {
     setCreateLoading(true);
     
-    const newDeal = await api.createGameDeal({
+    const newDeal = E.match(
+      (e) => {
+        setError("Failed to create new game deal");
+        console.trace("Failed to create new game deal", e);
+      },
+      (resp: CreateGameDealResp) => resp.deal,
+    )(await api.createGameDeal({
       game: {
         name: values.game_name,
         image_url: values.game_image_url,
+        game_id: 0,
       },
       link: values.link,
       price: values.price,
-    });
+    }));
 
     history.push(`/dashboard/game_deals/${newDeal._id}`);
 

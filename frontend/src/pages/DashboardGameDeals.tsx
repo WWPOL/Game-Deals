@@ -20,15 +20,17 @@ import {
 } from "@ant-design/icons";
 import "../antd.less";
 import strftime from "strftime";
+import * as E from "fp-ts/Either";
 
 import {
-  APICtx,
   ErrorCtx,
 } from "~/App";
 import {
   GoDashHome,
   GoDashNewGameDeal,
 } from "~/pages/Dashboard";
+import api from "~api";
+import { ListGameDealsResp } from "~api/list-game-deals";
 
 const DshEl = styled.div`
 display: flex;
@@ -104,15 +106,21 @@ const GAME_DEAL_COLS = [
  * @returns {Elements} Game deal dashboard elements.
  */
 export function DashboardGameDeals() {
-  const api = useContext(APICtx);
-  const { showError } = useContext(ErrorCtx);
+  const { setError } = useContext(ErrorCtx);
   const history = useHistory();
 
   const [deals, setDeals] = useState([]);
 
   useEffect(() => {
     async function fetchDeals() {
-      const deals = await api.listGameDeals(0, true);
+      const deals = E.match(
+        (e) => {
+          setError("Failed to get game deals");
+          console.trace("Failed to get game deals", e);
+          return [];
+        },
+        (r: ListGameDealsResp) => r.deals,
+       )(await api.listGameDeals(0, true));
 
       const dateStr = (epoch) => {
         const date = new Date(epoch * 1000);

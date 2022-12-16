@@ -29,6 +29,18 @@ export class Deal extends BaseEntity implements UniqueResource {
   @ManyToOne(() => Game, game => game.deals, { nullable: false })
   game: Game;
 
+  /**
+   * Overrides the game's image.
+   */
+  @Column({ nullable: true })
+  image_url: string;
+
+  @Column()
+  link: string;
+
+  @Column()
+  price: number;
+
   @Column()
   start_date: Date;
 

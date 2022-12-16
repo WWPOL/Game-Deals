@@ -11,9 +11,16 @@ export function EnsureAuth({
 }: {
     readonly children: React.Elements,
 }) {
+    const setJustLoggedIn = React.useState(false)[1];
+
+    const onLogin = () => {
+        // Force component to re-render after login
+        setJustLoggedIn(true);
+    };
+
     if (!getStoredAuthToken()) {
         return (
-            <DashboardLogin />
+            <DashboardLogin onLogin={onLogin} />
         )
     }
 

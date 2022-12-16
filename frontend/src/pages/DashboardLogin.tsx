@@ -35,7 +35,11 @@ enum LoginState {
   Success,
 }
 
-export function DashboardLogin() {
+export function DashboardLogin({
+  onLogin,
+}: {
+  readonly onLogin: () => void,
+}) {
   const { setError } = React.useContext(ErrorCtx);
   const handleLeft = useHandleLeft();
 
@@ -90,6 +94,7 @@ export function DashboardLogin() {
       (resp: LoginResp) => {
         setStoredAuthToken(resp.auth_token);
         setLoginState(LoginState.Success);
+        onLogin();
       }
     )(await callAPILogin());
   };

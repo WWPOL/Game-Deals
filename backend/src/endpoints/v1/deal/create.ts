@@ -39,6 +39,8 @@ const CreateDealReqShape = t.type({
      */
     game_id: t.number,
 
+    // TODO: image_url, price
+
     /**
      * Start date of new deal.
      */
