@@ -1,5 +1,5 @@
 import * as T from "io-ts";
-import { fromNullable } from 'io-ts-types/lib/fromNullable'
+import * as ET from "io-ts-types";
 import { getConnection } from "typeorm";
 
 import {
@@ -48,12 +48,12 @@ const ListDealsReqParamsShape = T.type({
   /**
    * Game deals will be returned sorted by their start date. This parameter indicates the index of the first game deal to retrieve using this ordering.
    */
-  offset: fromNullable(T.number, 0),
+  offset: ET.fromNullable(ET.NumberFromString, 0),
 
   /**
    * If game deals which have expired should be retrieved.
    */
-  expired: fromNullable(T.boolean, false),
+  expired: ET.fromNullable(ET.BooleanFromString, false),
 });
 
 type ListDealsReqParams = T.TypeOf<typeof ListDealsReqParamsShape>;
