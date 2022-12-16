@@ -23,10 +23,10 @@ export class Deal extends BaseEntity implements UniqueResource {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => User, user => user.deals)
+  @ManyToOne(() => User, user => user.deals, { nullable: false })
   author: User;
 
-  @ManyToOne(() => Game, game => game.deals)
+  @ManyToOne(() => Game, game => game.deals, { nullable: false })
   game: Game;
 
   @Column()
