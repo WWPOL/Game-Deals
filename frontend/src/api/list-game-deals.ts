@@ -12,7 +12,11 @@ import { DealC } from "./shapes";
  export async function listGameDeals(offset: number, expired: boolean=false) {
   return apiFetch({
     method: "GET",
-    path: `/api/v1/deal?expired=${expired}`,
+    path: "/api/v1/deal",
+    queryParams: {
+      expired,
+      offset,
+    },
     respDecoder: T.type({
       deals: T.array(DealC),
       next_offset: T.number,

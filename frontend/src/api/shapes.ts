@@ -8,5 +8,10 @@ export const DealC = T.type({
   start_date: DT.DateFromNumber,
   end_date: DT.DateFromNumber,
 });
-
 export type Deal = T.TypeOf<typeof DealC>;
+
+export const UserNonSecureC = T.type({
+  id: T.number,
+  username: T.string,
+});
+export type UserNonSecure = T.TypeOf<typeof UserNonSecureC>;

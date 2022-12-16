@@ -36,6 +36,11 @@ interface FetchOpts<A, O = A, I = unknown> {
   path: string,
 
   /**
+   * Query parameters.
+   */
+  queryParams?: { [key: string]: any },
+
+  /**
    * An io-ts type used to decode the API response into typescript R.
    * Type params for T.Type:
    * - 1st: Typescript type which will be stored in memory
@@ -83,7 +88,14 @@ interface FetchOpts<A, O = A, I = unknown> {
   // Make request
   let resp = undefined;
   try {
-    resp = await fetch(opts.path, fetchOpts);
+    // Query parameters
+    let path = opts.path;
+    if (opts.queryParams) {
+      path += new URLSearchParams(opts.queryParams);
+    }
+
+    // Make requests
+    resp = await fetch(path, fetchOpts);
 
     // Censor body after request is made
     if (opts.opts?.bodySensitive === true) {

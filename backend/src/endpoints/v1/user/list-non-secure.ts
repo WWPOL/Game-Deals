@@ -33,7 +33,7 @@ const ListUsersQueryParamsShape = t.type({
    * Identifier number of users to retrieve.
    * If not provided then all users are retrieved.
    */
-  id: fromNullable(t.array(IntFromString), []),
+  ids: fromNullable(t.array(IntFromString), []),
 });
 
 /**
@@ -55,7 +55,7 @@ export class ListUsersNonSecure extends BaseEndpoint<void> {
    * IDs of users to retrieve. If none provided then retrieve all users.
    */
   listUserIDs: number[];
-  
+
   constructor(ctx: EndpointCtx) {
     super(ctx, {
       method: "get",
@@ -72,23 +72,23 @@ export class ListUsersNonSecure extends BaseEndpoint<void> {
       req: req,
       decoder: ListUsersQueryParamsShape,
     });
-    this.listUserIDs = params.id;
+    this.listUserIDs = params.ids;
 
     if (this.listUserIDs.length > 0) {
       // Require specific permissions to access just the users specified
       return this.listUserIDs.map((id) => {
         return {
           resourceURI: new APIURI(DBResource.User, `/${id}`),
-          actions: [ UserAction.RetrieveNonSecure ],
+          actions: [UserAction.RetrieveNonSecure],
         };
       });
     }
-    
+
     // If asking to view all users, then require this permission
     return [
       {
         resourceURI: new APIURI(DBResource.User, "/*"),
-        actions: [ UserAction.RetrieveNonSecure ],
+        actions: [UserAction.RetrieveNonSecure],
       },
     ]
   }
@@ -104,7 +104,7 @@ export class ListUsersNonSecure extends BaseEndpoint<void> {
     queryBuilder.orderBy("user.id");
 
     const users = await queryBuilder.getMany();
-    
+
     return new JSONResponder({
       users: users.map((user) => user.toNonSecure()),
     });
