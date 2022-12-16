@@ -1,6 +1,5 @@
 import * as T from "io-ts";
-import * as Tt from "io-ts-types";
-import { DateFromUnixTime } from "io-ts-types/DateFromUnixTime";
+import * as ET from "io-ts-types";
 
 import {
   BaseEndpoint,
@@ -20,6 +19,8 @@ import {
 } from "../../../models";
 import {
   Deal,
+  DealNoIDC,
+  TDealC,
   DealAction,
 } from "../../../models/deal";
 import { Game } from "../../../models/game";
@@ -33,24 +34,7 @@ const CreateDealReqShape = T.type({
   /**
    * Information about the new game deal.
    */
-  deal: T.type({
-    /**
-     * ID of the game involved in the deal.
-     */
-    game_id: T.number,
-
-    // TODO: image_url, price
-
-    /**
-     * Start date of new deal.
-     */
-    start_date: DateFromUnixTime,
-
-    /**
-     * End date of the new deal.
-     */
-    end_date: DateFromUnixTime,
-  }),
+  deal: DealNoIDC,
 });
 
 type CreateDealReq = T.TypeOf<typeof CreateDealReqShape>;
@@ -62,12 +46,7 @@ type CreateDealResp = {
   /**
    * The created game deal.
    */
-  deal: {
-    id: number,
-    author_id: number,
-    start_date: Date,
-    end_date: Date,
-  };
+  deal: TDealC,
 };
 
 /**
@@ -111,12 +90,7 @@ export class CreateDeal extends BaseEndpoint<CreateDealReq> {
     await deal.save();
 
     return new JSONResponder({
-      deal: {
-        id: deal.id,
-        author_id: deal.author.id,
-        start_date: deal.start_date,
-        end_date: deal.end_date,
-      },
+      deal: deal.toDealC(),
     });
   }
 }
