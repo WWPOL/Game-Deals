@@ -3,6 +3,11 @@ import * as T from "io-ts";
 import { apiFetch } from "./fetch";
 import { UserNonSecureC } from "./shapes";
 
+export const ListUsersRespC = T.type({
+  users: T.array(UserNonSecureC),
+});
+export type ListUsersResp = T.TypeOf<typeof ListUsersRespC>;
+
 /**
    * Get an admin.
    * @param ids - IDs of users to retrieve.
@@ -15,8 +20,6 @@ export async function listUsers(ids: number[]) {
     queryParams: {
       ids,
     },
-    respDecoder: T.type({
-      users: T.array(UserNonSecureC),
-    }),
+    respDecoder: ListUsersRespC,
   });
 }

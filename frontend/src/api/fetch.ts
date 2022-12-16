@@ -5,6 +5,7 @@ import {
   EndpointError,
   UnauthorizedError,
 } from "./errors";
+import { getStoredAuthToken } from "./auth";
 
 /**
  * Options which can be used to configure API fetch requests.
@@ -85,13 +86,23 @@ interface FetchOpts<A, O = A, I = unknown> {
     fetchOpts.body = JSON.stringify(opts.body);
   }
 
+  // Set auth if present
+  const authToken = getStoredAuthToken();
+  if (authToken) {
+    fetchOpts.headers["Authorization"] = authToken;
+  }
+
   // Make request
   let resp = undefined;
   try {
     // Query parameters
     let path = opts.path;
     if (opts.queryParams) {
-      path += new URLSearchParams(opts.queryParams);
+      const filteredOpts = Object.entries(opts.queryParams).filter((k, v) => v !== undefined).reduce((acc, entry) => {
+        acc[entry[0]] = entry[1];
+        return acc;
+      }, {});
+      path += "?" + new URLSearchParams(filteredOpts);
     }
 
     // Make requests

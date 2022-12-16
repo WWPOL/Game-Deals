@@ -1,9 +1,15 @@
 import * as E from "fp-ts/Either";
 import * as T from "io-ts";
+import { Login } from "~components/Auth";
 
 import {
   apiFetch,
 } from "./fetch";
+
+export const LoginRespC = T.type({
+  auth_token: T.string,
+});
+export type LoginResp = T.TypeOf<typeof LoginRespC>;
 
 /**
 * Exchange API admin user login credentials for an API authentication token. Optionally allows setting a new password in the process.
@@ -17,12 +23,10 @@ export async function login(
  password: string,
  new_password?: string,
 ) {
- return await this.fetch({
+ return await apiFetch({
    method: "POST",
    path: "/api/v1/auth/login",
-   respDecoder: T.type({
-     auth_token: T.string,
-   }),
+   respDecoder: LoginRespC,
    body: {
      username,
      password,

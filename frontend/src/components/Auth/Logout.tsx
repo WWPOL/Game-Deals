@@ -3,7 +3,7 @@ import {
   Avatar,
 } from "antd";
 
-import { getStoredAuthToken } from "~/components/Auth";
+import { getStoredAuthToken } from "~/api/auth";
 
 export function Logout() {
   const authToken = getStoredAuthToken();

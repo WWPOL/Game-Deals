@@ -5,7 +5,7 @@
       "~*": [ "./*" ]
     },
     "jsx": "react",
-    "lib": [ "ES6", "DOM" ]
+    "lib": [ "ES2017", "DOM" ]
   },
   "include": [ "src/**/*" ],
   "files": [

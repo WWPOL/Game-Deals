@@ -5,11 +5,12 @@ import React, {
 } from "react";
 import styled from "styled-components";
 import humanizeDuration from "humanize-duration";
+import * as E from "fp-ts/Either";
 
-import { APICtx, ErrorCtx } from "~/App";
-import {
-  FriendlyError,
-} from "~/api";
+import { ErrorCtx } from "~/App";
+import api from "~/api";
+import { ListGameDealsResp } from "~api/list-game-deals";
+import { useHandleLeft } from "~lib/error";
 
 const HomeEl = styled.div`
 display: flex;
@@ -27,14 +28,17 @@ function unixTime(date) {
 }
 
 const Home = () => {
-  const api = useContext(APICtx);
   const { setError } = useContext(ErrorCtx);
   
   const [deals, setDeals] = useState([]);
+  const handleLeft = useHandleLeft();
 
   useEffect(() => {
     async function fetchDeals() {
-      setDeals(await api.listGameDeals());
+      handleLeft(
+        "Failed to fetch game deals",
+        (resp: ListGameDealsResp) => setDeals(resp.deals),
+      )(await api.listGameDeals());
     }
 
     fetchDeals();
