@@ -120,7 +120,7 @@ export function DashboardGameDeals() {
           return [];
         },
         (r: ListGameDealsResp) => r.deals,
-       )(await api.listGameDeals(0, true));
+       )(await api.listGameDeals(0, true, true));
 
       const dateStr = (epoch) => {
         const date = new Date(epoch * 1000);
@@ -130,7 +130,9 @@ export function DashboardGameDeals() {
 
       const dealLinkEl = (deal) => {
         const domainParts = deal.link.split(".");
-        let shortDomain = deal.link;
+        let 
+        
+        rtDomain = deal.link;
         if (domainParts.length >= 2) {
           shortDomain = domainParts.slice(0, 2).join(".");
         }

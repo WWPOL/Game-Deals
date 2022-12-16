@@ -22,9 +22,9 @@ ListGameDealsRespC>;
     method: "GET",
     path: "/api/v1/deal",
     queryParams: {
-      offset,
-      beforeStart,
-      expired,
+      offset: offset,
+      before_start: beforeStart,
+      expired: expired,
     },
     respDecoder: ListGameDealsRespC,
   });
