@@ -8,6 +8,11 @@ export enum ErrorCode {
   MustResetPassword = "must_reset_password",
 
   /**
+   * Indicates that the user cannot reset their password to their existing password.
+   */
+  ResetPasswordOldNotAllowed = "old_password_not_allowed",
+
+  /**
    * Indicates the API client cannot create a user because the password does not meet requirements. The error field will container a user friendly message.
    */
   NotMeetPasswordRequirements = "not_meet_password_requirements",

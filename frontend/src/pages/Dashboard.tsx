@@ -16,7 +16,6 @@ import {
 
 } from "@ant-design/icons";
 
-import { AuthCtx } from "~/App";
 import { DashboardHome } from "~/pages/DashboardHome";
 import { DashboardGameDeals } from "~/pages/DashboardGameDeals";
 import { DashboardNewGameDeal } from "~/pages/DashboardNewGameDeal";
@@ -104,12 +103,6 @@ margin-left: 0.7rem;
  */
 export function Dashboard() {
   const routeMatch = useRouteMatch();
-  const { getAuth, clearAuth } = useContext(AuthCtx);
-
-  // Ensure user is logged in before showing the dashboard
-  useEffect(() => {
-    getAuth("view the dashboard");
-  }, []);
   
   return (
     <DshEl>

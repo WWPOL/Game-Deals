@@ -18,11 +18,10 @@ import {
 } from "@ant-design/icons";
 import "~/antd.less";
 
-import { SharedProm } from "~/lib/shared-prom";
-import API from "~/api";
 import { Header } from "~/components/Header";
 import { Home } from "~/pages/Home";
 import { Dashboard } from "~/pages/Dashboard";
+import { EnsureAuth } from "~pages/EnsureAuth";
 
 export const ErrorCtx = React.createContext(() => {});
 export const AuthCtx = React.createContext([() => {}, () => {}]); // [ getAuth(action), clearAuth() ]
@@ -107,6 +106,13 @@ const Ctxs = ({
   );
 };
 
+export const ROUTES = {
+  DASHBOARD: {
+    ROOT: "/dashboard",
+    LOGIN: "/dashboard/login",
+  }
+}
+
 /**
  * Main application.
  * @returns {Elements} Website elements.
@@ -119,8 +125,10 @@ export function App() {
           header={<Header />}
         >
           <Switch>
-            <Route path="/dashboard">
-              <Dashboard />
+            <Route path={ROUTES.DASHBOARD.ROOT}>
+              <EnsureAuth>
+                <Dashboard />
+              </EnsureAuth>
             </Route>
 
             <Route path="/">

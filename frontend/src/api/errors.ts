@@ -17,6 +17,7 @@
     }
     
     super(msg);
+    Object.setPrototypeOf(this, FriendlyError.prototype); // TODO: Instead of this hack maybe consider non Error classes and instead objects with _tag keys
     this.name = "FriendlyError";
   }
 }
@@ -43,6 +44,7 @@ export class EndpointError extends Error {
    */
   constructor(error, error_code) {
     super(`The API returned an error response: error=${error}, error_code=${error_code}`);
+    Object.setPrototypeOf(this, EndpointError.prototype);
     this.name = "EndpointError";
 
     this.error = error;
@@ -61,6 +63,7 @@ export class UnauthorizedError extends EndpointError {
    */
   constructor(error, errorCode) {
     super(error, errorCode);
+    Object.setPrototypeOf(this, UnauthorizedError.prototype);
 
     this.name = "UnauthorizedError";
   }
@@ -74,3 +77,7 @@ export class UnauthorizedError extends EndpointError {
     return new FriendlyError(`you do not have permission to ${action}`);
   }
 }
+
+export const ERROR_CODE_MUST_RESET_PASSWORD = "must_reset_password";
+export const ERROR_CODE_RESET_PASSWORD_OLD_NOT_ALLOWED = "old_password_not_allowed";
+export const ERROR_CODE_PASSWORD_TO_PWNED = "not_meet_password_requirements";

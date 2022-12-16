@@ -23,7 +23,7 @@ export async function login(
  password: string,
  new_password?: string,
 ) {
- return await apiFetch({
+  return await apiFetch({
    method: "POST",
    path: "/api/v1/auth/login",
    respDecoder: LoginRespC,

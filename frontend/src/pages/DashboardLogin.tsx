@@ -9,16 +9,19 @@ import {
   Input,
   Checkbox,
 } from "antd";
+import * as E from "fp-ts/Either";
 
-import { SharedProm } from "~/lib/shared-prom";
-import {
+import api, {
   UnauthorizedError,
   ERROR_CODE_MUST_RESET_PASSWORD,
-} from "~/api";
-import {
-  ErrorCtx,
-  APICtx,
-} from "~/App";
+  ERROR_CODE_RESET_PASSWORD_OLD_NOT_ALLOWED,
+  EndpointError,
+  ERROR_CODE_PASSWORD_TO_PWNED,
+} from "~api";
+import { LoginResp } from "~api/login";
+import { useHandleLeft } from "~lib/error";
+import { ErrorCtx } from "~App";
+import { setStoredAuthToken } from "~api/auth";
 
 const LoginContainer = styled.div`
 display: flex;
@@ -26,58 +29,69 @@ align-items: center;
 flex-direction: column;
 `;
 
-export function Login({
-  getAuthFinishedProm,
-}: {
-  readonly getAuthFinishedProm: SharedProm
-}) {
-  const { setError } = useContext(ErrorCtx);
-  const api = useContext(APICtx);
+enum LoginState {
+  EnteringValues,
+  Loading,
+  Success,
+}
+
+export function DashboardLogin() {
+  const { setError } = React.useContext(ErrorCtx);
+  const handleLeft = useHandleLeft();
 
   const [mustResetPassword, setMustResetPassword] = useState(false);
+  const [lastSubmit, setLastSubmit] = React.useState({ username: "", password: ""});
+
+  const [loginState, setLoginState] = React.useState(LoginState.EnteringValues);
   
   /**
    * Runs when the login UI is successfully filled out by the user.
    * @param {object} values Form values.
    */
   const onLoginFormFinish = async (values) => {
-    let authToken = undefined;
+    setLoginState(LoginState.Loading);
     
-    try {
-      let newPassword?: bool = undefined;
-
+    const callAPILogin = async () => {
       if (mustResetPassword) {
-        if (values.new_password !== values.confirm_new_password) {
-          setError("The new password and the new password confirmation did not match")
-          return;
-        }
-
-        newPassword = values.new_password;
+        return api.login(lastSubmit.username, lastSubmit.password, values.new_password);
       }
-      
-      authToken = await api.login(values.username, values.password, newPassword);
-    } catch (e) {
-      if (e instanceof UnauthorizedError) {
-        if (e.error_code === ERROR_CODE_MUST_RESET_PASSWORD) {
-          // User entered correct password, but must now set a new password before fully logging in
-          if (mustResetPassword) {
-            // Huh, we just got the user to reset their password, call it an error so we don't get stuck in an infinite loop
-            setError("Failed to login and reset password");
+
+      return api.login(values.username, values.password);
+    };
+
+    E.match(
+      (l) => {
+        setLoginState(LoginState.EnteringValues);
+        
+        if (l instanceof EndpointError) {
+          if (l.error_code === ERROR_CODE_MUST_RESET_PASSWORD) {
+            // User entered correct password, but must now set a new password before fully logging in
+            if (mustResetPassword) {
+              // Huh, we just got the user to reset their password, call it an error so we don't get stuck in an infinite loop
+              setError("Failed to login and reset password");
+              return;
+            }
+            
+            setMustResetPassword(true);
+            setLastSubmit({
+              username: values.username,
+              password: values.password,
+            });
+            return;
+          } else if (l.error_code == ERROR_CODE_RESET_PASSWORD_OLD_NOT_ALLOWED) {
+            setError("Cannot reset your password to be the same as your old password");
+            return;
+          } else if (l.error_code == ERROR_CODE_PASSWORD_TO_PWNED) {
+            setError(l.error)
             return;
           }
-          
-          setMustResetPassword(true);
-          return;
-        } else {
-          // Wrong password
-          setError("Failed to login.");
-          return;
         }
+      },
+      (resp: LoginResp) => {
+        setStoredAuthToken(resp.auth_token);
+        setLoginState(LoginState.Success);
       }
-    }
-
-    // TODO: Make it so reset password works, make confirm new password entered twice correctly
-    getAuthFinishedProm.resolve(authToken);
+    )(await callAPILogin());
   };
 
   /**
@@ -88,6 +102,18 @@ export function Login({
     console.trace("onLoginFormFinishFailed", err);
     setError("Please fill out the log in form correctly.");
   };
+
+  if (loginState == LoginState.Loading) {
+    return (
+      <p>Loading</p>
+    )
+  }
+
+  if (loginState == LoginState.Success) {
+    return (
+      <p>Success</p>
+    )
+  }
   
   return (
     <LoginContainer>

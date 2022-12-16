@@ -134,6 +134,7 @@ interface FetchOpts<A, O = A, I = unknown> {
   // Decode
   return E.match(
     (e: T.Errors) => {
+      // Try to format validation errors as prettily as possible
       const fieldErrs = e.map(vErr => {
         const keys = vErr.context.map(ctx => `${ctx.key || "<unknown key>"} (was ${ctx.actual || "<unknown value>"})`).join(", ");
         return `for ${keys}: ${vErr.message}`;

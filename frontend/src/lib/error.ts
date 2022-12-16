@@ -30,23 +30,3 @@ export function useHandleLeft() {
         };
     };
 }
-
-/**
- * If the provided either type is left then 
- * @param userErrMsg - A user friendly error message that will be shown to the user if the provided either is left.
- * @param either - The Either type to check.
- * @returns The either type passed to the function.
- */
-export function handleLeft<L, R, B>(userErrMsg: string, success: (res: R)=> B): (either: E.Either<L, R>) => void {
-    //const { setError } = React.useContext(ErrorCtx);
-
-    return (either: E.Either<L, R>): void => {
-        return E.match(
-            (l: L) => {
-                console.trace(userErrMsg, l);
-                //setError(userErrMsg);
-            },
-            (r: R) => success(r),
-        )(either);
-    };
-}

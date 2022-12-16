@@ -146,6 +146,7 @@ export class LoginEndpoint extends BaseEndpoint<LoginReq> {
         throw MkEndpointError({
           http_status: 400,
           error: "failed to set new password: cannot be same as current",
+          error_code: ErrorCode.ResetPasswordOldNotAllowed,
         });
       }
       
