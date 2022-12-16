@@ -19,6 +19,7 @@
     "highlight.js": "^11.2.0",
     "humanize-duration": "^3.25.2",
     "io-ts": "^2.2.20",
+    "io-ts-types": "^0.5.19",
     "react": "^17.0.0",
     "react-dom": "^17.0.0",
     "react-router-dom": "^5.2.0",

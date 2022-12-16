@@ -1,5 +1,5 @@
 import * as E from "fp-ts/Either";
-import * as D from "io-ts/Decoder";
+import * as T from "io-ts";
 
 import {
   EndpointError,
@@ -20,9 +20,11 @@ export type FetchError = Error | EndpointError;
 
 /**
  * Options provided to the apiFetch method.
- * @typeParam R - The type which the response will be decoded into.
+ * @typeParam A - Type by which underlying data will be represented
+ * @typeParam O - Type in which data will be outputted
+ * @typeParam I - Type which will be provided as input
  */
-interface FetchOpts<R> {
+interface FetchOpts<A, O = A, I = unknown> {
   /**
    * HTTP method for request.
    */
@@ -34,9 +36,13 @@ interface FetchOpts<R> {
   path: string,
 
   /**
-   * An io-ts decoder used to parse the API response into a type.
+   * An io-ts type used to decode the API response into typescript R.
+   * Type params for T.Type:
+   * - 1st: Typescript type which will be stored in memory
+   * - 2nd: Encoded type
+   * - 3rd: Input type
    */
-  respDecoder: D.Decoder<unknown, R>,
+  respDecoder: T.Type<A, O, I>,
 
   /**
    * API request data to encode as JSON. Pass undefined to not encode a body.
@@ -51,12 +57,14 @@ interface FetchOpts<R> {
 
 /**
  * Make a HTTP API request.
- * @typeParam R - The type which the response will be decoded into.
+ * @typeParam A - Type by which underlying data will be represented
+ * @typeParam O - Type in which data will be outputted
+ * @typeParam I - Type which will be provided as input
  * @returns Always resolves with an Either type where left is an error and right is the decoded response. A reject here indicates a fatal error the logic did not anticipate. The left error will either:
  * - Error: If an error occurs while making the API request.
  * - EndpointError: If the API returned an error response.
  */
- export async function apiFetch<R>(opts: FetchOpts<R>): Promise<E.Either<FetchError, R>> {
+ export async function apiFetch<A, O = A, I = unknown>(opts: FetchOpts<A, O, I>): Promise<E.Either<FetchError, A>> {
   let fetchOpts: RequestInit = opts.opts || {};
 
   // Set method
@@ -102,7 +110,7 @@ interface FetchOpts<R> {
 
   // Decode
   return E.match(
-    (e: D.DecodeError) => E.left(new Error(`failed to decode response: ${e}`)),
-    (r: R) => E.right(r),
+    (e: T.Errors) => E.left(new Error(`failed to decode response: ${e}`)),
+    (r: A) => E.right(r),
   )(opts.respDecoder.decode(resp.json()));
 }
