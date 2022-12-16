@@ -19,18 +19,33 @@ import { Deal } from "./deal";
  */
 @Entity()
 export class User extends BaseEntity implements UniqueResource {
+  /**
+   * Primary key of user.
+   */
   @PrimaryGeneratedColumn()
   id: number;
 
+  /**
+   * Name user can login with.
+   */
   @Column()
   username: string;
 
+  /**
+   * Hash of password.
+   */
   @Column()
   password_hash: string;
 
+  /**
+   * If true then the user will not be issued auth tokens without first setting a new password.
+   */
   @Column()
   must_reset_password: boolean;
 
+  /**
+   * Deals which the user submitted.
+   */
   @OneToMany(() => Deal, deal => deal.author)
   deals: Deal[];
 

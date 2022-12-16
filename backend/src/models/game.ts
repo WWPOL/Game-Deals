@@ -19,15 +19,27 @@ import { Deal } from "./deal";
  */
 @Entity()
 export class Game extends BaseEntity implements UniqueResource {
+  /**
+   * Primary key of game.
+   */
   @PrimaryGeneratedColumn()
   id: number;
 
+  /**
+   * User friendly title of game.
+   */
   @Column()
   name: string;
 
+  /**
+   * URL to an image cover for the game.
+   */
   @Column()
   image_url: string;
 
+  /**
+   * The deals which grant access to the game.
+   */
   @OneToMany(() => Deal, (deal: Deal) => deal.game)
   deals: Deal[];
 
