@@ -1,4 +1,4 @@
-import * as t from "io-ts";
+import * as T from "io-ts";
 import { fromNullable } from "io-ts-types/lib/fromNullable";
 import { IntFromString } from "io-ts-types/lib/IntFromString";
 
@@ -28,12 +28,12 @@ import {
 /**
  * List users request URL parameters.
  */
-const ListUsersQueryParamsShape = t.type({
+const ListUsersQueryParamsShape = T.type({
   /**
    * Identifier number of users to retrieve.
    * If not provided then all users are retrieved.
    */
-  ids: fromNullable(t.array(IntFromString), []),
+  ids: fromNullable(T.array(IntFromString), []),
 });
 
 /**

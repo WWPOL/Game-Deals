@@ -1,5 +1,5 @@
 import { Request } from "express";
-import * as t from "io-ts";
+import * as T from "io-ts";
 import {
   isRight,
   isLeft,
@@ -36,12 +36,12 @@ export class DecoderParser<I> implements BodyParser<I> {
   /**
    * io-ts decoder.
    */
-  decoder: t.Decoder<unknown, I>;
+  decoder: T.Decoder<unknown, I>;
 
   /**
    * Initialize decoder parser.
    */
-  constructor(decoder: t.Decoder<unknown, I>) {
+  constructor(decoder: T.Decoder<unknown, I>) {
     this.decoder = decoder;
   }
 
@@ -99,7 +99,7 @@ export function decodeQueryParams<T>({
   decoder,
 }: {
   readonly req: EndpointRequest<any>;
-  readonly decoder: t.Decoder<unknown, T>;
+  readonly decoder: T.Decoder<unknown, T>;
 }): T {
   // Try to parse query parameters to lists if need be
   const queryParams = decodeQueryParamsLists(req.req.query, decoder);

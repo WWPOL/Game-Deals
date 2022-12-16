@@ -1,4 +1,4 @@
-import * as t from "io-ts";
+import * as T from "io-ts";
 
 import {
   EndpointCtx,
@@ -30,19 +30,19 @@ import {
 /**
  * Create user request.
  */
-const CreateUserReqShape = t.type({
+const CreateUserReqShape = T.type({
   /**
    * The new user's username.
    */
-  username: t.string,
+  username: T.string,
 
   /**
    * The password the new user will login with for the first time. Tell them this password. The new user must then change this password.
    */
-  invite_password: t.string,
+  invite_password: T.string,
 });
 
-type CreateUserReq = t.TypeOf<typeof CreateUserReqShape>;
+type CreateUserReq = T.TypeOf<typeof CreateUserReqShape>;
 
 /**
  * Create user response.

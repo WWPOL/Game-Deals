@@ -1,5 +1,5 @@
 import { isRight } from "fp-ts/Either";
-import * as t from "io-ts";
+import * as T from "io-ts";
 
 /**
  * Output messages about the behavior of the server.
@@ -57,7 +57,7 @@ export class ConsoleLogger implements Logger {
    * @returns Value serialized to a string.
    */
   pretty(value: any): string {
-    if (isRight(t.object.decode(value))) {
+    if (isRight(T.object.decode(value))) {
       return JSON.stringify(value, null, 2);
     }
 

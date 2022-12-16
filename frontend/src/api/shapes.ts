@@ -5,6 +5,9 @@ export const DealC = T.type({
   id: T.number,
   author_id: T.number,
   game_id: T.number,
+  image_url: T.union([T.null, T.string]),
+  link: T.string,
+  price: T.number,
   start_date: DT.DateFromNumber,
   end_date: DT.DateFromNumber,
 });

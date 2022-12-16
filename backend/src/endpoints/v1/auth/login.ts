@@ -1,4 +1,4 @@
-import * as t from "io-ts";
+import * as T from "io-ts";
 import {
   timingSafeEqual,
 } from "crypto";
@@ -45,17 +45,17 @@ import {
 /**
  * Login endpoint request body shape.
  */
-const LoginReqShape = t.type({
-  username: t.string,
-  password: t.string,
+const LoginReqShape = T.type({
+  username: T.string,
+  password: T.string,
 
   /**
    * If provided the user's password will be changed. This is required if the .must_reset_password field is true on the user.
    */
-  new_password: t.union([t.string, t.undefined]),
+  new_password: T.union([T.string, T.undefined]),
 });
 
-type LoginReq = t.TypeOf<typeof LoginReqShape>;
+type LoginReq = T.TypeOf<typeof LoginReqShape>;
 
 /**
  * Login response.

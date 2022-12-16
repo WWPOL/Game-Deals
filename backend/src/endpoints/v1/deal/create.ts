@@ -1,5 +1,5 @@
-import * as t from "io-ts";
-import * as tt from "io-ts-types";
+import * as T from "io-ts";
+import * as Tt from "io-ts-types";
 import { DateFromUnixTime } from "io-ts-types/DateFromUnixTime";
 
 import {
@@ -29,15 +29,15 @@ import { MkEndpointError } from "../../error";
 /**
  * Create game deal request.
  */
-const CreateDealReqShape = t.type({
+const CreateDealReqShape = T.type({
   /**
    * Information about the new game deal.
    */
-  deal: t.type({
+  deal: T.type({
     /**
      * ID of the game involved in the deal.
      */
-    game_id: t.number,
+    game_id: T.number,
 
     // TODO: image_url, price
 
@@ -53,7 +53,7 @@ const CreateDealReqShape = t.type({
   }),
 });
 
-type CreateDealReq = t.TypeOf<typeof CreateDealReqShape>;
+type CreateDealReq = T.TypeOf<typeof CreateDealReqShape>;
 
 /**
  * Create game deal response.
