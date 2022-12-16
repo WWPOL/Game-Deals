@@ -22,6 +22,7 @@ import {
 } from "../../../models";
 import {
   Deal,
+  TDealC,
   DealAction,
 } from "../../../models/deal";
 import { MkEndpointError } from "../../error";
@@ -33,7 +34,7 @@ type ListDealsResp = {
   /**
    * Array of game deals sorted by their start date. Maximum of QUERY_LIMIT items.
    */
-  deals: Deal[];
+  deals: TDealC[];
 
   /**
    * Next offset value to provide to access the next page of results. Is -1 if this page is the last page of results.
@@ -49,6 +50,11 @@ const ListDealsReqParamsShape = T.type({
    * Game deals will be returned sorted by their start date. This parameter indicates the index of the first game deal to retrieve using this ordering.
    */
   offset: ET.fromNullable(ET.NumberFromString, 0),
+
+  /**
+   * If game deals which have not started yet should be retrieved.
+   */
+  before_start: ET.fromNullable(ET.BooleanFromString, false),
 
   /**
    * If game deals which have expired should be retrieved.
@@ -88,6 +94,11 @@ export class ListDeals extends BaseEndpoint<void> {
 
     // Query
     const query = Deal.createQueryBuilder("deal");
+
+    if (!params.before_start) {
+      // No deals which haven't started yet shouldn't be included
+      query.where("deal.start_date >= :now", { now: new Date() });
+    }
     
     if (params.expired === false) {
       query.where("deal.end_date < :now", { now: new Date() });
@@ -98,7 +109,7 @@ export class ListDeals extends BaseEndpoint<void> {
     const nextOffset = deals.length < QUERY_LIMIT ? -1 : params.offset + QUERY_LIMIT;
 
     return new JSONResponder({
-      deals: deals,
+      deals: deals.map(deal => deal.toDealC()),
       next_offset: nextOffset,
     });
   }

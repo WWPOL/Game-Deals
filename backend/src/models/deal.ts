@@ -5,6 +5,8 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
 } from "typeorm";
+import * as T from "io-ts";
+import * as ET from "io-ts-types";
 
 import {
   UniqueResource,
@@ -14,6 +16,7 @@ import {
 } from "./index";
 import { User } from "./user";
 import { Game } from "./game";
+import { writerT } from "fp-ts";
 
 /**
  * An opportunity to obtain ownership of a game.
@@ -51,7 +54,7 @@ export class Deal extends BaseEntity implements UniqueResource {
   link: string;
 
   /**
-   * The price of the game when the deal is used.
+   * The price of the game when the deal is used. A negative price means the game is free.
    */
   @Column()
   price: number;
@@ -74,7 +77,47 @@ export class Deal extends BaseEntity implements UniqueResource {
   uri(): APIURI {
     return new APIURI(DBResource.Deal, this.id.toString());
   }
+
+  /**
+   * @returns The deal in the DealC form.
+   */
+  toDealC(): TDealC {
+    return {
+      ...this,
+      author_id: this.author.id,
+      game_id: this.game.id,
+    };
+  }
 }
+
+/**
+ * Codec for the deal id field.
+ */
+export const DealIDC = T.type({
+  id: T.number,
+});
+
+/**
+ * Codec containing deal fields except the ID field.
+ */
+export const DealNoIDC = T.type({
+  author_id: T.number,
+  game_id: T.number,
+  image_url: T.union([T.null, T.string]),
+  link: T.string,
+  price: T.number,
+  start_date: ET.DateFromISOString,
+  end_date: ET.DateFromISOString,
+});
+
+/**
+ * Codec containing all deal fields.
+ */
+export const DealC = T.intersection([
+  DealIDC,
+  DealNoIDC,
+])
+export type TDealC = T.TypeOf<typeof DealC>;
 
 /**
  * Deal authorization actions.
