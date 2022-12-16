@@ -91,16 +91,10 @@ export class Deal extends BaseEntity implements UniqueResource {
 }
 
 /**
- * Codec for the deal id field.
+ * Codec representing deal.
  */
-export const DealIDC = T.type({
+export const DealC = T.type({
   id: T.number,
-});
-
-/**
- * Codec containing deal fields except the ID field.
- */
-export const DealNoIDC = T.type({
   author_id: T.number,
   game_id: T.number,
   image_url: T.union([T.null, T.string]),
@@ -109,14 +103,6 @@ export const DealNoIDC = T.type({
   start_date: ET.DateFromISOString,
   end_date: ET.DateFromISOString,
 });
-
-/**
- * Codec containing all deal fields.
- */
-export const DealC = T.intersection([
-  DealIDC,
-  DealNoIDC,
-])
 export type TDealC = T.TypeOf<typeof DealC>;
 
 /**

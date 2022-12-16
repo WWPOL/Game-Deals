@@ -19,7 +19,6 @@ import {
 } from "../../../models";
 import {
   Deal,
-  DealNoIDC,
   TDealC,
   DealAction,
 } from "../../../models/deal";
@@ -34,7 +33,14 @@ const CreateDealReqShape = T.type({
   /**
    * Information about the new game deal.
    */
-  deal: DealNoIDC,
+  deal: T.type({
+    game_id: T.number,
+    image_url: T.union([T.null, T.string]),
+    link: T.string,
+    price: T.number,
+    start_date: ET.DateFromISOString,
+    end_date: ET.DateFromISOString,
+  }),
 });
 
 type CreateDealReq = T.TypeOf<typeof CreateDealReqShape>;
