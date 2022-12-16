@@ -9,6 +9,8 @@ services:
       PGPASSWORD: devgamedeals # For psql
     volumes:
       - "postgresdata:/var/lib/postgresql/data/"
+    ports:
+      - "5432:5432"
     restart: always
   nginx:
     image: nginx:latest
