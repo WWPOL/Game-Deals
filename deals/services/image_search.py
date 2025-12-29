@@ -73,8 +73,8 @@ class GoogleCustomSearchProvider(ImageSearchProvider):
                 cx=self.search_engine_id,
                 searchType='image',
                 num=num_results,
-                imgSize='LARGE',  # Prefer larger images
-                safe='active',    # Safe search
+                imgSize='XXLARGE',  # Prefer biggest images
+                safe='active',      # Safe search
             ).execute()
 
             images = []
