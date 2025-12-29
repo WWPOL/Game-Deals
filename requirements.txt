@@ -4,3 +4,4 @@ dj-database-url~=2.3
 celery~=5.4
 redis~=5.2
 google-api-python-client~=2.159
+django-unfold~=0.45

@@ -58,7 +58,7 @@ A Django app with Celery for background tasks.
 
 3. **Build and start containers:**
    ```shell
-   bash scripts/build.sh
+   bash scripts/build-images.sh
    docker compose up -d
    ```
 

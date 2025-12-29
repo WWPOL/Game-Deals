@@ -1,11 +1,12 @@
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
+from unfold.admin import ModelAdmin
 from .models import Deal, PushSubscription
 
 
 @admin.register(Deal)
-class DealAdmin(admin.ModelAdmin):
+class DealAdmin(ModelAdmin):
     list_display = ('name', 'status', 'price', 'expires', 'is_active', 'created_at')
     list_filter = ('status', 'expires', 'created_at')
     search_fields = ('name',)
@@ -39,7 +40,7 @@ class DealAdmin(admin.ModelAdmin):
 
 
 @admin.register(PushSubscription)
-class PushSubscriptionAdmin(admin.ModelAdmin):
+class PushSubscriptionAdmin(ModelAdmin):
     list_display = ('endpoint_preview', 'channel', 'created_at')
     list_filter = ('channel', 'created_at')
     search_fields = ('endpoint',)
