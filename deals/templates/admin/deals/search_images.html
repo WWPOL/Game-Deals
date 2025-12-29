@@ -55,20 +55,8 @@
 <script>
 function selectAndSubmit(url) {
     document.getElementById('selected_image_url').value = url;
-
-    {% if not deal %}
-    // For new deals, update opener window's image field immediately
-    if (window.opener && window.opener.document.getElementById('id_image')) {
-        window.opener.document.getElementById('id_image').value = url;
-        window.close();
-    } else {
-        // Fallback: submit the form
-        document.getElementById('image_form').submit();
-    }
-    {% else %}
-    // For existing deals, submit the form to save the image
+    // Always submit the form to extract colors on the server
     document.getElementById('image_form').submit();
-    {% endif %}
 }
 </script>
 {% endblock %}

@@ -6,29 +6,8 @@ from unfold.admin import ModelAdmin
 from .models import Deal, PushSubscription
 
 
-class DealAdminForm(forms.ModelForm):
-    """Custom form to populate fields from URL parameters"""
-
-    class Meta:
-        model = Deal
-        fields = '__all__'
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Populate from request GET parameters if creating new instance
-        if not self.instance.pk and hasattr(self, 'request'):
-            request = self.request
-            if 'image' in request.GET:
-                self.initial['image'] = request.GET['image']
-            if 'primary_color' in request.GET:
-                self.initial['primary_color'] = request.GET['primary_color']
-            if 'secondary_color' in request.GET:
-                self.initial['secondary_color'] = request.GET['secondary_color']
-
-
 @admin.register(Deal)
 class DealAdmin(ModelAdmin):
-    form = DealAdminForm
     list_display = ('name', 'status', 'price', 'expires', 'is_active', 'created_at')
     list_filter = ('status', 'expires', 'created_at')
     search_fields = ('name',)
@@ -49,11 +28,17 @@ class DealAdmin(ModelAdmin):
         }),
     )
 
-    def get_form(self, request, obj=None, **kwargs):
-        """Pass request to form"""
-        form = super().get_form(request, obj, **kwargs)
-        form.request = request
-        return form
+    def get_changeform_initial_data(self, request):
+        """Populate initial data from URL parameters"""
+        initial = super().get_changeform_initial_data(request)
+        # Get values from URL parameters for image search
+        if 'image' in request.GET:
+            initial['image'] = request.GET['image']
+        if 'primary_color' in request.GET:
+            initial['primary_color'] = request.GET['primary_color']
+        if 'secondary_color' in request.GET:
+            initial['secondary_color'] = request.GET['secondary_color']
+        return initial
 
     def image_preview(self, obj):
         """Display current image preview"""
