@@ -4,71 +4,80 @@
 
 {% block content %}
 <style>
-    /* Override nav colors for this deal page */
-    nav {
-        background: {{ deal.primary_color|default:"#ffffff" }} !important;
-        border-bottom: 2px solid {{ deal.secondary_color|default:"#e5e7eb" }} !important;
-    }
-    nav a, nav button {
-        color: white !important;
-    }
-    nav a:hover, nav button:hover {
-        opacity: 0.9;
+    body {
+        background: #0a0a0a;
     }
 
-    .deal-hero {
-        background: linear-gradient(135deg, {{ deal.primary_color|default:"#1a1a1a" }} 0%, {{ deal.secondary_color|default:"#2d2d2d" }} 100%);
+    .deal-accent {
+        border-left: 6px solid {{ deal.primary_color|default:"#3b82f6" }};
     }
-    .deal-button {
+
+    .price-tag {
         background: {{ deal.primary_color|default:"#3b82f6" }};
+        box-shadow: 0 0 40px {{ deal.primary_color|default:"#3b82f6" }}40;
     }
-    .deal-button:hover {
-        filter: brightness(1.1);
+
+    .get-deal-btn {
+        background: {{ deal.primary_color|default:"#3b82f6" }};
+        border: 2px solid {{ deal.secondary_color|default:"#1e40af" }};
+    }
+
+    .get-deal-btn:hover {
+        background: {{ deal.secondary_color|default:"#1e40af" }};
+        transform: translateY(-2px);
+    }
+
+    .color-bar {
+        height: 4px;
+        background: linear-gradient(90deg, {{ deal.primary_color|default:"#3b82f6" }} 0%, {{ deal.secondary_color|default:"#1e40af" }} 100%);
     }
 </style>
 
-<div class="deal-hero min-h-screen">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="min-h-screen bg-[#0a0a0a] text-white">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {% if deal.status == 'draft' %}
-        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-            <p class="text-sm text-yellow-700 font-medium">
+        <div class="bg-yellow-900/20 border-l-4 border-yellow-500 p-4 mb-8">
+            <p class="text-sm text-yellow-200 font-medium">
                 ⚠️ Draft Preview - This deal is not visible to the public
             </p>
         </div>
         {% endif %}
 
-        <a href="{% url 'deals:home' %}" class="inline-flex items-center text-white/90 hover:text-white mb-6">
-            ← Back to all deals
+        <a href="{% url 'deals:home' %}" class="inline-flex items-center text-gray-400 hover:text-white mb-8 transition-colors">
+            ← Back
         </a>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mt-8">
-            <!-- Featured Image -->
-            <div class="order-2 lg:order-1">
-                <img src="{{ deal.image }}"
-                     alt="{{ deal.name }}"
-                     class="w-full rounded-2xl shadow-2xl"
-                     onerror="this.src='https://via.placeholder.com/800x450?text={{ deal.name|urlencode }}'">
-            </div>
+        <!-- Image -->
+        <div class="mb-8">
+            <div class="color-bar mb-2"></div>
+            <img src="{{ deal.image }}"
+                 alt="{{ deal.name }}"
+                 class="w-full rounded-lg"
+                 onerror="this.src='https://via.placeholder.com/1200x600?text={{ deal.name|urlencode }}'">
+        </div>
 
-            <!-- Deal Info -->
-            <div class="order-1 lg:order-2 text-white">
-                <h1 class="text-5xl lg:text-6xl font-bold mb-6">{{ deal.name }}</h1>
+        <!-- Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Main Info -->
+            <div class="lg:col-span-2 deal-accent pl-6">
+                <h1 class="text-4xl lg:text-5xl font-bold mb-4 tracking-tight">
+                    {{ deal.name }}
+                </h1>
 
-                <div class="mb-8">
-                    {% if deal.price == 0 %}
-                    <span class="text-7xl font-bold text-green-400">FREE</span>
-                    {% else %}
-                    <span class="text-7xl font-bold">${{ deal.price }}</span>
-                    {% endif %}
-                </div>
-
-                <div class="flex items-center text-white/80 mb-8 text-lg">
-                    ⏰
-                    <span class="ml-2">
-                        {% if deal.is_active %}
-                        Expires in {{ deal.expires|timeuntil }}
+                <div class="flex items-baseline gap-4 mb-6">
+                    <div class="price-tag inline-block px-6 py-3 rounded-lg">
+                        {% if deal.price == 0 %}
+                        <span class="text-4xl font-black">FREE</span>
                         {% else %}
-                        <span class="text-red-400">This deal has expired</span>
+                        <span class="text-4xl font-black">${{ deal.price }}</span>
+                        {% endif %}
+                    </div>
+
+                    <span class="text-gray-400 text-sm">
+                        {% if deal.is_active %}
+                        Expires {{ deal.expires|timeuntil }}
+                        {% else %}
+                        <span class="text-red-400">Expired</span>
                         {% endif %}
                     </span>
                 </div>
@@ -76,13 +85,43 @@
                 <a href="{{ deal.link }}"
                    target="_blank"
                    rel="noopener noreferrer"
-                   class="deal-button inline-flex items-center justify-center w-full text-white text-xl font-bold px-8 py-6 rounded-xl transition-all shadow-lg hover:shadow-xl">
+                   class="get-deal-btn inline-block w-full text-center text-white text-xl font-bold px-8 py-4 rounded-lg transition-all">
                     Get This Deal →
                 </a>
+            </div>
 
-                <p class="mt-6 text-white/60 text-sm">
-                    Added {{ deal.created_at|timesince }} ago
-                </p>
+            <!-- Sidebar -->
+            <div class="lg:col-span-1 space-y-6">
+                <div class="bg-white/5 rounded-lg p-6 border border-white/10">
+                    <h3 class="text-sm uppercase tracking-wider text-gray-400 mb-3">Details</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Added</span>
+                            <span>{{ deal.created_at|timesince }} ago</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Status</span>
+                            <span>{{ deal.status|capfirst }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Color Debug Info -->
+                {% if deal.primary_color %}
+                <div class="bg-white/5 rounded-lg p-6 border border-white/10">
+                    <h3 class="text-sm uppercase tracking-wider text-gray-400 mb-3">Colors</h3>
+                    <div class="flex gap-2">
+                        <div class="flex-1">
+                            <div class="w-full h-12 rounded" style="background: {{ deal.primary_color }}"></div>
+                            <p class="text-xs text-gray-400 mt-1">{{ deal.primary_color }}</p>
+                        </div>
+                        <div class="flex-1">
+                            <div class="w-full h-12 rounded" style="background: {{ deal.secondary_color }}"></div>
+                            <p class="text-xs text-gray-400 mt-1">{{ deal.secondary_color }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
