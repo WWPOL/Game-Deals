@@ -17,10 +17,22 @@
 - [x] Create Django admin customizations
 - [x] Fix Docker permissions with non-root user
 
+## Current Phase: Phase 3 - DRF API
+
+### In Progress
+- [ ] Create serializers (DealSerializer, SubscriptionSerializer)
+- [ ] Create viewsets using ModelViewSet
+- [ ] Create custom permission class (IsAdminOrReadOnly)
+- [ ] Configure router and URLs
+- [ ] Add filtering (active deals queryset for public)
+- [ ] Test API endpoints
+
 ### Next Steps
-1. Create models in a new `deals` Django app
-2. Run migrations
-3. Move to Phase 3: DRF API
+1. Create serializers for models
+2. Create viewsets with default ModelViewSet
+3. Configure URLs and router
+4. Test API functionality
+5. Generate admin token for testing
 
 ## Blockers
 None currently
