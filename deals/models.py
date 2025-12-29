@@ -22,7 +22,6 @@ class Deal(models.Model):
     slug = models.SlugField(
         max_length=255,
         unique=True,
-        null=True,
         blank=True,
         help_text="URL-friendly name (auto-generated)"
     )
@@ -76,6 +75,8 @@ class Deal(models.Model):
     @property
     def is_active(self):
         """Check if deal is still active (not expired)"""
+        if not self.expires:
+            return False
         return self.expires > timezone.now()
 
     def has_notification_sent(self, channel='main'):
@@ -92,8 +93,6 @@ class Deal(models.Model):
         super().clean()
         if self.status == self.Status.PUBLISHED:
             errors = {}
-            if not self.slug:
-                errors['slug'] = 'Slug is required when publishing'
             if self.price is None:
                 errors['price'] = 'Price is required when publishing'
             if not self.expires:
@@ -106,8 +105,8 @@ class Deal(models.Model):
                 raise ValidationError(errors)
 
     def save(self, *args, **kwargs):
-        """Auto-generate slug from name if not provided and status is published"""
-        if self.status == self.Status.PUBLISHED and not self.slug:
+        """Auto-generate slug from name if not provided"""
+        if not self.slug:
             self.slug = slugify(self.name)
             # Ensure uniqueness
             original_slug = self.slug
