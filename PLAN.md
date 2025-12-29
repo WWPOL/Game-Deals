@@ -58,28 +58,20 @@ class PushSubscription(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 ```
 
-## API Endpoints (DRF)
+## Views & URLs (Django Templates)
 
-### Authentication
-- **Method**: Django REST Framework Token Authentication
-- **Static API Tokens**: Each admin user gets a persistent token
-- **Permissions**:
-  - Read (GET): Public (no authentication required)
-  - Write (POST/PUT/PATCH/DELETE): Admin only (requires token + is_staff=True)
+### Public Views
+- `/` - Home page with list of active deals (ListView)
+- `/deals/<id>/` - Deal detail page (DetailView)
+- `/subscribe/` - Subscribe to push notifications (POST endpoint)
+- `/unsubscribe/` - Unsubscribe from notifications (POST endpoint)
 
-### Endpoints (Using Default ViewSets)
-- `GET /api/deals/` - List active deals (public)
-- `GET /api/deals/{id}/` - Deal detail (public)
-- `POST /api/deals/` - Create deal (admin only)
-- `PUT /api/deals/{id}/` - Update deal (admin only)
-- `PATCH /api/deals/{id}/` - Partial update (admin only)
-- `DELETE /api/deals/{id}/` - Delete deal (admin only)
-- `POST /api/deals/{id}/notify/` - Send notification (admin only, custom action)
-
-- `POST /api/subscriptions/` - Subscribe to notifications (public)
-- `DELETE /api/subscriptions/` - Unsubscribe (public)
-
-- `POST /api/auth/token/` - Obtain auth token (admin login)
+### Admin
+- `/admin/` - Django admin panel for managing deals
+- Custom admin actions:
+  - "Send notification" - triggers Celery task to notify subscribers
+  - Bulk notification sending
+- Admin filters for active/expired deals
 
 ## Celery Tasks
 
@@ -142,15 +134,14 @@ def cleanup_expired_deals():
 - [ ] Run migrations
 - [ ] Create admin panel customizations
 
-### Phase 3: DRF API
-- [ ] Install Django REST Framework
-- [ ] Configure DRF settings (TokenAuthentication)
-- [ ] Create serializers (DealSerializer, SubscriptionSerializer)
-- [ ] Create viewsets using ModelViewSet (default viewsets)
-- [ ] Create custom permission class (IsAdminOrReadOnly)
-- [ ] Configure router and URLs
-- [ ] Add filtering (active deals queryset for public)
-- [ ] Generate admin tokens via Django shell or management command
+### Phase 3: Django Views & Templates
+- [ ] Create base template with Bootstrap/Tailwind
+- [ ] Create home page view (active deals list)
+- [ ] Create deal detail view
+- [ ] Create subscription endpoints (subscribe/unsubscribe)
+- [ ] Configure URLs
+- [ ] Add custom admin actions for sending notifications
+- [ ] Test views and admin functionality
 
 ### Phase 4: Real-time Updates (WebSockets)
 - [ ] Install Django Channels
