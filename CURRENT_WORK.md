@@ -10,12 +10,12 @@
 - [x] All containers running successfully
 - [x] Created scripts/manage.sh for container management
 
-### In Progress
-- [ ] Create Deal model
-- [ ] Create Admin model extension
-- [ ] Create PushSubscription model
-- [ ] Run migrations
-- [ ] Create Django admin customizations
+### Phase 2 Completed ✓
+- [x] Create Deal model
+- [x] Create PushSubscription model
+- [x] Run migrations
+- [x] Create Django admin customizations
+- [x] Fix Docker permissions with non-root user
 
 ### Next Steps
 1. Create models in a new `deals` Django app
