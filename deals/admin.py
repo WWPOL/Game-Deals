@@ -13,13 +13,13 @@ class DealAdmin(ModelAdmin):
     readonly_fields = ('slug', 'created_at', 'updated_at', 'image_search_button', 'image_preview')
     fieldsets = (
         ('Main Information', {
-            'fields': ('name', 'status')
+            'fields': ('name', 'status', 'image', 'image_preview', 'image_search_button')
         }),
         ('Pricing', {
             'fields': ('price',)
         }),
         ('Details', {
-            'fields': ('expires', 'link', 'image', 'image_preview', 'image_search_button')
+            'fields': ('expires', 'link')
         }),
         ('Auto-Generated & Metadata', {
             'fields': ('slug', 'notifications_sent', 'created_at', 'updated_at'),
