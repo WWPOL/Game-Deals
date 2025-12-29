@@ -12,3 +12,8 @@ public/
 .venv/
 *.pyc
 __pycache__/
+db.sqlite3
+*.db
+
+celerybeat-schedule*
+celerybeat.pid
