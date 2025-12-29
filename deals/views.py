@@ -30,7 +30,9 @@ class DealDetailView(DetailView):
     slug_url_kwarg = 'slug'
 
     def get_queryset(self):
-        """Only show published deals"""
+        """Show all deals to staff, only published deals to public"""
+        if self.request.user.is_staff:
+            return Deal.objects.all()
         return Deal.objects.filter(status=Deal.Status.PUBLISHED)
 
 
