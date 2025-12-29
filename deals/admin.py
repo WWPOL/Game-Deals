@@ -10,7 +10,7 @@ class DealAdmin(ModelAdmin):
     list_display = ('name', 'status', 'price', 'expires', 'is_active', 'created_at')
     list_filter = ('status', 'expires', 'created_at')
     search_fields = ('name',)
-    readonly_fields = ('slug', 'created_at', 'updated_at', 'image_search_button')
+    readonly_fields = ('slug', 'created_at', 'updated_at', 'image_search_button', 'image_preview')
     fieldsets = (
         ('Main Information', {
             'fields': ('name', 'status')
@@ -19,7 +19,7 @@ class DealAdmin(ModelAdmin):
             'fields': ('price',)
         }),
         ('Details', {
-            'fields': ('expires', 'link', 'image', 'image_search_button')
+            'fields': ('expires', 'link', 'image', 'image_preview', 'image_search_button')
         }),
         ('Auto-Generated & Metadata', {
             'fields': ('slug', 'notifications_sent', 'created_at', 'updated_at'),
@@ -27,15 +27,32 @@ class DealAdmin(ModelAdmin):
         }),
     )
 
+    def image_preview(self, obj):
+        """Display current image preview"""
+        if obj and obj.image:
+            return format_html(
+                '<img src="{}" style="max-width: 400px; max-height: 300px; border: 1px solid #ddd; border-radius: 5px;">',
+                obj.image
+            )
+        return "No image selected"
+    image_preview.short_description = 'Current Image'
+
     def image_search_button(self, obj):
         """Display a button to search for images"""
-        if obj.pk:
-            url = reverse('admin_search_images', args=[obj.pk])
+        if obj and obj.pk:
+            # Existing deal
+            url = reverse('admin_search_images_with_id', args=[obj.pk])
             return format_html(
                 '<a class="button" href="{}" target="_blank">Search for Images</a>',
                 url
             )
-        return "Save the deal first to search for images"
+        else:
+            # New deal - use JavaScript to get the name field value
+            url = reverse('admin_search_images')
+            return format_html(
+                '<a class="button" href="#" onclick="window.open(\'{}\' + \'?name=\' + encodeURIComponent(document.getElementById(\'id_name\').value || \'\'), \'_blank\'); return false;">Search for Images</a>',
+                url
+            )
     image_search_button.short_description = 'Image Search'
 
 

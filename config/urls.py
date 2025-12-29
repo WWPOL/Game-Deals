@@ -9,7 +9,8 @@ admin.site.index_title = "Welcome to Game Deals Administration"
 
 urlpatterns = [
     # Custom admin URLs must come before admin.site.urls
-    path('admin/deal/<int:deal_id>/search-images/', deals_views.search_deal_images, name='admin_search_images'),
+    path('admin/deal/search-images/', deals_views.search_deal_images, name='admin_search_images'),
+    path('admin/deal/<int:deal_id>/search-images/', deals_views.search_deal_images, name='admin_search_images_with_id'),
     path('admin/', admin.site.urls),
     path('', include('deals.urls')),
 ]

@@ -37,20 +37,30 @@ class DealDetailView(DetailView):
 
 
 @staff_member_required
-def search_deal_images(request, deal_id):
+def search_deal_images(request, deal_id=None):
     """Search for images for a deal and allow admin to select one"""
     from django.conf import settings
     from .services.image_search import GoogleCustomSearchProvider
 
-    deal = get_object_or_404(Deal, id=deal_id)
+    deal = None
+    game_name = request.GET.get('name', '')
+
+    if deal_id:
+        deal = get_object_or_404(Deal, id=deal_id)
+        game_name = deal.name
 
     if request.method == 'POST':
         # User selected an image
         selected_image_url = request.POST.get('image_url')
         if selected_image_url:
-            deal.image = selected_image_url
-            deal.save(update_fields=['image'])
-            return redirect('admin:deals_deal_change', deal.id)
+            if deal_id:
+                # Update existing deal
+                deal.image = selected_image_url
+                deal.save(update_fields=['image'])
+                return redirect('admin:deals_deal_change', deal.id)
+            else:
+                # Return to add form with image URL
+                return redirect(f'/admin/deals/deal/add/?image={selected_image_url}')
 
     # Use Google Custom Search to find images
     provider = GoogleCustomSearchProvider(
@@ -59,11 +69,12 @@ def search_deal_images(request, deal_id):
     )
 
     # Search for images related to the game deal
-    search_query = f"{deal.name} game cover art"
+    search_query = f"{game_name} game cover art" if game_name else "game cover art"
     image_results = provider.search(search_query, limit=12)
 
     context = {
         'deal': deal,
+        'game_name': game_name,
         'image_results': image_results,
     }
 
