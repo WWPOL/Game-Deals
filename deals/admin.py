@@ -6,8 +6,8 @@ from .models import Deal, PushSubscription
 
 @admin.register(Deal)
 class DealAdmin(admin.ModelAdmin):
-    list_display = ('name', 'status', 'price', 'is_free', 'expires', 'is_active', 'created_at')
-    list_filter = ('status', 'is_free', 'expires', 'created_at')
+    list_display = ('name', 'status', 'price', 'expires', 'is_active', 'created_at')
+    list_filter = ('status', 'expires', 'created_at')
     search_fields = ('name',)
     readonly_fields = ('slug', 'created_at', 'updated_at', 'image_search_button')
     fieldsets = (
@@ -15,7 +15,7 @@ class DealAdmin(admin.ModelAdmin):
             'fields': ('name', 'status')
         }),
         ('Pricing', {
-            'fields': ('price', 'is_free')
+            'fields': ('price',)
         }),
         ('Details', {
             'fields': ('expires', 'link', 'image', 'image_search_button')

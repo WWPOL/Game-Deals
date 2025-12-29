@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from django.utils import timezone
 from django.utils.text import slugify
 
@@ -28,11 +29,10 @@ class Deal(models.Model):
     price = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        null=True,
-        blank=True,
-        help_text="Discounted price (null if free)"
+        default=0,
+        validators=[MinValueValidator(0)],
+        help_text="Discounted price (0 for free)"
     )
-    is_free = models.BooleanField(default=False, help_text="Is the game free?")
     expires = models.DateTimeField(
         null=True,
         blank=True,
@@ -70,7 +70,7 @@ class Deal(models.Model):
         ]
 
     def __str__(self):
-        price_str = "FREE" if self.is_free else f"${self.price}"
+        price_str = "FREE" if self.price == 0 else f"${self.price}"
         return f"{self.name} ({price_str})"
 
     @property
@@ -94,6 +94,8 @@ class Deal(models.Model):
             errors = {}
             if not self.slug:
                 errors['slug'] = 'Slug is required when publishing'
+            if self.price is None:
+                errors['price'] = 'Price is required when publishing'
             if not self.expires:
                 errors['expires'] = 'Expiration date is required when publishing'
             if not self.image:
