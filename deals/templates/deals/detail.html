@@ -4,6 +4,18 @@
 
 {% block content %}
 <style>
+    /* Override nav colors for this deal page */
+    nav {
+        background: {{ deal.primary_color|default:"#ffffff" }} !important;
+        border-bottom: 2px solid {{ deal.secondary_color|default:"#e5e7eb" }} !important;
+    }
+    nav a, nav button {
+        color: white !important;
+    }
+    nav a:hover, nav button:hover {
+        opacity: 0.9;
+    }
+
     .deal-hero {
         background: linear-gradient(135deg, {{ deal.primary_color|default:"#1a1a1a" }} 0%, {{ deal.secondary_color|default:"#2d2d2d" }} 100%);
     }
