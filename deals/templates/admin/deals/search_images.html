@@ -18,16 +18,16 @@
     {% if image_results %}
     <div style="margin: 30px 0;">
         <h2>Select an Image</h2>
-        <p style="color: #666;">Click on an image to select it for this deal.</p>
+        <p style="color: #666;">Click on an image to use it for this deal.</p>
 
         <form method="post" style="margin-top: 20px;" id="image_form">
             {% csrf_token %}
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
                 {% for image in image_results %}
                 <div style="border: 2px solid #ddd; padding: 10px; border-radius: 5px; cursor: pointer; transition: all 0.2s;"
-                     onclick="selectImage('{{ image.url }}', this)"
+                     onclick="selectAndSubmit('{{ image.url }}')"
                      onmouseover="this.style.borderColor='#417690'"
-                     onmouseout="if(!this.classList.contains('selected')) this.style.borderColor='#ddd'">
+                     onmouseout="this.style.borderColor='#ddd'">
                     <img src="{{ image.thumbnail }}"
                          alt="{{ image.title }}"
                          style="width: 100%; height: 200px; object-fit: cover; border-radius: 3px;">
@@ -42,22 +42,6 @@
             </div>
 
             <input type="hidden" name="image_url" id="selected_image_url" value="">
-
-            <div style="margin-top: 30px; padding: 20px; background: #f8f8f8; border-radius: 5px;">
-                <p><strong>Selected Image:</strong></p>
-                <div id="preview_container" style="display: none; margin-top: 10px;">
-                    <img id="preview_image" src="" style="max-width: 400px; max-height: 300px; border: 1px solid #ddd; border-radius: 3px;">
-                    <p id="preview_url" style="margin-top: 10px; font-size: 12px; color: #666; word-break: break-all;"></p>
-                </div>
-                <p id="no_selection" style="color: #999; font-style: italic;">No image selected</p>
-                <button type="submit" class="button default" style="margin-top: 15px;" disabled id="submit_btn">
-                    {% if deal %}
-                    Confirm Selection
-                    {% else %}
-                    Use This Image
-                    {% endif %}
-                </button>
-            </div>
         </form>
     </div>
     {% else %}
@@ -69,41 +53,22 @@
 </div>
 
 <script>
-function selectImage(url, element) {
-    // Remove selected class from all images
-    document.querySelectorAll('[onclick^="selectImage"]').forEach(el => {
-        el.classList.remove('selected');
-        el.style.borderColor = '#ddd';
-    });
-
-    // Mark this image as selected
-    element.classList.add('selected');
-    element.style.borderColor = '#417690';
-    element.style.borderWidth = '3px';
-
-    // Update hidden input
+function selectAndSubmit(url) {
     document.getElementById('selected_image_url').value = url;
 
-    // Show preview
-    document.getElementById('preview_container').style.display = 'block';
-    document.getElementById('no_selection').style.display = 'none';
-    document.getElementById('preview_image').src = url;
-    document.getElementById('preview_url').textContent = url;
-
-    // Enable submit button
-    document.getElementById('submit_btn').disabled = false;
-}
-
-{% if not deal %}
-// For new deals, update opener window's image field when form is submitted
-document.getElementById('image_form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    var imageUrl = document.getElementById('selected_image_url').value;
-    if (imageUrl && window.opener) {
-        window.opener.document.getElementById('id_image').value = imageUrl;
+    {% if not deal %}
+    // For new deals, update opener window's image field immediately
+    if (window.opener && window.opener.document.getElementById('id_image')) {
+        window.opener.document.getElementById('id_image').value = url;
         window.close();
+    } else {
+        // Fallback: submit the form
+        document.getElementById('image_form').submit();
     }
-});
-{% endif %}
+    {% else %}
+    // For existing deals, submit the form to save the image
+    document.getElementById('image_form').submit();
+    {% endif %}
+}
 </script>
 {% endblock %}

@@ -41,6 +41,7 @@ def search_deal_images(request, deal_id=None):
     """Search for images for a deal and allow admin to select one"""
     from django.conf import settings
     from .services.image_search import GoogleCustomSearchProvider
+    from .services.color_extractor import extract_colors_from_url
 
     deal = None
     game_name = request.GET.get('name', '')
@@ -53,14 +54,23 @@ def search_deal_images(request, deal_id=None):
         # User selected an image
         selected_image_url = request.POST.get('image_url')
         if selected_image_url:
+            # Extract colors from the image
+            primary_color, secondary_color = extract_colors_from_url(selected_image_url)
+
             if deal_id:
                 # Update existing deal
                 deal.image = selected_image_url
-                deal.save(update_fields=['image'])
+                deal.primary_color = primary_color
+                deal.secondary_color = secondary_color
+                deal.save(update_fields=['image', 'primary_color', 'secondary_color'])
                 return redirect('admin:deals_deal_change', deal.id)
             else:
-                # Return to add form with image URL
-                return redirect(f'/admin/deals/deal/add/?image={selected_image_url}')
+                # Return to add form with image URL and colors
+                from urllib.parse import quote
+                return redirect(
+                    f'/admin/deals/deal/add/?image={quote(selected_image_url)}'
+                    f'&primary_color={quote(primary_color)}&secondary_color={quote(secondary_color)}'
+                )
 
     # Use Google Custom Search to find images
     provider = GoogleCustomSearchProvider(
