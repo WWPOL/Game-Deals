@@ -20,8 +20,9 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <div class="flex items-center">
-                    <a href="{% url 'deals:home' %}" class="text-2xl font-bold text-gray-900">
-                        🎮 Game Deals
+                    <a href="{% url 'deals:home' %}" class="flex items-center">
+                        <span class="text-2xl font-bold text-gray-900">🎮 Game Deals</span>
+                        <span class="ml-3 text-sm text-gray-500 hidden sm:block">by Olly G</span>
                     </a>
                 </div>
                 <div class="flex items-center space-x-4">
@@ -39,9 +40,15 @@
 
     <footer class="bg-white border-t border-gray-200 mt-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <p class="text-center text-gray-600">
-                Game Deals - Never miss a great deal on your favorite games
-            </p>
+            <div class="text-center">
+                <p class="text-gray-900 font-semibold mb-2">🎮 Olly G's Game Deals</p>
+                <p class="text-gray-600 text-sm">
+                    Never miss a great deal on your favorite games
+                </p>
+                <p class="text-gray-500 text-xs mt-3">
+                    No affiliate links • No ads • Always free
+                </p>
+            </div>
         </div>
     </footer>
 

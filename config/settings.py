@@ -140,3 +140,12 @@ CELERY_TIMEZONE = 'UTC'
 # Create a Custom Search Engine at: https://programmablesearchengine.google.com/
 GOOGLE_API_KEY = os.environ['GOOGLE_API_KEY']
 GOOGLE_SEARCH_ENGINE_ID = os.environ['GOOGLE_SEARCH_ENGINE_ID']
+
+# Admin Branding
+UNFOLD = {
+    "SITE_TITLE": "Game Deals Admin",
+    "SITE_HEADER": "Game Deals",
+    "SITE_SYMBOL": "🎮",
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": True,
+}
