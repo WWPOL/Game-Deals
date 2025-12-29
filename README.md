@@ -36,31 +36,18 @@ Friendly website which provides those interested in gaming with notifications ab
 
 # Development
 
-A Gatsby/React app with a Firebase backend.
+A Django app.
 
-Stuff we're using:
+Start the dev setup with:
 
-- [Gatsby](https://www.gatsbyjs.org/)
-- [Gatsby Firebase Plugin](https://www.gatsbyjs.org/packages/gatsby-plugin-firebase/)
-- [React Bootstrap](https://react-bootstrap.github.io/)
-
-Make sure you have the latest versions of
-[NodeJS](https://nodejs.org/en/download/)
-and [Yarn](https://classic.yarnpkg.com/en/docs/install/).
-
-## Website
-
-Install dependencies:
-
-```
-yarn install
+```shell
+docker compose up -d
 ```
 
-Start the auto-reloading development server:
+The first time you run this complete the setup:
 
-```
-yarn website
-```
+- `./scripts/manage.sh migrate`
+- `./scripts/manage.sh createusperuser`
 
 Then navigate to [localhost:8000](http://localhost:8000).
 
