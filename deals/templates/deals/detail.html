@@ -22,7 +22,7 @@
         <div class="p-8">
             <div class="flex items-start justify-between mb-4">
                 <h1 class="text-4xl font-bold text-gray-900">{{ deal.name }}</h1>
-                {% if deal.is_free %}
+                {% if deal.price == 0 %}
                 <span class="text-5xl font-bold text-green-600">FREE</span>
                 {% else %}
                 <span class="text-5xl font-bold text-blue-600">${{ deal.price }}</span>

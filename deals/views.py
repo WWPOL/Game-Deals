@@ -14,8 +14,11 @@ class HomeView(ListView):
     paginate_by = 12
 
     def get_queryset(self):
-        """Only show deals that haven't expired"""
-        return Deal.objects.filter(expires__gt=timezone.now()).order_by('-created_at')
+        """Only show published deals that haven't expired"""
+        return Deal.objects.filter(
+            status=Deal.Status.PUBLISHED,
+            expires__gt=timezone.now()
+        ).order_by('-created_at')
 
 
 class DealDetailView(DetailView):
@@ -25,6 +28,10 @@ class DealDetailView(DetailView):
     context_object_name = 'deal'
     slug_field = 'slug'
     slug_url_kwarg = 'slug'
+
+    def get_queryset(self):
+        """Only show published deals"""
+        return Deal.objects.filter(status=Deal.Status.PUBLISHED)
 
 
 @staff_member_required
