@@ -30,7 +30,7 @@ class DealAdmin(ModelAdmin):
     def image_search_button(self, obj):
         """Display a button to search for images"""
         if obj.pk:
-            url = reverse('deals:search_images', args=[obj.pk])
+            url = reverse('admin_search_images', args=[obj.pk])
             return format_html(
                 '<a class="button" href="{}" target="_blank">Search for Images</a>',
                 url
