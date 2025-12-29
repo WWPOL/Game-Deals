@@ -1,25 +1,41 @@
 from django.contrib import admin
+from django.urls import reverse
+from django.utils.html import format_html
 from .models import Deal, PushSubscription
 
 
 @admin.register(Deal)
 class DealAdmin(admin.ModelAdmin):
-    list_display = ('name', 'price', 'is_free', 'expires', 'is_active', 'created_at')
-    list_filter = ('is_free', 'expires', 'created_at')
+    list_display = ('name', 'status', 'price', 'is_free', 'expires', 'is_active', 'created_at')
+    list_filter = ('status', 'is_free', 'expires', 'created_at')
     search_fields = ('name',)
-    readonly_fields = ('created_at', 'updated_at')
+    readonly_fields = ('slug', 'created_at', 'updated_at', 'image_search_button')
     fieldsets = (
-        ('Deal Information', {
-            'fields': ('name', 'price', 'is_free', 'expires', 'image', 'link')
+        ('Main Information', {
+            'fields': ('name', 'status')
         }),
-        ('Notification Tracking', {
-            'fields': ('notifications_sent',)
+        ('Pricing', {
+            'fields': ('price', 'is_free')
         }),
-        ('Timestamps', {
-            'fields': ('created_at', 'updated_at'),
+        ('Details', {
+            'fields': ('expires', 'link', 'image', 'image_search_button')
+        }),
+        ('Auto-Generated & Metadata', {
+            'fields': ('slug', 'notifications_sent', 'created_at', 'updated_at'),
             'classes': ('collapse',)
         }),
     )
+
+    def image_search_button(self, obj):
+        """Display a button to search for images"""
+        if obj.pk:
+            url = reverse('deals:search_images', args=[obj.pk])
+            return format_html(
+                '<a class="button" href="{}" target="_blank">Search for Images</a>',
+                url
+            )
+        return "Save the deal first to search for images"
+    image_search_button.short_description = 'Image Search'
 
 
 @admin.register(PushSubscription)

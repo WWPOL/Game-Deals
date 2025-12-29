@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Active Game Deals{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-8">
+        <h1 class="text-4xl font-bold text-gray-900 mb-2">Active Deals</h1>
+        <p class="text-gray-600">{{ deals.count }} deal{{ deals.count|pluralize }} available now</p>
+    </div>
+
+    {% if deals %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for deal in deals %}
+        <div class="deal-card bg-white rounded-xl shadow-sm hover:shadow-lg transition-shadow overflow-hidden border border-gray-200">
+            <a href="{% url 'deals:detail' deal.slug %}" class="block">
+                <div class="aspect-w-16 aspect-h-9 bg-gray-200">
+                    <img src="{{ deal.image }}"
+                         alt="{{ deal.name }}"
+                         class="w-full h-48 object-cover"
+                         onerror="this.src='https://via.placeholder.com/400x225?text={{ deal.name|urlencode }}'">
+                </div>
+                <div class="p-4">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
+                        {{ deal.name }}
+                    </h2>
+                    <div class="flex items-center justify-between mb-3">
+                        <div>
+                            {% if deal.is_free %}
+                            <span class="text-3xl font-bold text-green-600">FREE</span>
+                            {% else %}
+                            <span class="text-3xl font-bold text-blue-600">${{ deal.price }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="flex items-center text-sm text-gray-500">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Expires {{ deal.expires|timeuntil }}
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-12">
+        <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+        </svg>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">No active deals</h3>
+        <p class="text-gray-600">Check back soon for new deals!</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('subscribe-btn').addEventListener('click', async () => {
+    if (!('Notification' in window)) {
+        alert('This browser does not support notifications');
+        return;
+    }
+
+    if (Notification.permission === 'granted') {
+        alert('You are already subscribed!');
+        return;
+    }
+
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+        // Will implement push subscription in next phase
+        alert('Notifications enabled! (Full implementation coming soon)');
+    }
+});
+</script>
+{% endblock %}

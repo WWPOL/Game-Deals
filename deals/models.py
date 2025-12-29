@@ -1,10 +1,30 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 from django.utils import timezone
+from django.utils.text import slugify
 
 
 class Deal(models.Model):
     """Game deal model"""
+
+    class Status(models.TextChoices):
+        DRAFT = 'draft', 'Draft'
+        PUBLISHED = 'published', 'Published'
+
     name = models.CharField(max_length=255, help_text="Game title")
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.DRAFT,
+        help_text="Deal status"
+    )
+    slug = models.SlugField(
+        max_length=255,
+        unique=True,
+        null=True,
+        blank=True,
+        help_text="URL-friendly name (auto-generated)"
+    )
     price = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -13,9 +33,23 @@ class Deal(models.Model):
         help_text="Discounted price (null if free)"
     )
     is_free = models.BooleanField(default=False, help_text="Is the game free?")
-    expires = models.DateTimeField(help_text="Deal expiration date")
-    image = models.URLField(max_length=500, help_text="Game image URL")
-    link = models.URLField(max_length=500, help_text="Store URL to purchase")
+    expires = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Deal expiration date (required when published)"
+    )
+    image = models.URLField(
+        max_length=500,
+        null=True,
+        blank=True,
+        help_text="Game image URL (required when published)"
+    )
+    link = models.URLField(
+        max_length=500,
+        null=True,
+        blank=True,
+        help_text="Store URL to purchase (required when published)"
+    )
 
     # Notification tracking - JSON field to track which channels have been notified
     # Structure: {"main": true, "test": false, ...}
@@ -52,6 +86,39 @@ class Deal(models.Model):
         """Mark notification as sent for a specific channel"""
         self.notifications_sent[channel] = True
         self.save(update_fields=['notifications_sent'])
+
+    def clean(self):
+        """Validate that required fields are present when publishing"""
+        super().clean()
+        if self.status == self.Status.PUBLISHED:
+            errors = {}
+            if not self.slug:
+                errors['slug'] = 'Slug is required when publishing'
+            if not self.expires:
+                errors['expires'] = 'Expiration date is required when publishing'
+            if not self.image:
+                errors['image'] = 'Image is required when publishing'
+            if not self.link:
+                errors['link'] = 'Store link is required when publishing'
+            if errors:
+                raise ValidationError(errors)
+
+    def save(self, *args, **kwargs):
+        """Auto-generate slug from name if not provided and status is published"""
+        if self.status == self.Status.PUBLISHED and not self.slug:
+            self.slug = slugify(self.name)
+            # Ensure uniqueness
+            original_slug = self.slug
+            counter = 1
+            while Deal.objects.filter(slug=self.slug).exclude(pk=self.pk).exists():
+                self.slug = f"{original_slug}-{counter}"
+                counter += 1
+        super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        """Get the canonical URL for this deal"""
+        from django.urls import reverse
+        return reverse('deals:detail', kwargs={'slug': self.slug})
 
 
 class PushSubscription(models.Model):

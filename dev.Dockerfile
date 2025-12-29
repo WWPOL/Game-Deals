@@ -17,12 +17,11 @@ RUN apk add --no-cache \
 RUN groupadd -g ${GID} appuser && \
     useradd -m -u ${UID} -g appuser appuser
 
-# Copy dependency files and package structure
-COPY pyproject.toml README.md ./
-COPY game_deals/ ./game_deals/
+# Copy requirements files
+COPY requirements.txt requirements-dev.txt ./
 
 # Install Python dependencies as root
-RUN pip install --no-cache-dir -e '.[dev]'
+RUN pip install --no-cache-dir -r requirements-dev.txt
 
 # Change ownership of app directory
 RUN chown -R appuser:appuser /app

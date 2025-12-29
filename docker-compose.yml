@@ -10,11 +10,13 @@ services:
       - postgres_18_data:/var/lib/postgresql/18/docker
     ports:
       - "5432:5432"
+    restart: always
 
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    restart: always
 
   web:
     build:
@@ -24,37 +26,46 @@ services:
       - .:/app
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/game_deals
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
+    restart: always
 
   celery:
     build:
       context: .
       dockerfile: dev.Dockerfile
-    command: celery -A game_deals worker -l info
+    command: celery -A config worker -l info
     volumes:
       - .:/app
+    env_file:
+      - .env
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/game_deals
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
+    restart: always
 
   celery-beat:
     build:
       context: .
       dockerfile: dev.Dockerfile
-    command: celery -A game_deals beat -l info
+    command: celery -A config beat -l info
     volumes:
       - .:/app
+    env_file:
+      - .env
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/game_deals
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
+    restart: always
 
 volumes:
   postgres_18_data: {}

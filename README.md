@@ -36,48 +36,45 @@ Friendly website which provides those interested in gaming with notifications ab
 
 # Development
 
-A Django app.
+A Django app with Celery for background tasks.
 
-Start the dev setup with:
+## Setup
 
-```shell
-docker compose up -d
-```
+1. **Copy environment template:**
+   ```shell
+   cp .env.template .env
+   ```
 
-The first time you run this complete the setup:
+2. **Configure Google Custom Search API:**
+   - Get your API key from: https://console.cloud.google.com/apis/credentials
+   - Create a Custom Search Engine at: https://programmablesearchengine.google.com/
+     - Enable "Image search"
+     - Set "Sites to search" to `*` (entire web)
+   - Add both values to `.env`:
+     ```
+     GOOGLE_API_KEY=your_api_key_here
+     GOOGLE_SEARCH_ENGINE_ID=your_search_engine_id_here
+     ```
 
-- `./scripts/manage.sh migrate`
-- `./scripts/manage.sh createusperuser`
+3. **Build and start containers:**
+   ```shell
+   bash scripts/build.sh
+   docker compose up -d
+   ```
 
-Then navigate to [localhost:8000](http://localhost:8000).
+4. **Run migrations:**
+   ```shell
+   docker compose exec web python manage.py migrate
+   ```
 
-To make the website use a locally emulated version of Firebase create a
-Firebase service account and download the credentials JSON file, rename it
-to `firebase-service-account.json`.
+5. **Create a superuser:**
+   ```shell
+   docker compose exec web python manage.py createsuperuser
+   ```
 
-```
-yarn emulate-firebase
-```
-
-Finally run:
-
-```
-EMULATE_FIREBASE=true yarn website
-```
-
-## Functions
-
-Functions are located in [`./functions/index.js`](./functions/index.js).
-
-If you would like to run any of the `package.json` scripts in this directory the
-`--ignore-engines` option must be passed due to the fact that the `package.json`
-file defines the `engines` key for the sake of Firebase.
-
-## Firestore
-
-Firestore indexes are defined in `firestore.indexes.json`.
-
-Firestore rules are defined in `firestores.rules`.
+6. **Access the app:**
+   - Website: http://localhost:8000
+   - Admin: http://localhost:8000/admin
 
 # Deployment
 
