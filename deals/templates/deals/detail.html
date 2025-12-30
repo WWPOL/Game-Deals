@@ -181,15 +181,15 @@
     .price-marker {
         display: inline-flex;
         align-items: center;
-        {% with backgrounds=deal.color_palette.all|palette_backgrounds %}
-        background: linear-gradient(135deg, {{ backgrounds.0 }} 0%, {{ backgrounds.1 }} 100%);
-        box-shadow: 0 0 30px {{ backgrounds.0 }}60, 0 4px 15px rgba(0, 0, 0, 0.3);
+        {% with primary=deal.color_palette.all|first %}
+        background: {{ primary.background_color }};
+        box-shadow: 0 0 30px {{ primary.background_color }}60, 0 4px 15px rgba(0, 0, 0, 0.3);
+        color: {{ primary.foreground_color }};
         {% endwith %}
         padding: 0.75rem 1.25rem;
         border-radius: 0.75rem;
         font-size: 1.5rem;
         font-weight: 900;
-        color: white;
         border: 2px solid rgba(255, 255, 255, 0.2);
     }
 
