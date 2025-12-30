@@ -73,8 +73,8 @@
     }
 
     .deal-title {
-        position: absolute;
-        top: 3rem;
+        position: fixed;
+        top: 5rem;
         left: 50%;
         transform: translateX(-50%);
         font-size: 2.5rem;
@@ -83,25 +83,26 @@
         margin: 0;
         line-height: 1.2;
         text-align: center;
-        z-index: 10;
+        z-index: 20;
         padding: 0 1rem;
         max-width: 90%;
         text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8),
                      0 2px 8px rgba(0, 0, 0, 0.6),
                      0 0 60px rgba(0, 0, 0, 0.5);
+        pointer-events: none;
     }
 
     @media (min-width: 768px) {
         .deal-title {
             font-size: 3.5rem;
-            top: 4rem;
+            top: 6rem;
         }
     }
 
     @media (min-width: 1024px) {
         .deal-title {
             font-size: 4.5rem;
-            top: 5rem;
+            top: 7rem;
         }
     }
 
@@ -114,48 +115,47 @@
         border: 2px solid rgba(255, 255, 255, 0.1);
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
         margin-bottom: 1.5rem;
-        cursor: pointer;
-        transition: transform 0.3s, box-shadow 0.3s;
-    }
-
-    .image-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 25px 70px rgba(0, 0, 0, 0.5);
     }
 
     .image-card a {
         display: block;
         text-decoration: none;
         color: inherit;
+        cursor: pointer;
     }
 
     .deal-image-wrapper {
         position: relative;
         width: 100%;
-        padding-top: 56.25%; /* 16:9 aspect ratio */
+        min-height: 100vh;
         background: rgba(0, 0, 0, 0.2);
     }
 
     .deal-image {
-        position: absolute;
-        top: 0;
-        left: 0;
         width: 100%;
-        height: 100%;
-        object-fit: cover;
+        height: auto;
+        display: block;
+        object-fit: contain;
     }
 
     .image-overlay {
-        position: absolute;
+        position: fixed;
         bottom: 0;
         left: 0;
         right: 0;
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
-        padding: 2rem 1.5rem 1.5rem;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 50%, transparent 100%);
+        padding: 3rem 1.5rem 1.5rem;
         display: flex;
         gap: 1rem;
         flex-wrap: wrap;
         align-items: flex-end;
+        justify-content: center;
+        z-index: 20;
+        pointer-events: none;
+    }
+
+    .image-overlay > * {
+        pointer-events: auto;
     }
 
     .price-marker {
@@ -190,27 +190,7 @@
     }
 
     .deal-link-button {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.75rem;
-        width: 100%;
-        background: linear-gradient(135deg,
-            {{ deal.palette_colors|first|default:"#3b82f6" }} 0%,
-            {{ deal.palette_colors|slice:"1:2"|first|default:"#1e40af" }} 100%
-        );
-        color: white;
-        text-decoration: none;
-        font-size: 1.25rem;
-        font-weight: 700;
-        padding: 1rem 2rem;
-        border-radius: 0.75rem;
-        border: 2px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 0 40px {{ deal.palette_colors|first|default:"#3b82f6" }}60,
-                    0 10px 30px rgba(0, 0, 0, 0.3);
-        transition: all 0.3s;
-        position: relative;
-        overflow: hidden;
+        display: none;
     }
 
     .deal-link-button::before {
