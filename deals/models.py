@@ -5,6 +5,10 @@ from django.utils import timezone
 from django.utils.text import slugify
 
 
+def default_palette():
+    return ['#000000']
+
+
 class Deal(models.Model):
     """Game deal model"""
 
@@ -44,7 +48,7 @@ class Deal(models.Model):
         help_text="Game image URL (required when published)"
     )
     palette_colors = models.JSONField(
-        default=list,
+        default=default_palette,
         blank=True,
         null=False,
         help_text="6-color palette extracted from image (array of hex strings)"
@@ -52,7 +56,7 @@ class Deal(models.Model):
     foreground_color = models.CharField(
         max_length=7,
         blank=True,
-        default='',
+        default='#ffffff',
         help_text="Foreground text color for contrast (from palette or black/white)"
     )
     link = models.URLField(

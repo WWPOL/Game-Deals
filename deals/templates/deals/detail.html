@@ -4,229 +4,231 @@
 
 {% block content %}
 <style>
-    body {
-        background: #0a0a0a;
+    #animation-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        overflow: hidden;
+        background: linear-gradient(135deg, {{ deal.palette_colors|first }} 0%, {{ deal.palette_colors|last }} 100%);
     }
 
-    /* Override header colors for deal page */
-    nav {
-        background: linear-gradient(135deg,
-            {{ deal.palette_colors.0|default:"#3b82f6" }}60 0%,
-            {{ deal.palette_colors.1|default:"#1e40af" }}60 50%,
-            {{ deal.palette_colors.2|default:"#2563eb" }}60 100%) !important;
-        border-bottom: 2px solid {{ deal.palette_colors.0|default:"#3b82f6" }}80 !important;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 4px 30px {{ deal.palette_colors.0|default:"#3b82f6" }}40;
+    #animation-container svg {
+        position: absolute;
+        width: 100%;
+        height: 100%;
     }
 
-    nav a span {
-        color: white !important;
+    .particle {
+        position: absolute;
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        opacity: 0.6;
     }
 
-    nav button {
-        background: linear-gradient(135deg, {{ deal.palette_colors.0|default:"#3b82f6" }}, {{ deal.palette_colors.3|default:"#1e40af" }}) !important;
-        border: 1px solid {{ deal.palette_colors.1|default:"#1e40af" }};
-    }
-
-    nav button:hover {
-        background: linear-gradient(135deg, {{ deal.palette_colors.1|default:"#1e40af" }}, {{ deal.palette_colors.4|default:"#3b82f6" }}) !important;
-    }
-
-    .get-deal-btn {
-        background: linear-gradient(135deg,
-            {{ deal.palette_colors.0|default:"#3b82f6" }} 0%,
-            {{ deal.palette_colors.2|default:"#2563eb" }} 50%,
-            {{ deal.palette_colors.1|default:"#1e40af" }} 100%);
-        box-shadow: 0 4px 20px {{ deal.palette_colors.0|default:"#3b82f6" }}60;
-    }
-
-    .get-deal-btn:hover {
-        box-shadow: 0 8px 30px {{ deal.palette_colors.0|default:"#3b82f6" }}80, 0 0 60px {{ deal.palette_colors.1|default:"#1e40af" }}40;
-        transform: translateY(-2px);
-    }
-
-    footer {
-        background: linear-gradient(135deg,
-            {{ deal.palette_colors.3|default:"#3b82f6" }}40 0%,
-            {{ deal.palette_colors.4|default:"#1e40af" }}40 50%,
-            {{ deal.palette_colors.5|default:"#2563eb" }}40 100%) !important;
-        border-top: 2px solid {{ deal.palette_colors.0|default:"#3b82f6" }}60 !important;
-        box-shadow: 0 -4px 30px {{ deal.palette_colors.0|default:"#3b82f6" }}20;
-    }
-
-    footer p {
-        color: white !important;
+    .blob-svg {
+        filter: blur(40px);
+        opacity: 0.7;
     }
 
     .deal-container {
         position: relative;
-        background:
-            radial-gradient(ellipse 100% 60% at 50% 0%, {{ deal.palette_colors.0|default:"#3b82f6" }}50 0%, transparent 60%),
-            radial-gradient(ellipse 80% 60% at 20% 100%, {{ deal.palette_colors.1|default:"#1e40af" }}40 0%, transparent 60%),
-            radial-gradient(ellipse 80% 60% at 80% 80%, {{ deal.palette_colors.2|default:"#2563eb" }}30 0%, transparent 60%),
-            radial-gradient(ellipse 70% 50% at 10% 50%, {{ deal.palette_colors.3|default:"#1d4ed8" }}25 0%, transparent 60%),
-            radial-gradient(ellipse 60% 40% at 90% 30%, {{ deal.palette_colors.4|default:"#1e3a8a" }}20 0%, transparent 60%),
-            radial-gradient(ellipse 50% 30% at 50% 100%, {{ deal.palette_colors.5|default:"#172554" }}15 0%, transparent 60%),
-            #0a0a0a;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        color: {{ deal.foreground_color }};
+        z-index: 1;
     }
 
-    .deal-accent {
-        border-left: 6px solid transparent;
-        border-image: linear-gradient(180deg,
-            {{ deal.palette_colors.0|default:"#3b82f6" }} 0%,
-            {{ deal.palette_colors.1|default:"#1e40af" }} 50%,
-            {{ deal.palette_colors.2|default:"#2563eb" }} 100%) 1;
-    }
-
-    .price-tag {
-        background: linear-gradient(135deg,
-            {{ deal.palette_colors.0|default:"#3b82f6" }} 0%,
-            {{ deal.palette_colors.1|default:"#1e40af" }} 100%);
-        box-shadow:
-            0 0 50px {{ deal.palette_colors.0|default:"#3b82f6" }}90,
-            0 0 80px {{ deal.palette_colors.1|default:"#1e40af" }}50;
-    }
-
-    .deal-image-container {
-        position: relative;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow:
-            0 0 120px {{ deal.palette_colors.0|default:"#3b82f6" }}70,
-            0 0 200px {{ deal.palette_colors.1|default:"#1e40af" }}50,
-            0 0 150px {{ deal.palette_colors.2|default:"#2563eb" }}30,
-            0 20px 60px rgba(0,0,0,0.5);
-        border: 3px solid transparent;
-        border-image: linear-gradient(90deg,
-            {{ deal.palette_colors.0|default:"#3b82f6" }} 0%,
-            {{ deal.palette_colors.1|default:"#1e40af" }} 25%,
-            {{ deal.palette_colors.2|default:"#2563eb" }} 50%,
-            {{ deal.palette_colors.3|default:"#1d4ed8" }} 75%,
-            {{ deal.palette_colors.4|default:"#1e3a8a" }} 100%) 1;
-    }
-
-    .deal-image-container img {
-        width: 100%;
-        height: auto;
-        display: block;
-    }
-
-    .deal-image-container::after {
-        content: '';
+    .back-link {
         position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 12px;
-        background: linear-gradient(90deg,
-            {{ deal.palette_colors.0|default:"#3b82f6" }} 0%,
-            {{ deal.palette_colors.1|default:"#1e40af" }} 20%,
-            {{ deal.palette_colors.2|default:"#2563eb" }} 40%,
-            {{ deal.palette_colors.3|default:"#1d4ed8" }} 60%,
-            {{ deal.palette_colors.4|default:"#1e3a8a" }} 80%,
-            {{ deal.palette_colors.5|default:"#172554" }} 100%);
-        box-shadow: 0 0 30px {{ deal.palette_colors.0|default:"#3b82f6" }}90;
+        top: 2rem;
+        left: 2rem;
+        color: {{ deal.foreground_color }};
+        text-decoration: none;
+        opacity: 0.9;
+        z-index: 2;
     }
 
     .back-link:hover {
-        color: {{ deal.palette_colors.2|default:"#2563eb" }};
+        opacity: 1;
     }
 
-    .details-card {
-        background: linear-gradient(135deg,
-            {{ deal.palette_colors.3|default:"#3b82f6" }}40 0%,
-            {{ deal.palette_colors.4|default:"#1e40af" }}40 50%,
-            {{ deal.palette_colors.5|default:"#2563eb" }}40 100%);
-        border: 2px solid {{ deal.palette_colors.0|default:"#3b82f6" }}70;
-        box-shadow: 0 0 40px {{ deal.palette_colors.1|default:"#1e40af" }}40;
+    .deal-content {
+        text-align: center;
+        max-width: 800px;
     }
 
-    .timer-badge {
-        background: linear-gradient(135deg,
-            {{ deal.palette_colors.1|default:"#1e40af" }}50 0%,
-            {{ deal.palette_colors.3|default:"#1d4ed8" }}50 100%);
-        border: 2px solid {{ deal.palette_colors.2|default:"#2563eb" }}80;
-        color: #ffffff;
-        box-shadow: 0 0 20px {{ deal.palette_colors.1|default:"#1e40af" }}40;
+    .deal-title {
+        font-size: 4rem;
+        font-weight: bold;
+        margin-bottom: 2rem;
+    }
+
+    .deal-price {
+        font-size: 3rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+
+    .deal-expiry {
+        font-size: 1.5rem;
+        margin-bottom: 2rem;
+        opacity: 0.9;
+    }
+
+    .deal-button {
+        display: inline-block;
+        padding: 1rem 3rem;
+        background: {{ deal.foreground_color }};
+        color: {{ deal.palette_colors|first }};
+        text-decoration: none;
+        border-radius: 50px;
+        font-size: 1.5rem;
+        font-weight: bold;
+        transition: transform 0.2s;
+    }
+
+    .deal-button:hover {
+        transform: scale(1.05);
     }
 </style>
 
-<div class="min-h-screen bg-[#0a0a0a] text-white deal-container">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
-        {% if deal.status == 'draft' %}
-        <div class="bg-yellow-900/20 border-l-4 border-yellow-500 p-4 mb-8">
-            <p class="text-sm text-yellow-200 font-medium">
-                ⚠️ Draft Preview - This deal is not visible to the public
-            </p>
-        </div>
-        {% endif %}
+<div id="animation-container">
+    <svg id="blob-svg" class="blob-svg" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
+        {% for color in deal.palette_colors %}
+        <circle class="morphing-blob" cx="500" cy="500" r="200" fill="{{ color }}"/>
+        {% endfor %}
+    </svg>
+</div>
 
-        <a href="{% url 'deals:home' %}" class="back-link inline-flex items-center text-gray-400 hover:text-white mb-8 transition-colors">
-            ← Back
+<div class="deal-container">
+    <a href="{% url 'deals:home' %}" class="back-link">
+        ← Back to Deals
+    </a>
+
+    <div class="deal-content">
+        <h1 class="deal-title">{{ deal.name }}</h1>
+
+        <div class="deal-price">
+            {% if deal.price == 0 %}
+            FREE
+            {% else %}
+            ${{ deal.price }}
+            {% endif %}
+        </div>
+
+        <div class="deal-expiry">
+            {% if deal.is_active %}
+            Expires {{ deal.expires|timeuntil }}
+            {% else %}
+            Expired
+            {% endif %}
+        </div>
+
+        <a href="{{ deal.link }}"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="deal-button">
+            Get This Deal →
         </a>
-
-        <!-- Deal Info Above Image -->
-        <div class="mb-8 flex items-end justify-between gap-8">
-            <div class="flex-1">
-                <h1 class="text-5xl lg:text-6xl font-black mb-6 tracking-tight deal-accent pl-6">
-                    {{ deal.name }}
-                </h1>
-
-                <div class="flex flex-wrap items-center gap-4 pl-6">
-                    <div class="price-tag inline-block px-8 py-4 rounded-lg">
-                        {% if deal.price == 0 %}
-                        <span class="text-5xl font-black">FREE</span>
-                        {% else %}
-                        <span class="text-5xl font-black">${{ deal.price }}</span>
-                        {% endif %}
-                    </div>
-
-                    {% if deal.is_active %}
-                    <div class="timer-badge px-5 py-3 rounded-lg backdrop-blur-sm">
-                        <span class="text-base font-semibold">⏰ Expires {{ deal.expires|timeuntil }}</span>
-                    </div>
-                    {% else %}
-                    <div class="px-5 py-3 rounded-lg bg-red-900/20 border border-red-500/40">
-                        <span class="text-base font-semibold text-red-400">Expired</span>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="flex-shrink-0">
-                <a href="{{ deal.link }}"
-                   target="_blank"
-                   rel="noopener noreferrer"
-                   class="get-deal-btn inline-block text-center text-white text-xl font-bold px-10 py-4 rounded-lg transition-all whitespace-nowrap">
-                    Get This Deal →
-                </a>
-            </div>
-        </div>
-
-        <!-- Image - Larger and More Prominent -->
-        <div class="mb-12 deal-image-container">
-            <img src="{{ deal.image }}"
-                 alt="{{ deal.name }}"
-                 class="w-full"
-                 onerror="this.src='https://via.placeholder.com/1200x600?text={{ deal.name|urlencode }}'">
-        </div>
-
-        <!-- Details Below -->
-        <div class="max-w-4xl">
-            <div class="details-card rounded-lg p-6 backdrop-blur-sm inline-block">
-                <h3 class="text-sm uppercase tracking-wider mb-4 font-semibold" style="color: {{ deal.palette_colors.0|default:"#3b82f6" }}">Deal Details</h3>
-                <div class="flex gap-8 text-sm">
-                    <div class="flex flex-col">
-                        <span class="text-gray-400 mb-1">Added</span>
-                        <span class="font-medium">{{ deal.created_at|timesince }} ago</span>
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="text-gray-400 mb-1">Status</span>
-                        <span class="font-medium">{{ deal.status|capfirst }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script>
+    var paletteColors = {{ deal.palette_colors|safe }};
+    var container = document.getElementById('animation-container');
+
+    // Create floating particles with staggered grid animation
+    var particleCount = 50;
+    var particles = [];
+
+    for (var i = 0; i < particleCount; i++) {
+        var particle = document.createElement('div');
+        particle.className = 'particle';
+        var randomColor = paletteColors[Math.floor(Math.random() * paletteColors.length)];
+        particle.style.backgroundColor = randomColor;
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.top = Math.random() * 100 + '%';
+        container.appendChild(particle);
+        particles.push(particle);
+    }
+
+    // Animate particles with wave effect
+    anime({
+        targets: particles,
+        translateX: function() {
+            return anime.random(-400, 400);
+        },
+        translateY: function() {
+            return anime.random(-400, 400);
+        },
+        scale: [
+            { value: 1.5, duration: 1000 },
+            { value: 1, duration: 1000 }
+        ],
+        opacity: [
+            { value: 0.8, duration: 1000 },
+            { value: 0.4, duration: 1000 }
+        ],
+        duration: 4000,
+        easing: 'easeInOutSine',
+        loop: true,
+        direction: 'alternate',
+        delay: anime.stagger(80, { from: 'center' })
+    });
+
+    // Animate morphing blobs
+    var blobs = document.querySelectorAll('.morphing-blob');
+
+    blobs.forEach(function(blob, index) {
+        var timeline = anime.timeline({
+            loop: true,
+            easing: 'easeInOutElastic(1, .6)'
+        });
+
+        timeline.add({
+            targets: blob,
+            cx: function() { return anime.random(200, 800); },
+            cy: function() { return anime.random(200, 800); },
+            r: function() { return anime.random(150, 300); },
+            duration: 8000,
+            delay: index * 1000
+        });
+    });
+
+    // Create motion path animation for a few special blobs
+    var numSpecialBlobs = Math.min(3, paletteColors.length);
+    for (var i = 0; i < numSpecialBlobs; i++) {
+        var specialBlob = document.createElement('div');
+        specialBlob.style.position = 'absolute';
+        specialBlob.style.width = '100px';
+        specialBlob.style.height = '100px';
+        specialBlob.style.borderRadius = '50%';
+        specialBlob.style.backgroundColor = paletteColors[i];
+        specialBlob.style.filter = 'blur(30px)';
+        specialBlob.style.opacity = '0.6';
+        container.appendChild(specialBlob);
+
+        var path = anime.path('M250,250 Q500,100 750,250 T750,750 Q500,900 250,750 T250,250');
+
+        anime({
+            targets: specialBlob,
+            translateX: path('x'),
+            translateY: path('y'),
+            duration: 15000 + (i * 2000),
+            easing: 'linear',
+            loop: true,
+            delay: i * 3000
+        });
+    }
+</script>
+
 {% endblock %}

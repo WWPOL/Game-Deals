@@ -42,7 +42,7 @@ A Django app with Celery for background tasks.
 
 1. **Copy environment template:**
    ```shell
-   cp .env.template .env
+   cp .env.example .env
    ```
 
 2. **Configure Google Custom Search API:**
