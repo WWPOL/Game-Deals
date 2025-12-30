@@ -4,7 +4,8 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator
 from django.utils import timezone
 from django import forms
-from .models import Deal
+from urllib.parse import quote
+from .models import Deal, ColorPalette
 
 
 class DealFilterForm(forms.Form):
@@ -95,6 +96,9 @@ class HomeView(ListView):
         else:  # 'newest'
             queryset = queryset.order_by('-created_at')
 
+        # Prefetch color palette to avoid N+1 queries
+        queryset = queryset.prefetch_related('color_palette')
+
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -137,8 +141,8 @@ class DealDetailView(DetailView):
     def get_queryset(self):
         """Show all deals to staff, only published deals to public"""
         if self.request.user.is_staff:
-            return Deal.objects.all()
-        return Deal.objects.filter(status=Deal.Status.PUBLISHED)
+            return Deal.objects.all().prefetch_related('color_palette')
+        return Deal.objects.filter(status=Deal.Status.PUBLISHED).prefetch_related('color_palette')
 
 
 @staff_member_required
@@ -159,29 +163,25 @@ def search_deal_images(request, deal_id=None):
         # User selected an image
         selected_image_url = request.POST.get('image_url')
         if selected_image_url:
-            # Extract colors from the image
-            palette_colors, foreground_color = extract_colors_from_url(selected_image_url)
+            # Extract colors from the image (returns ColorPalette instances)
+            palette_entries = extract_colors_from_url(selected_image_url)
 
             if deal_id:
                 # Update existing deal
                 deal.image = selected_image_url
-                deal.palette_colors = palette_colors
-                deal.foreground_color = foreground_color
-                deal.save(update_fields=['image', 'palette_colors', 'foreground_color'])
+                deal.save(update_fields=['image'])
+
+                # Clear existing palette and create new entries
+                deal.color_palette.all().delete()
+                for entry in palette_entries:
+                    entry.deal = deal
+                    entry.save()
+
                 return redirect('admin:deals_deal_change', deal.id)
             else:
-                # Return to add form with image URL and colors
-                # Preserve existing form values from session
-                from urllib.parse import quote
-                import json
-
-                # Build URL with colors
-                palette_json = json.dumps(palette_colors)
-                return redirect(
-                    f'/admin/deals/deal/add/?image={quote(selected_image_url)}'
-                    f'&palette_colors={quote(palette_json)}'
-                    f'&foreground_color={quote(foreground_color)}'
-                )
+                # Return to add form with image URL only
+                # The admin's save_model will handle color extraction if auto_extract is enabled
+                return redirect(f'/admin/deals/deal/add/?image={quote(selected_image_url)}')
 
     # Use Google Custom Search to find images
     provider = GoogleCustomSearchProvider(

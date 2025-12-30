@@ -5,8 +5,13 @@ from django.utils import timezone
 from django.utils.text import slugify
 
 
-# Default colors
+# Default theme colors
 DEFAULT_FOREGROUND_COLOR = '#ffffff'
+DEFAULT_BACKGROUND_COLOR = '#3b82f6'
+DEFAULT_PALETTE = [
+    {'background': '#3b82f6', 'foreground': '#ffffff', 'weight': 0.5},
+    {'background': '#1e40af', 'foreground': '#ffffff', 'weight': 0.5},
+]
 
 
 def default_palette():
@@ -163,7 +168,17 @@ class Deal(models.Model):
             while Deal.objects.filter(slug=self.slug).exclude(pk=self.pk).exists():
                 self.slug = f"{original_slug}-{counter}"
                 counter += 1
+
         super().save(*args, **kwargs)
+
+        # Ensure at least one ColorPalette entry exists (create default if none)
+        if not self.color_palette.exists():
+            for palette_entry in DEFAULT_PALETTE:
+                self.color_palette.create(
+                    background_color=palette_entry['background'],
+                    foreground_color=palette_entry['foreground'],
+                    weight=palette_entry['weight']
+                )
 
     def get_absolute_url(self):
         """Get the canonical URL for this deal"""

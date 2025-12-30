@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load deal_colors %}
 
 {% block title %}{{ deal.name }} - Olly G's Game Deals{% endblock %}
 
@@ -12,7 +13,7 @@
     }
 
     nav * {
-        color: {{ deal.foreground_color }} !important;
+        color: {{ deal.primary_foreground_color }} !important;
     }
 
     #animation-container {
@@ -23,15 +24,7 @@
         height: 100%;
         z-index: 0;
         overflow: hidden;
-        {% if deal.palette_colors|length == 1 %}
-        background: {{ deal.palette_colors|first }};
-        {% else %}
-        background: linear-gradient(135deg,
-            {% for color in deal.palette_colors %}
-                {{ color }} {% widthratio forloop.counter0 deal.palette_colors|length|add:"-1" 100 %}%{% if not forloop.last %},{% endif %}
-            {% endfor %}
-        );
-        {% endif %}
+        background: linear-gradient(135deg, {{ deal.color_palette.all|palette_gradient_css }});
     }
 
     #animation-container svg {
@@ -61,7 +54,7 @@
     .back-link {
         display: inline-flex;
         align-items: center;
-        color: {{ deal.foreground_color }};
+        color: {{ deal.primary_foreground_color }};
         text-decoration: none;
         opacity: 0.8;
         font-size: 1rem;
@@ -79,7 +72,7 @@
         transform: translateX(-50%);
         font-size: 2.5rem;
         font-weight: 900;
-        color: {{ deal.foreground_color }};
+        color: {{ deal.primary_foreground_color }};
         margin: 0;
         line-height: 1.2;
         text-align: center;
@@ -100,12 +93,7 @@
         padding: 0.25rem;
         -webkit-text-stroke-width: 3px;
         -webkit-text-stroke-color: transparent;
-        background: linear-gradient(
-            110deg,
-            {% for color in deal.palette_colors %}
-                {{ color }} {% widthratio forloop.counter0 deal.palette_colors|length|add:"-1" 100 %}%{% if not forloop.last %},{% endif %}
-            {% endfor %}
-        );
+        background: linear-gradient(110deg, {{ deal.color_palette.all|palette_gradient_css }});
         background-size: 300% 100%;
         -webkit-background-clip: text;
         background-clip: text;
@@ -187,17 +175,15 @@
     .price-marker {
         display: inline-flex;
         align-items: center;
-        background: linear-gradient(135deg,
-            {{ deal.palette_colors|first|default:"#3b82f6" }} 0%,
-            {{ deal.palette_colors|slice:"1:2"|first|default:"#1e40af" }} 100%
-        );
+        {% with backgrounds=deal.color_palette.all|palette_backgrounds %}
+        background: linear-gradient(135deg, {{ backgrounds.0 }} 0%, {{ backgrounds.1 }} 100%);
+        box-shadow: 0 0 30px {{ backgrounds.0 }}60, 0 4px 15px rgba(0, 0, 0, 0.3);
+        {% endwith %}
         padding: 0.75rem 1.25rem;
         border-radius: 0.75rem;
         font-size: 1.5rem;
         font-weight: 900;
         color: white;
-        box-shadow: 0 0 30px {{ deal.palette_colors|first|default:"#3b82f6" }}60,
-                    0 4px 15px rgba(0, 0, 0, 0.3);
         border: 2px solid rgba(255, 255, 255, 0.2);
     }
 
@@ -211,7 +197,7 @@
         border-radius: 0.75rem;
         font-size: 1rem;
         font-weight: 600;
-        color: {{ deal.foreground_color }};
+        color: {{ deal.primary_foreground_color }};
         border: 2px solid rgba(255, 255, 255, 0.15);
     }
 
@@ -221,10 +207,10 @@
         justify-content: center;
         gap: 0.75rem;
         width: 100%;
-        background: linear-gradient(135deg,
-            {{ deal.palette_colors|first|default:"#3b82f6" }} 0%,
-            {{ deal.palette_colors|slice:"1:2"|first|default:"#1e40af" }} 100%
-        );
+        {% with backgrounds=deal.color_palette.all|palette_backgrounds %}
+        background: linear-gradient(135deg, {{ backgrounds.0 }} 0%, {{ backgrounds.1 }} 100%);
+        box-shadow: 0 0 40px {{ backgrounds.0 }}60, 0 10px 30px rgba(0, 0, 0, 0.3);
+        {% endwith %}
         color: white;
         text-decoration: none;
         font-size: 1.25rem;
@@ -232,8 +218,6 @@
         padding: 1rem 2rem;
         border-radius: 0.75rem;
         border: 2px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 0 40px {{ deal.palette_colors|first|default:"#3b82f6" }}60,
-                    0 10px 30px rgba(0, 0, 0, 0.3);
         transition: all 0.3s;
         position: relative;
         overflow: hidden;
@@ -261,8 +245,9 @@
 
     .deal-link-button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 0 50px {{ deal.palette_colors|first|default:"#3b82f6" }}80,
-                    0 15px 40px rgba(0, 0, 0, 0.4);
+        {% with backgrounds=deal.color_palette.all|palette_backgrounds %}
+        box-shadow: 0 0 50px {{ backgrounds.0 }}80, 0 15px 40px rgba(0, 0, 0, 0.4);
+        {% endwith %}
     }
 
     .deal-link-button svg {
@@ -271,18 +256,16 @@
     }
 
     nav button {
-        background: linear-gradient(135deg,
-            {{ deal.palette_colors|first|default:"#3b82f6" }} 0%,
-            {{ deal.palette_colors|slice:"1:2"|first|default:"#1e40af" }} 100%
-        ) !important;
-        border-color: {{ deal.palette_colors|slice:"2:3"|first|default:"#1e40af" }} !important;
+        {% with backgrounds=deal.color_palette.all|palette_backgrounds %}
+        background: linear-gradient(135deg, {{ backgrounds.0 }} 0%, {{ backgrounds.1 }} 100%) !important;
+        border-color: {{ backgrounds.2 }} !important;
+        {% endwith %}
     }
 
     nav button:hover {
-        background: linear-gradient(135deg,
-            {{ deal.palette_colors|slice:"1:2"|first|default:"#1e40af" }} 0%,
-            {{ deal.palette_colors|first|default:"#3b82f6" }} 100%
-        ) !important;
+        {% with backgrounds=deal.color_palette.all|palette_backgrounds %}
+        background: linear-gradient(135deg, {{ backgrounds.1 }} 0%, {{ backgrounds.0 }} 100%) !important;
+        {% endwith %}
     }
 </style>
 
@@ -347,7 +330,15 @@
 
 <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
 <script>
-    var paletteColors = {{ deal.palette_colors|safe }};
+    var paletteColors = [
+        {% for entry in deal.color_palette.all %}
+        {
+            background: "{{ entry.background_color }}",
+            foreground: "{{ entry.foreground_color }}",
+            weight: {{ entry.weight }}
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
     var container = document.getElementById('animation-container');
     var svg = document.getElementById('blob-svg');
 
@@ -374,16 +365,13 @@
         return path + 'Z';
     }
 
-    // Create SVG blobs with prominence-based sizing
+    // Create SVG blobs with weight-based sizing
     var blobs = [];
 
-    paletteColors.forEach(function(color, index) {
-        // Calculate blob size based on prominence
-        var prominenceFactor = 1 - (index / paletteColors.length * 0.7);
-        var blobSize = 300 * prominenceFactor;
-
-        // More dominant colors get more blobs
-        var blobCount = Math.max(1, Math.ceil(3 * prominenceFactor));
+    paletteColors.forEach(function(colorEntry, index) {
+        // Use weight to determine blob size and count
+        var blobSize = 300 * (colorEntry.weight * 2);
+        var blobCount = Math.max(1, Math.ceil(3 * colorEntry.weight));
 
         for (var i = 0; i < blobCount; i++) {
             // Random position across canvas
@@ -393,7 +381,7 @@
             var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             path.setAttribute('class', 'morphing-blob');
             path.setAttribute('d', createBlobPath(cx, cy, blobSize));
-            path.setAttribute('fill', color);
+            path.setAttribute('fill', colorEntry.background);
             svg.appendChild(path);
             blobs.push({ element: path, baseCx: cx, baseCy: cy });
         }
