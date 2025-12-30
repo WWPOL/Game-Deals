@@ -16,6 +16,21 @@
         color: {{ deal.primary_foreground_color }} !important;
     }
 
+    nav button {
+        {% with primary=deal.color_palette.all|first %}
+        background: {{ primary.background_color }} !important;
+        color: {{ primary.foreground_color }} !important;
+        box-shadow: 0 0 20px {{ primary.background_color }}60;
+        border: 2px solid rgba(255, 255, 255, 0.2) !important;
+        {% endwith %}
+    }
+
+    nav button:hover {
+        {% with primary=deal.color_palette.all|first %}
+        box-shadow: 0 0 30px {{ primary.background_color }}80 !important;
+        {% endwith %}
+    }
+
     #animation-container {
         position: fixed;
         top: 0;
@@ -270,19 +285,6 @@
     .deal-link-button svg {
         width: 1.5rem;
         height: 1.5rem;
-    }
-
-    nav button {
-        {% with backgrounds=deal.color_palette.all|palette_backgrounds %}
-        background: linear-gradient(135deg, {{ backgrounds.0 }} 0%, {{ backgrounds.1 }} 100%) !important;
-        border-color: {{ backgrounds.2 }} !important;
-        {% endwith %}
-    }
-
-    nav button:hover {
-        {% with backgrounds=deal.color_palette.all|palette_backgrounds %}
-        background: linear-gradient(135deg, {{ backgrounds.1 }} 0%, {{ backgrounds.0 }} 100%) !important;
-        {% endwith %}
     }
 </style>
 
