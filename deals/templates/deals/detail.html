@@ -7,8 +7,8 @@
     /* Make header transparent on this page */
     nav {
         background: transparent !important;
-        border-bottom: none !important;
-        backdrop-filter: blur(10px);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
 
     #animation-container {
@@ -69,12 +69,13 @@
     .deal-image {
         max-width: 800px;
         max-height: 60vh;
-        width: 100%;
+        width: auto;
         height: auto;
         object-fit: contain;
         border-radius: 0.5rem;
         margin: 2rem auto;
         display: block;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
     }
 
     .deal-main {
@@ -84,6 +85,28 @@
 
     .deal-main > div {
         margin-bottom: 2rem;
+    }
+
+    .deal-main {
+        padding-bottom: 6rem;
+    }
+
+    .floating-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: transparent;
+        backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        z-index: 100;
+        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .floating-footer-content {
+        max-width: 1200px;
+        margin: 0 auto;
     }
 
     .deal-title {
@@ -193,13 +216,13 @@
             {{ deal.palette_colors.0|default:"#3b82f6" }} 0%,
             {{ deal.palette_colors.1|default:"#1e40af" }} 100%
         );
-        border: 3px solid {{ deal.palette_colors.2|default:"rgba(255, 255, 255, 0.3)" }};
+        border: 2px solid {{ deal.palette_colors.2|default:"rgba(255, 255, 255, 0.3)" }};
         color: white;
         text-decoration: none;
-        font-size: 1.5rem;
-        font-weight: 900;
-        padding: 1.25rem 3rem;
-        border-radius: 1rem;
+        font-size: 1.125rem;
+        font-weight: 700;
+        padding: 0.875rem 2rem;
+        border-radius: 0.5rem;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         box-shadow:
             0 0 40px {{ deal.palette_colors.0|default:"#3b82f6" }}60,
@@ -283,16 +306,18 @@
             <img src="{{ deal.image }}" alt="{{ deal.name }}" class="deal-image">
             {% endif %}
         </div>
+    </div>
+</div>
 
-        <!-- Button -->
-        <div>
-            <a href="{{ deal.link }}"
-               target="_blank"
-               rel="noopener noreferrer"
-               class="deal-button">
-                Get This Deal →
-            </a>
-        </div>
+<!-- Floating Footer with Button -->
+<div class="floating-footer">
+    <div class="floating-footer-content">
+        <a href="{{ deal.link }}"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="deal-button">
+            Get This Deal →
+        </a>
     </div>
 </div>
 
