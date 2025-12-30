@@ -12,7 +12,17 @@
         height: 100%;
         z-index: 0;
         overflow: hidden;
-        background: linear-gradient(135deg, {{ deal.palette_colors|first }} 0%, {{ deal.palette_colors|last }} 100%);
+        {% if deal.palette_colors|length == 1 %}
+        background: {{ deal.palette_colors.0 }};
+        {% else %}
+        background: linear-gradient(135deg,
+            {{ deal.palette_colors.0 }} 0%,
+            {{ deal.palette_colors.0 }} 40%,
+            {% for color in deal.palette_colors|slice:"1:" %}
+                {{ color }} {% widthratio forloop.counter deal.palette_colors|length|add:"-1" 60 |add:40 %}%{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        );
+        {% endif %}
     }
 
     #animation-container svg {
@@ -159,29 +169,31 @@
         return path + 'Z';
     }
 
-    // Create SVG blobs with evenly distributed starting positions
+    // Create SVG blobs with prominence-based sizing
+    // First color (most dominant) gets biggest blobs, later colors get smaller
     var blobs = [];
-    var gridSize = Math.ceil(Math.sqrt(paletteColors.length));
-    var cellWidth = 1000 / gridSize;
-    var cellHeight = 1000 / gridSize;
-
-    // Scale blob size based on number of colors - fewer colors = bigger blobs
-    var blobSize = Math.max(200, 500 / Math.sqrt(paletteColors.length));
 
     paletteColors.forEach(function(color, index) {
-        var gridX = index % gridSize;
-        var gridY = Math.floor(index / gridSize);
+        // Calculate blob size based on prominence (index 0 = most prominent)
+        // First color gets largest blobs, each subsequent color gets smaller
+        var prominenceFactor = 1 - (index / paletteColors.length * 0.7); // Scale from 1.0 to 0.3
+        var blobSize = 300 * prominenceFactor;
 
-        // Random position within grid cell
-        var cx = gridX * cellWidth + Math.random() * cellWidth;
-        var cy = gridY * cellHeight + Math.random() * cellHeight;
+        // More dominant colors get more blobs
+        var blobCount = Math.max(1, Math.ceil(3 * prominenceFactor));
 
-        var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('class', 'morphing-blob');
-        path.setAttribute('d', createBlobPath(cx, cy, blobSize));
-        path.setAttribute('fill', color);
-        svg.appendChild(path);
-        blobs.push({ element: path, baseCx: cx, baseCy: cy });
+        for (var i = 0; i < blobCount; i++) {
+            // Random position across canvas
+            var cx = Math.random() * 1000;
+            var cy = Math.random() * 1000;
+
+            var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('class', 'morphing-blob');
+            path.setAttribute('d', createBlobPath(cx, cy, blobSize));
+            path.setAttribute('fill', color);
+            svg.appendChild(path);
+            blobs.push({ element: path, baseCx: cx, baseCy: cy });
+        }
     });
 
     // Animate morphing blobs with slow, gentle movement using CSS transforms

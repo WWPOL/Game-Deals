@@ -8,7 +8,7 @@ WORKDIR /app
 
 # Install build dependencies for PostgreSQL adapter
 RUN apk add --no-cache \
-    gcc \
+    gcc g++ \
     musl-dev \
     postgresql-dev \
     shadow

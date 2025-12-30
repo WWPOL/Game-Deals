@@ -7,3 +7,5 @@ google-api-python-client~=2.159
 django-unfold~=0.45
 Pillow~=11.0
 colorthief~=0.2
+numpy~=2.4.0
+scikit-learn~=1.8.0

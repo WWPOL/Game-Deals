@@ -74,17 +74,18 @@ def find_foreground_color(palette: List[Tuple[int, int, int]], primary_color: Tu
     return "#ffffff" if white_contrast > black_contrast else "#000000"
 
 
-def extract_colors_with_proportions(image_url: str, num_colors: int = 6) -> Tuple[List[Dict[str, any]], str]:
+def extract_colors_from_url(image_url: str, num_colors: int = 6) -> Tuple[List[str], str]:
     """
-    Extract color palette with proportions and foreground color from an image URL.
+    Extract color palette ordered by prominence and foreground color from an image URL.
+    Uses k-means clustering to find dominant colors sorted by how much they appear.
 
     Args:
         image_url: URL of the image to analyze
-        num_colors: Number of colors to extract
+        num_colors: Number of colors to extract (default 6)
 
     Returns:
-        Tuple of (palette_data, foreground_color) where:
-        - palette_data is a list of dicts with 'color' (hex) and 'percentage' (0-100)
+        Tuple of (palette_colors, foreground_color) where:
+        - palette_colors is a list of hex color strings sorted by prominence (most dominant first)
         - foreground_color is a hex string for text color
     """
     try:
@@ -111,53 +112,30 @@ def extract_colors_with_proportions(image_url: str, num_colors: int = 6) -> Tupl
         counts = np.bincount(labels)
         percentages = (counts / len(labels)) * 100
 
-        # Sort by percentage (descending)
+        # Sort by percentage (descending) - most dominant first
         sorted_indices = np.argsort(percentages)[::-1]
 
-        # Build palette with proportions
-        palette_data = []
+        # Build palette sorted by prominence
+        palette_hex = []
         palette_rgb = []
         for idx in sorted_indices:
             color_rgb = tuple(colors[idx])
-            palette_data.append({
-                'color': rgb_to_hex(color_rgb),
-                'percentage': float(percentages[idx])
-            })
+            hex_color = rgb_to_hex(color_rgb)
+            palette_hex.append(hex_color)
             palette_rgb.append(color_rgb)
 
         # Find best foreground color
         dominant_color = palette_rgb[0]
         foreground_hex = find_foreground_color(palette_rgb, dominant_color)
 
-        print(f"Extracted colors from {image_url}:")
-        for data in palette_data:
-            print(f"  {data['color']}: {data['percentage']:.1f}%")
+        print(f"Extracted colors from {image_url} (sorted by prominence):")
+        for i, (hex_color, pct) in enumerate(zip(palette_hex, sorted(percentages, reverse=True))):
+            print(f"  {i+1}. {hex_color}: {pct:.1f}%")
         print(f"  Foreground: {foreground_hex}")
 
-        return palette_data, foreground_hex
+        return palette_hex, foreground_hex
 
     except Exception as e:
         print(f"Error extracting colors from {image_url}: {e}")
         # Return default colors if extraction fails
-        default_palette = [
-            {'color': '#000000', 'percentage': 100.0}
-        ]
-        return default_palette, "#ffffff"
-
-
-def extract_colors_from_url(image_url: str) -> Tuple[List[str], str]:
-    """
-    Extract color palette and foreground color from an image URL.
-    Legacy function for backward compatibility.
-
-    Args:
-        image_url: URL of the image to analyze
-
-    Returns:
-        Tuple of (palette_colors, foreground_color) where:
-        - palette_colors is a list of 6 hex color strings
-        - foreground_color is a hex string for text color
-    """
-    palette_data, foreground = extract_colors_with_proportions(image_url, num_colors=6)
-    palette_hex = [item['color'] for item in palette_data]
-    return palette_hex, foreground
+        return ['#000000'], "#ffffff"
