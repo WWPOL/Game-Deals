@@ -60,15 +60,24 @@
     .back-link {
         display: inline-flex;
         align-items: center;
-        color: {{ deal.primary_foreground_color }};
+        {% with primary=deal.color_palette.all|first %}
+        background: {{ primary.background_color }};
+        color: {{ primary.foreground_color }};
+        box-shadow: 0 0 20px {{ primary.background_color }}60, 0 2px 8px rgba(0, 0, 0, 0.3);
+        {% endwith %}
         text-decoration: none;
-        opacity: 0.8;
         font-size: 1rem;
-        transition: opacity 0.2s;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.2s;
     }
 
     .back-link:hover {
-        opacity: 1;
+        transform: translateY(-1px);
+        {% with primary=deal.color_palette.all|first %}
+        box-shadow: 0 0 25px {{ primary.background_color }}80, 0 4px 12px rgba(0, 0, 0, 0.4);
+        {% endwith %}
     }
 
     .deal-title {
