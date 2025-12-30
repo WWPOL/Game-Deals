@@ -44,91 +44,115 @@
     .deal-container {
         position: relative;
         min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
-        padding: 3rem 2rem;
+        max-width: 1536px;
+        margin: 0 auto;
+        padding: 0.5rem 1rem 3rem 1rem;
         color: {{ deal.foreground_color }};
         z-index: 1;
     }
 
     .back-link {
-        position: absolute;
-        top: 1rem;
-        left: 2rem;
+        display: inline-flex;
+        align-items: center;
         color: {{ deal.foreground_color }};
         text-decoration: none;
         opacity: 0.8;
-        z-index: 2;
+        margin-bottom: 2rem;
         font-size: 1rem;
+        transition: opacity 0.2s;
     }
 
     .back-link:hover {
         opacity: 1;
     }
 
-    .deal-content {
-        text-align: center;
-        max-width: 1000px;
-        width: 100%;
-    }
-
-    .deal-title {
-        font-size: 5rem;
-        font-weight: 900;
-        margin-bottom: 2rem;
-        line-height: 1.1;
-        text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
-        letter-spacing: -0.02em;
-    }
-
-    .deal-info-row {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 3rem;
-        margin-bottom: 3rem;
-        flex-wrap: wrap;
-    }
-
-    .deal-price {
-        font-size: 4rem;
-        font-weight: 900;
-        text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
-        letter-spacing: -0.01em;
-    }
-
-    .deal-expiry {
-        font-size: 1.75rem;
-        opacity: 0.95;
-        font-weight: 600;
+    .color-bar {
+        height: 4px;
+        background: linear-gradient(90deg, {{ deal.palette_colors.0|default:"#3b82f6" }} 0%, {{ deal.palette_colors.1|default:"#1e40af" }} 100%);
+        margin-bottom: 0.5rem;
     }
 
     .deal-image {
-        max-width: 600px;
+        max-width: 800px;
+        max-height: 60vh;
         width: 100%;
         height: auto;
-        border-radius: 12px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-        margin-bottom: 3rem;
+        object-fit: contain;
+        border-radius: 0.5rem;
+        margin: 0 auto 2rem auto;
+        display: block;
+    }
+
+    .deal-main {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .deal-accent {
+        border-left: 6px solid {{ deal.palette_colors.0|default:"#3b82f6" }};
+        padding-left: 1.5rem;
+    }
+
+    .deal-title {
+        font-size: 3rem;
+        font-weight: bold;
+        margin-bottom: 1.5rem;
+        line-height: 1.1;
+        letter-spacing: -0.025em;
+    }
+
+    @media (min-width: 1024px) {
+        .deal-title {
+            font-size: 4rem;
+        }
+    }
+
+    .price-container {
+        display: flex;
+        align-items: baseline;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .price-tag {
+        display: inline-block;
+        background: {{ deal.palette_colors.0|default:"#3b82f6" }};
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 0 40px {{ deal.palette_colors.0|default:"#3b82f6" }}40;
+    }
+
+    .deal-price {
+        font-size: 2.5rem;
+        font-weight: 900;
+    }
+
+    .deal-expiry {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.875rem;
     }
 
     .deal-button {
-        display: inline-block;
-        padding: 1rem 3rem;
-        background: {{ deal.foreground_color }};
-        color: {{ deal.palette_colors|first }};
+        display: block;
+        width: 100%;
+        text-align: center;
+        background: {{ deal.palette_colors.0|default:"#3b82f6" }};
+        border: 2px solid {{ deal.palette_colors.1|default:"#1e40af" }};
+        color: white;
         text-decoration: none;
-        border-radius: 50px;
-        font-size: 1.5rem;
+        font-size: 1.25rem;
         font-weight: bold;
-        transition: transform 0.2s;
+        padding: 1rem 2rem;
+        border-radius: 0.5rem;
+        transition: all 0.2s;
     }
 
     .deal-button:hover {
-        transform: scale(1.05);
+        background: {{ deal.palette_colors.1|default:"#1e40af" }};
+        transform: translateY(-2px);
     }
+
 </style>
 
 <div id="animation-container">
@@ -138,40 +162,52 @@
 
 <div class="deal-container">
     <a href="{% url 'deals:home' %}" class="back-link">
-        ← Back to Deals
+        ← Back
     </a>
 
-    <div class="deal-content">
-        <h1 class="deal-title">{{ deal.name }}</h1>
+    <div class="deal-main">
+        <!-- Title and Price Info -->
+        <div class="deal-accent">
+            <h1 class="deal-title">{{ deal.name }}</h1>
 
-        <div class="deal-info-row">
-            <div class="deal-price">
-                {% if deal.price == 0 %}
-                FREE
-                {% else %}
-                ${{ deal.price }}
-                {% endif %}
-            </div>
+            <div class="price-container">
+                <div class="price-tag">
+                    <span class="deal-price">
+                        {% if deal.price == 0 %}
+                        FREE
+                        {% else %}
+                        ${{ deal.price }}
+                        {% endif %}
+                    </span>
+                </div>
 
-            <div class="deal-expiry">
-                {% if deal.is_active %}
-                Expires {{ deal.expires|timeuntil }}
-                {% else %}
-                Expired
-                {% endif %}
+                <span class="deal-expiry">
+                    {% if deal.is_active %}
+                    Expires {{ deal.expires|timeuntil }}
+                    {% else %}
+                    <span style="color: #f87171;">Expired</span>
+                    {% endif %}
+                </span>
             </div>
         </div>
 
-        {% if deal.image %}
-        <img src="{{ deal.image }}" alt="{{ deal.name }}" class="deal-image">
-        {% endif %}
+        <!-- Image -->
+        <div>
+            <div class="color-bar"></div>
+            {% if deal.image %}
+            <img src="{{ deal.image }}" alt="{{ deal.name }}" class="deal-image">
+            {% endif %}
+        </div>
 
-        <a href="{{ deal.link }}"
-           target="_blank"
-           rel="noopener noreferrer"
-           class="deal-button">
-            Get This Deal →
-        </a>
+        <!-- Button -->
+        <div class="deal-accent">
+            <a href="{{ deal.link }}"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="deal-button">
+                Get This Deal →
+            </a>
+        </div>
     </div>
 </div>
 
