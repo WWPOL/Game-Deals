@@ -133,8 +133,19 @@
         display: inline-block;
         padding: 0.25rem;
         color: {{ deal.foreground_color }};
-        -webkit-text-fill-color: {{ deal.foreground_color }};
-        -webkit-text-stroke-width: 2px;
+        filter: drop-shadow(0 0 20px {{ deal.palette_colors|first|default:"#fff" }}30)
+                drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+    }
+
+    .deal-title::before {
+        content: attr(data-text);
+        position: absolute;
+        left: 0;
+        top: 0;
+        z-index: -1;
+        padding: 0.25rem;
+        -webkit-text-stroke-width: 3px;
+        -webkit-text-stroke-color: transparent;
         background: linear-gradient(
             110deg,
             {% for color in deal.palette_colors %}
@@ -145,8 +156,6 @@
         -webkit-background-clip: text;
         background-clip: text;
         animation: shimmer 6s ease-in-out infinite;
-        filter: drop-shadow(0 0 20px {{ deal.palette_colors|first|default:"#fff" }}30)
-                drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
     }
 
     @keyframes shimmer {
@@ -330,7 +339,7 @@
     <div class="deal-main">
         <!-- Title -->
         <div>
-            <h1 class="deal-title">{{ deal.name }}</h1>
+            <h1 class="deal-title" data-text="{{ deal.name }}">{{ deal.name }}</h1>
         </div>
 
         <!-- Image -->
