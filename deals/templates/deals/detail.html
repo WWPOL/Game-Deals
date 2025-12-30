@@ -55,9 +55,6 @@
     }
 
     .header-section {
-        display: flex;
-        align-items: center;
-        gap: 1.5rem;
         margin-bottom: 2rem;
     }
 
@@ -69,7 +66,6 @@
         opacity: 0.8;
         font-size: 1rem;
         transition: opacity 0.2s;
-        flex-shrink: 0;
     }
 
     .back-link:hover {
@@ -77,16 +73,35 @@
     }
 
     .deal-title {
-        font-size: 2rem;
-        font-weight: 700;
-        color: {{ deal.foreground_color }};
+        position: absolute;
+        top: 3rem;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 2.5rem;
+        font-weight: 900;
+        color: white;
         margin: 0;
         line-height: 1.2;
+        text-align: center;
+        z-index: 10;
+        padding: 0 1rem;
+        max-width: 90%;
+        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8),
+                     0 2px 8px rgba(0, 0, 0, 0.6),
+                     0 0 60px rgba(0, 0, 0, 0.5);
     }
 
     @media (min-width: 768px) {
         .deal-title {
-            font-size: 2.5rem;
+            font-size: 3.5rem;
+            top: 4rem;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .deal-title {
+            font-size: 4.5rem;
+            top: 5rem;
         }
     }
 
@@ -251,17 +266,17 @@
 </div>
 
 <div class="deal-container">
-    <!-- Header with Back Link and Title -->
+    <!-- Header with Back Link -->
     <div class="header-section">
         <a href="{% url 'deals:home' %}" class="back-link">
             ← Back
         </a>
-        <h1 class="deal-title">{{ deal.name }}</h1>
     </div>
 
-    <!-- Clickable Image Card with Price and Expiry Markers -->
+    <!-- Clickable Image Card with Title, Price and Expiry Markers -->
     <div class="image-card">
         <a href="{{ deal.link }}" target="_blank" rel="noopener noreferrer">
+            <h1 class="deal-title">{{ deal.name }}</h1>
             <div class="deal-image-wrapper">
                 {% if deal.image %}
                 <img src="{{ deal.image }}" alt="{{ deal.name }}" class="deal-image">
