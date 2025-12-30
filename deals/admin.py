@@ -119,10 +119,6 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
     reextract_colors.label = "Re-extract Colors"
     reextract_colors.short_description = "Extract color palette from current image"
 
-    # Add the action to the change form
-    change_actions = ('reextract_colors',)
-
-
     def image_search(self, request, obj):
         """Action to search for images for this deal"""
         if obj and obj.pk:
@@ -141,7 +137,7 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
     image_search.label = "Search for Images"
     image_search.short_description = "Open image search page for this deal"
 
-    # Add the action to the change form
+    # Add both actions to the change form
     change_actions = ('reextract_colors', 'image_search')
 
 
