@@ -19,10 +19,10 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
     list_display = ('name', 'status', 'price', 'expires', 'is_active', 'created_at')
     list_filter = ('status', 'expires', 'created_at')
     search_fields = ('name',)
-    readonly_fields = ('slug', 'created_at', 'updated_at', 'image_search_button', 'image_preview')
+    readonly_fields = ('slug', 'created_at', 'updated_at', 'image_preview')
     fieldsets = (
         ('Main Information', {
-            'fields': ('name', 'status', 'image', 'image_preview', 'image_search_button')
+            'fields': ('name', 'status', 'image', 'image_preview')
         }),
         ('Color Palette', {
             'fields': ('palette_colors', 'foreground_color')
@@ -126,11 +126,12 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
     def image_search(self, request, obj):
         """Action to search for images for this deal"""
         if obj and obj.pk:
-            # Redirect to the image search page in a new window/tab
+            # For image search, we want to open in a new tab, but django-object-actions
+            # doesn't support this directly. We'll redirect to the URL which will be
+            # handled by the existing view.
             from django.http import HttpResponseRedirect
             from django.urls import reverse
             url = reverse('admin_search_images_with_id', args=[obj.pk])
-            # This will open in the same window, but we can't control that with object actions
             return HttpResponseRedirect(url)
         else:
             self.message_user(request, 'Please save the deal first before searching for images.', level=messages.WARNING)
@@ -138,7 +139,7 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
 
     # Configure the object action
     image_search.label = "Search for Images"
-    image_search.short_description = "Open image search in a new tab"
+    image_search.short_description = "Open image search page for this deal"
 
     # Add the action to the change form
     change_actions = ('reextract_colors', 'image_search')
