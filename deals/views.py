@@ -55,21 +55,27 @@ def search_deal_images(request, deal_id=None):
         selected_image_url = request.POST.get('image_url')
         if selected_image_url:
             # Extract colors from the image
-            primary_color, secondary_color = extract_colors_from_url(selected_image_url)
+            palette_colors, foreground_color = extract_colors_from_url(selected_image_url)
 
             if deal_id:
                 # Update existing deal
                 deal.image = selected_image_url
-                deal.primary_color = primary_color
-                deal.secondary_color = secondary_color
-                deal.save(update_fields=['image', 'primary_color', 'secondary_color'])
+                deal.palette_colors = palette_colors
+                deal.foreground_color = foreground_color
+                deal.save(update_fields=['image', 'palette_colors', 'foreground_color'])
                 return redirect('admin:deals_deal_change', deal.id)
             else:
                 # Return to add form with image URL and colors
+                # Preserve existing form values from session
                 from urllib.parse import quote
+                import json
+
+                # Build URL with colors
+                palette_json = json.dumps(palette_colors)
                 return redirect(
                     f'/admin/deals/deal/add/?image={quote(selected_image_url)}'
-                    f'&primary_color={quote(primary_color)}&secondary_color={quote(secondary_color)}'
+                    f'&palette_colors={quote(palette_json)}'
+                    f'&foreground_color={quote(foreground_color)}'
                 )
 
     # Use Google Custom Search to find images

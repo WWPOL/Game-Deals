@@ -43,17 +43,17 @@ class Deal(models.Model):
         blank=True,
         help_text="Game image URL (required when published)"
     )
-    primary_color = models.CharField(
-        max_length=7,
+    palette_colors = models.JSONField(
+        default=list,
         blank=True,
-        default='',
-        help_text="Primary color extracted from image (hex)"
+        null=False,
+        help_text="6-color palette extracted from image (array of hex strings)"
     )
-    secondary_color = models.CharField(
+    foreground_color = models.CharField(
         max_length=7,
         blank=True,
         default='',
-        help_text="Secondary color extracted from image (hex)"
+        help_text="Foreground text color for contrast (from palette or black/white)"
     )
     link = models.URLField(
         max_length=500,
