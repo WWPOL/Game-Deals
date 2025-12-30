@@ -42,13 +42,54 @@
   - Shows success/error messages for re-extraction
 - [x] Enhanced deal detail page with palette-based styling
   - Made header visible on detail page with transparent blur effect
-  - Added title shimmer effect using palette accent colors
+  - Added subtle shimmer effect to title outline using palette colors
   - Styled subscribe button with palette color gradients
   - Implemented floating footer with price, expiration, and CTA button
   - Applied frosted glass effects to header and footer
   - Added palette-based glowing effects to price tag and button
   - Fixed image shadow to fit actual dimensions
   - Fixed JSON parsing bug in ColorPaletteWidget for admin updates
+  - Title positioned over video game cover image with dramatic shadows
+- [x] Color palette diversity improvements
+  - Added perceptual color distance calculation
+  - Selects visually distinct colors ensuring minimum distance between palette colors
+  - Uses 12+ k-means clusters, then selects most diverse subset
+  - Prevents similar shades from dominating the palette (e.g., 5 purples when yellow/blue exist)
+- [x] Slug management enhancements
+  - Changed slug format to year/month/name (e.g., 2025/12/far-cry)
+  - Slug editable in admin when status is draft
+  - Slug locked as readonly when status is published
+  - URL pattern updated to support path slugs with slashes
+  - Changed slug field from SlugField to CharField to allow slashes
+- [x] Admin workflow improvements
+  - Added bulk action to re-extract colors from multiple deals
+  - Added bulk action for image search (single selection only)
+  - Moved slug to Basic Information section for better visibility
+  - Reorganized admin form: Basic Info → Deal Details → Image → Status → Color Palette
+- [x] Error handling
+  - Created project-wide 404 error page with user-friendly design
+  - Added config/views.py with handler404 and handler500
+  - Registered error handlers in config/urls.py
+  - Added test URL (/test-404/) for viewing 404 page in DEBUG mode
+- [x] Pricing features
+  - Added optional original_price field to show discount savings
+  - Displays strikethrough original price before sale price
+  - Shows on both home page and detail page
+  - Helps users see the value of the deal
+- [x] Documentation improvements
+  - Added critical reminder to CLAUDE.md to update CURRENT_WORK.md with every commit
+- [x] Home page filtering and pagination
+  - Added comprehensive filtering system using Django forms for validation
+  - Search by game name (case-insensitive)
+  - Sort options: newest, price (low to high), price (high to low), expiring soon
+  - Price range filter using price_gt and price_lt parameters (free, under $10, $10-$20, $20-$30, $30+)
+  - Status filter: active, expired, all deals
+  - Staff-only: Toggle to show/hide draft deals
+  - Pagination controls with page numbers and previous/next buttons
+  - Filter state preserved across pagination
+  - Visual indicators: EXPIRED banner and DRAFT badge on deal cards
+  - Context-aware empty state with clear filters button
+  - Active filters summary with individual remove options
 
 ### In Progress
 - [ ] Push notification implementation

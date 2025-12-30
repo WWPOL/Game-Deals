@@ -3,7 +3,35 @@ from django.views.generic import ListView, DetailView
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator
 from django.utils import timezone
+from django import forms
 from .models import Deal
+
+
+class DealFilterForm(forms.Form):
+    """Form to declare and validate deal filter parameters"""
+    search = forms.CharField(required=False, max_length=255)
+    sort = forms.ChoiceField(
+        required=False,
+        choices=[
+            ('newest', 'Newest'),
+            ('price_low', 'Price: Low to High'),
+            ('price_high', 'Price: High to Low'),
+            ('expiring_soon', 'Expiring Soon'),
+        ],
+        initial='newest'
+    )
+    price_gt = forms.DecimalField(required=False, min_value=0)
+    price_lt = forms.DecimalField(required=False, min_value=0)
+    status_filter = forms.ChoiceField(
+        required=False,
+        choices=[
+            ('active', 'Active'),
+            ('expired', 'Expired'),
+            ('all', 'All'),
+        ],
+        initial='active'
+    )
+    show_drafts = forms.BooleanField(required=False)
 
 
 class HomeView(ListView):
@@ -13,12 +41,89 @@ class HomeView(ListView):
     context_object_name = 'deals'
     paginate_by = 12
 
+    def get_filter_form(self):
+        """Get and validate filter form from GET parameters"""
+        form = DealFilterForm(self.request.GET)
+        form.is_valid()  # Populate cleaned_data even if invalid
+        return form
+
     def get_queryset(self):
-        """Only show published deals that haven't expired"""
-        return Deal.objects.filter(
-            status=Deal.Status.PUBLISHED,
-            expires__gt=timezone.now()
-        ).order_by('-created_at')
+        """Filter deals based on validated form parameters"""
+        form = self.get_filter_form()
+        filters = form.cleaned_data if form.is_valid() else {}
+
+        queryset = Deal.objects.all()
+
+        # Base: Staff sees all, public sees only published
+        if not self.request.user.is_staff:
+            queryset = queryset.filter(status=Deal.Status.PUBLISHED)
+        else:
+            # Staff can optionally show drafts
+            if not filters.get('show_drafts', False):
+                queryset = queryset.filter(status=Deal.Status.PUBLISHED)
+
+        # Search filter
+        search = filters.get('search', '').strip()
+        if search:
+            queryset = queryset.filter(name__icontains=search)
+
+        # Price range filter
+        price_gt = filters.get('price_gt')
+        if price_gt is not None:
+            queryset = queryset.filter(price__gt=price_gt)
+
+        price_lt = filters.get('price_lt')
+        if price_lt is not None:
+            queryset = queryset.filter(price__lt=price_lt)
+
+        # Status filter (active/expired/all)
+        status_filter = filters.get('status_filter', 'active')
+        now = timezone.now()
+        if status_filter == 'active':
+            queryset = queryset.filter(expires__gt=now)
+        elif status_filter == 'expired':
+            queryset = queryset.filter(expires__lte=now)
+
+        # Sort order
+        sort_by = filters.get('sort', 'newest')
+        if sort_by == 'price_low':
+            queryset = queryset.order_by('price', '-created_at')
+        elif sort_by == 'price_high':
+            queryset = queryset.order_by('-price', '-created_at')
+        elif sort_by == 'expiring_soon':
+            queryset = queryset.filter(expires__gt=now).order_by('expires')
+        else:  # 'newest'
+            queryset = queryset.order_by('-created_at')
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        """Add filter form and pagination query string to context"""
+        context = super().get_context_data(**kwargs)
+
+        # Add filter form to context
+        form = self.get_filter_form()
+        context['filter_form'] = form
+
+        # Get cleaned filter values for template
+        filters = form.cleaned_data if form.is_valid() else {}
+        context['current_search'] = filters.get('search', '')
+        context['current_sort'] = filters.get('sort', 'newest')
+        context['current_price_gt'] = filters.get('price_gt')
+        context['current_price_lt'] = filters.get('price_lt')
+        context['current_status_filter'] = filters.get('status_filter', 'active')
+        context['show_drafts'] = filters.get('show_drafts', False)
+
+        # Query string for pagination (preserve filters)
+        query_params = self.request.GET.copy()
+        if 'page' in query_params:
+            query_params.pop('page')
+        context['query_string'] = query_params.urlencode()
+
+        # Total results count
+        context['total_results'] = self.get_queryset().count()
+
+        return context
 
 
 class DealDetailView(DetailView):
