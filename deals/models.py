@@ -5,6 +5,10 @@ from django.utils import timezone
 from django.utils.text import slugify
 
 
+# Default colors
+DEFAULT_FOREGROUND_COLOR = '#ffffff'
+
+
 def default_palette():
     return ['#000000']
 
@@ -55,6 +59,10 @@ class Deal(models.Model):
         blank=True,
         help_text="Game image URL (required when published)"
     )
+    auto_extract_palette = models.BooleanField(
+        default=True,
+        help_text="Automatically extract color palette when image changes"
+    )
     palette_colors = models.JSONField(
         default=default_palette,
         blank=True,
@@ -103,6 +111,12 @@ class Deal(models.Model):
             return False
         return self.expires > timezone.now()
 
+    @property
+    def primary_foreground_color(self):
+        """Get foreground color from most prominent palette entry (highest weight)"""
+        first_entry = self.color_palette.order_by('-weight').first()
+        return first_entry.foreground_color if first_entry else DEFAULT_FOREGROUND_COLOR
+
     def has_notification_sent(self, channel='main'):
         """Check if notification was sent for a specific channel"""
         return self.notifications_sent.get(channel, False)
@@ -125,6 +139,11 @@ class Deal(models.Model):
                 errors['image'] = 'Image is required when publishing'
             if not self.link:
                 errors['link'] = 'Store link is required when publishing'
+
+            # Check for at least one color palette entry (only if deal exists in DB)
+            if self.pk and not self.color_palette.exists():
+                errors['color_palette'] = 'At least one color palette entry is required when publishing'
+
             if errors:
                 raise ValidationError(errors)
 
@@ -150,6 +169,46 @@ class Deal(models.Model):
         """Get the canonical URL for this deal"""
         from django.urls import reverse
         return reverse('deals:detail', kwargs={'slug': self.slug})
+
+
+class ColorPalette(models.Model):
+    """Individual color from a deal's palette with foreground/background pairing"""
+
+    deal = models.ForeignKey(
+        'Deal',
+        on_delete=models.CASCADE,
+        related_name='color_palette'
+    )
+
+    # Main palette color (what's currently in palette_colors JSON)
+    background_color = models.CharField(
+        max_length=7,
+        help_text="Main palette color (e.g., #3B82F6)"
+    )
+
+    # Contrasting text color for this background
+    foreground_color = models.CharField(
+        max_length=7,
+        help_text="Contrasting text color for accessibility (e.g., #FFFFFF)"
+    )
+
+    # Prominence weight (any positive number, typically sums to 1.0 per deal)
+    weight = models.FloatField(
+        validators=[MinValueValidator(0.0)],
+        help_text="Relative prominence (any positive number, higher = more dominant)"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['deal', '-weight']  # Order by weight descending within each deal
+        indexes = [
+            models.Index(fields=['deal', '-weight']),
+            models.Index(fields=['background_color']),  # For color analytics
+        ]
+
+    def __str__(self):
+        return f"{self.deal.name}: {self.background_color} (weight: {self.weight:.3f})"
 
 
 class PushSubscription(models.Model):

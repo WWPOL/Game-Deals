@@ -1,4 +1,5 @@
 import json
+from django import forms
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
@@ -7,16 +8,67 @@ from django.contrib import messages
 from django.conf import settings
 from unfold.admin import ModelAdmin
 from django_object_actions import DjangoObjectActions
-from .models import Deal, PushSubscription
+from .models import Deal, PushSubscription, ColorPalette
 from .forms import DealAdminForm
 from .services.image_search import GoogleCustomSearchProvider
 from .services.color_extractor import extract_colors_from_url
 from .admin_mixins import unfold_action
+from .widgets import ColorPickerWidget, ColorPalettePreviewWidget
+
+
+class ColorPaletteInlineForm(forms.ModelForm):
+    class Meta:
+        model = ColorPalette
+        fields = ['background_color', 'foreground_color', 'weight']
+        widgets = {
+            'background_color': ColorPickerWidget(),
+            'foreground_color': ColorPickerWidget(),
+        }
+
+
+class ColorPaletteInline(admin.TabularInline):
+    model = ColorPalette
+    form = ColorPaletteInlineForm
+    extra = 0
+    min_num = 0  # Don't auto-create empty rows
+    max_num = 6
+    can_delete = True
+
+    fields = ['color_preview', 'weight', 'background_color', 'foreground_color']
+    readonly_fields = ['color_preview']
+    ordering = ['-weight']
+
+    class Media:
+        css = {
+            'all': ('admin/css/colorpalette_inline.css',)
+        }
+        js = ('admin/js/colorpalette_inline.js',)
+
+    def color_preview(self, obj):
+        """Visual preview of foreground text on background"""
+        if not obj:
+            return "-"
+
+        # Get values, use defaults for new objects
+        bg_color = obj.background_color if obj.background_color else '#000000'
+        fg_color = obj.foreground_color if obj.foreground_color else '#ffffff'
+        weight = obj.weight if obj.weight is not None else 0.0
+
+        widget = ColorPalettePreviewWidget()
+        value = {
+            'background_color': bg_color,
+            'foreground_color': fg_color,
+            'weight': weight
+        }
+        return widget.render(name='preview', value=value)
+
+    color_preview.short_description = 'Preview'
 
 
 @admin.register(Deal)
 class DealAdmin(DjangoObjectActions, ModelAdmin):
     form = DealAdminForm
+    inlines = [ColorPaletteInline]
     list_display = ('name', 'status', 'price', 'expires', 'is_active', 'created_at')
     list_filter = ('status', 'expires', 'created_at')
     search_fields = ('name',)
@@ -29,13 +81,10 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
             'fields': ('original_price', 'price', 'link', 'expires')
         }),
         ('Image', {
-            'fields': ('image', 'image_preview')
+            'fields': ('image', 'image_preview', 'auto_extract_palette')
         }),
         ('Status', {
             'fields': ('status',)
-        }),
-        ('Color Palette', {
-            'fields': ('palette_colors', 'foreground_color')
         }),
         ('Metadata', {
             'fields': ('notifications_sent', 'created_at', 'updated_at'),
@@ -44,11 +93,7 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
     )
 
     def save_model(self, request, obj, form, change):
-        """Automatically find image on creation if not set, and re-extract colors when image changes"""
-        # Ensure palette_colors is always set to at least an empty list
-        if not obj.palette_colors:
-            obj.palette_colors = []
-
+        """Automatically find image on creation if not set, and re-extract colors when image changes if auto_extract is enabled"""
         # Check if image URL has changed (for updates)
         image_changed = False
         if change and obj.pk:
@@ -72,25 +117,45 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
 
                 if image_results:
                     first_image = image_results[0].url
-                    palette_colors, foreground_color = extract_colors_from_url(first_image)
-
                     obj.image = first_image
-                    obj.palette_colors = palette_colors
-                    obj.foreground_color = foreground_color
 
-                    messages.success(request, f'Automatically found and set image for "{obj.name}"')
+                    # Only extract colors if auto_extract is enabled
+                    if obj.auto_extract_palette:
+                        palette_entries = extract_colors_from_url(first_image)
+
+                        # Save Deal first to get pk for ColorPalette entries
+                        super().save_model(request, obj, form, change)
+
+                        # Create ColorPalette entries
+                        for entry in palette_entries:
+                            entry.deal = obj
+                            entry.save()
+
+                        messages.success(request, f'Automatically found image and extracted {len(palette_entries)} colors')
+                        return  # Don't call super() again
+                    else:
+                        messages.success(request, f'Automatically found and set image for "{obj.name}"')
                 else:
                     messages.warning(request, f'No images found for "{obj.name}"')
 
             except Exception as e:
                 messages.error(request, f'Error finding image: {e}')
-        elif image_changed:
-            # Image URL was changed - automatically re-extract colors
+        elif image_changed and obj.auto_extract_palette:
+            # Image URL was changed and auto-extract is enabled - re-extract colors
             try:
-                palette_colors, foreground_color = extract_colors_from_url(obj.image)
-                obj.palette_colors = palette_colors
-                obj.foreground_color = foreground_color
-                messages.success(request, 'Image changed - color palette automatically re-extracted')
+                palette_entries = extract_colors_from_url(obj.image)
+
+                # Save Deal first
+                super().save_model(request, obj, form, change)
+
+                # Clear existing palette and create new entries
+                obj.color_palette.all().delete()
+                for entry in palette_entries:
+                    entry.deal = obj
+                    entry.save()
+
+                messages.success(request, f'Image changed - extracted {len(palette_entries)} colors')
+                return  # Don't call super() again
             except Exception as e:
                 messages.error(request, f'Error extracting colors from new image: {e}')
 
@@ -128,14 +193,20 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
 
     @unfold_action(label="Re-extract Colors", short_description="Extract color palette from current image")
     def reextract_colors(self, request, obj):
-        """Action to re-extract colors from current image"""
+        """Action to manually re-extract colors from current image"""
         if obj and obj.image:
             try:
-                palette_colors, foreground_color = extract_colors_from_url(obj.image)
-                obj.palette_colors = palette_colors
-                obj.foreground_color = foreground_color
-                obj.save(update_fields=['palette_colors', 'foreground_color'])
-                self.message_user(request, 'Colors successfully re-extracted!')
+                palette_entries = extract_colors_from_url(obj.image)
+
+                # Clear existing palette
+                obj.color_palette.all().delete()
+
+                # Create new entries
+                for entry in palette_entries:
+                    entry.deal = obj
+                    entry.save()
+
+                self.message_user(request, f'Successfully re-extracted {len(palette_entries)} colors!')
             except Exception as e:
                 self.message_user(request, f'Error extracting colors: {e}', level=messages.ERROR)
         else:
@@ -171,17 +242,21 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
 
     @admin.action(description='Re-extract colors from images')
     def reextract_colors_bulk(self, request, queryset):
-        """Bulk action to re-extract colors from selected deals"""
+        """Bulk action to manually re-extract colors from selected deals"""
         success_count = 0
         error_count = 0
 
         for deal in queryset:
             if deal.image:
                 try:
-                    palette_colors, foreground_color = extract_colors_from_url(deal.image)
-                    deal.palette_colors = palette_colors
-                    deal.foreground_color = foreground_color
-                    deal.save(update_fields=['palette_colors', 'foreground_color'])
+                    palette_entries = extract_colors_from_url(deal.image)
+
+                    # Clear and recreate palette
+                    deal.color_palette.all().delete()
+                    for entry in palette_entries:
+                        entry.deal = deal
+                        entry.save()
+
                     success_count += 1
                 except Exception as e:
                     error_count += 1

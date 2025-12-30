@@ -92,14 +92,33 @@
   - Active filters summary with individual remove options
 
 ### In Progress
-- [ ] Push notification implementation
-- [ ] Subscription endpoints for web push
+- [ ] **Color Palette Refactoring to Relational Database** (see `/home/noah/.claude/plans/structured-stargazing-river.md`)
+  - Replacing JSON `palette_colors` field with relational `ColorPalette` model
+  - Each palette entry has: `background_color`, `foreground_color`, `weight` (0-1)
+  - Weight-based ordering (most prominent first)
+  - Admin UI: TabularInline with click-to-edit color preview widget
+  - Auto-extraction toggle: `auto_extract_palette` boolean field
+  - Templates: Dynamic percentage calculation from weights
+
+### Recently Fixed ✓
+1. [x] ColorPaletteInline - weight field now visible/editable in admin (moved to 2nd position after preview)
+2. [x] ColorPaletteInline - preview fixed, shows color preview instead of dash even for new objects
+   - Uses `format_html()` directly instead of widget rendering
+   - Pre-formats percentage string (format_html doesn't support `{:.1%}` specifiers)
+3. [x] Default behavior fixed - no longer creates empty white/white entries (min_num = 0)
+4. [x] ColorPaletteInline - bg/fg fields hidden by default with click-to-edit (CSS/JS added)
+   - Created `deals/static/admin/css/colorpalette_inline.css` for styling
+   - Created `deals/static/admin/js/colorpalette_inline.js` for click toggle
+   - Fields show when clicking preview row
 
 ### Next Steps
-1. Implement web push notifications for new deals
-2. Create subscription management endpoints
-3. Add Celery tasks for scheduled notifications
-4. Test notification delivery across channels
+1. Update views.py to add prefetch_related('color_palette') for performance
+2. Update templates (detail.html, home.html) to use new ColorPalette relationship
+3. Update image search view in views.py to create ColorPalette instances
+4. Remove deprecated `foreground_color` and `palette_colors` fields from Deal model
+5. Test color extraction and admin workflow end-to-end
+6. Push notification implementation
+7. Subscription endpoints for web push
 
 ## Blockers
 None currently
