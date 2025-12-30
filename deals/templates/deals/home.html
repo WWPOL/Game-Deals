@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load deal_colors %}
 
 {% block title %}Olly G's Game Deals - Active Deals{% endblock %}
 
@@ -180,25 +181,29 @@
             <style>
                 .card-{{ forloop.counter }} {
                     border-top: 4px solid transparent;
+                    {% with backgrounds=deal.color_palette.all|palette_backgrounds|slice:":4" %}
                     border-image: linear-gradient(90deg,
-                        {% for color in deal.palette_colors|slice:":4" %}
-                            {{ color|default:"#3b82f6" }} {% widthratio forloop.counter0 3 100 %}%{% if not forloop.last %},{% endif %}
+                        {% for color in backgrounds %}
+                            {{ color }} {% widthratio forloop.counter0 3 100 %}%{% if not forloop.last %},{% endif %}
                         {% endfor %}) 1;
+                    {% endwith %}
                 }
                 .card-{{ forloop.counter }}:hover {
+                    {% with backgrounds=deal.color_palette.all|palette_backgrounds|slice:"1:5" %}
                     border-image: linear-gradient(90deg,
-                        {% for color in deal.palette_colors|slice:"1:5" %}
-                            {{ color|default:"#1e40af" }} {% widthratio forloop.counter0 3 100 %}%{% if not forloop.last %},{% endif %}
+                        {% for color in backgrounds %}
+                            {{ color }} {% widthratio forloop.counter0 3 100 %}%{% if not forloop.last %},{% endif %}
                         {% endfor %}) 1;
-                    box-shadow:
-                        0 0 30px {{ deal.palette_colors|first|default:"#3b82f6" }}40,
-                        0 0 50px {{ deal.palette_colors|slice:"1:2"|first|default:"#1e40af" }}20;
+                    {% with bg0=deal.color_palette.all|palette_backgrounds|first bg1=deal.color_palette.all|palette_backgrounds|slice:"1:2"|first %}
+                    box-shadow: 0 0 30px {{ bg0 }}40, 0 0 50px {{ bg1 }}20;
+                    {% endwith %}
+                    {% endwith %}
                 }
                 .card-{{ forloop.counter }} .price-badge {
-                    background: linear-gradient(135deg,
-                        {{ deal.palette_colors|first|default:"#3b82f6" }} 0%,
-                        {{ deal.palette_colors|slice:"2:3"|first|default:"#2563eb" }} 100%);
-                    box-shadow: 0 0 20px {{ deal.palette_colors|first|default:"#3b82f6" }}60;
+                    {% with backgrounds=deal.color_palette.all|palette_backgrounds %}
+                    background: linear-gradient(135deg, {{ backgrounds.0 }} 0%, {{ backgrounds.2 }} 100%);
+                    box-shadow: 0 0 20px {{ backgrounds.0 }}60;
+                    {% endwith %}
                 }
                 {% if not deal.is_active %}
                 .card-{{ forloop.counter }} {
