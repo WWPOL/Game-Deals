@@ -124,25 +124,24 @@
         padding: 0.25rem 0.25rem 0.75rem 0.25rem;
         background: linear-gradient(
             110deg,
-            {{ deal.palette_colors.0|default:"#fff" }} 0%,
-            {{ deal.palette_colors.2|default:"#fff" }} 30%,
-            {{ deal.palette_colors.4|default:"#fff" }} 50%,
-            {{ deal.palette_colors.2|default:"#fff" }} 70%,
-            {{ deal.palette_colors.0|default:"#fff" }} 100%
+            {{ deal.foreground_color }} 0%,
+            {{ deal.palette_colors.3|default:"#fff" }} 35%,
+            {{ deal.palette_colors.5|default:"#fff" }} 50%,
+            {{ deal.palette_colors.3|default:"#fff" }} 65%,
+            {{ deal.foreground_color }} 100%
         );
-        background-size: 200% 100%;
+        background-size: 250% 100%;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        animation: shimmer 4s linear infinite;
-        filter: drop-shadow(0 0 30px {{ deal.palette_colors.0|default:"#fff" }}60)
-                drop-shadow(0 0 50px {{ deal.palette_colors.1|default:"#fff" }}40)
-                drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        animation: shimmer 6s ease-in-out infinite;
+        filter: drop-shadow(0 0 20px {{ deal.palette_colors.0|default:"#fff" }}30)
+                drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
     }
 
     @keyframes shimmer {
-        0% { background-position: -200% 0; }
-        100% { background-position: 200% 0; }
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
     }
 
     nav button {
