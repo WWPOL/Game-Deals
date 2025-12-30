@@ -11,6 +11,7 @@ from .models import Deal, PushSubscription
 from .forms import DealAdminForm
 from .services.image_search import GoogleCustomSearchProvider
 from .services.color_extractor import extract_colors_from_url
+from .admin_mixins import unfold_action
 
 
 @admin.register(Deal)
@@ -98,6 +99,7 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
         return "No image selected"
     image_preview.short_description = 'Current Image'
 
+    @unfold_action(label="Re-extract Colors", short_description="Extract color palette from current image")
     def reextract_colors(self, request, obj):
         """Action to re-extract colors from current image"""
         if obj and obj.image:
@@ -115,10 +117,7 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
         # Redirect back to the same change form
         return redirect('admin:deals_deal_change', object_id=obj.pk)
 
-    # Configure the object action
-    reextract_colors.label = "Re-extract Colors"
-    reextract_colors.short_description = "Extract color palette from current image"
-
+    @unfold_action(label="Search for Images", short_description="Open image search page for this deal")
     def image_search(self, request, obj):
         """Action to search for images for this deal"""
         if obj and obj.pk:
@@ -132,10 +131,6 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
         else:
             self.message_user(request, 'Please save the deal first before searching for images.', level=messages.WARNING)
             return None  # Return to the same page
-
-    # Configure the object action
-    image_search.label = "Search for Images"
-    image_search.short_description = "Open image search page for this deal"
 
     # Add both actions to the change form
     change_actions = ('reextract_colors', 'image_search')
