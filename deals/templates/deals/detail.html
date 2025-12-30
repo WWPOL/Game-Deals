@@ -57,7 +57,7 @@
         color: {{ deal.foreground_color }};
         text-decoration: none;
         opacity: 0.8;
-        margin-bottom: 2rem;
+        margin-bottom: 1rem;
         font-size: 1rem;
         transition: opacity 0.2s;
     }
@@ -116,8 +116,8 @@
             {{ deal.palette_colors.0|default:"#3b82f6" }} 0%,
             {{ deal.palette_colors.1|default:"#1e40af" }} 100%
         );
-        padding: 0.75rem 1.5rem;
-        border-radius: 0.75rem;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
         box-shadow:
             0 0 40px {{ deal.palette_colors.0|default:"#3b82f6" }}60,
             0 0 60px {{ deal.palette_colors.1|default:"#1e40af" }}30,
@@ -150,7 +150,7 @@
     }
 
     .deal-price {
-        font-size: 1.5rem;
+        font-size: 0.875rem;
         font-weight: 900;
         letter-spacing: -0.02em;
         position: relative;
@@ -159,7 +159,7 @@
 
     @media (min-width: 1024px) {
         .deal-price {
-            font-size: 2rem;
+            font-size: 1rem;
         }
     }
 
