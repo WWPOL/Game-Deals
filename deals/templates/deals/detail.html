@@ -24,7 +24,13 @@
         height: 100%;
         z-index: 0;
         overflow: hidden;
-        background: linear-gradient(135deg, {{ deal.color_palette.all|palette_gradient_css }});
+        {% with palette=deal.color_palette.all %}
+        {% if palette|length == 1 %}
+        background: {{ palette.0.background_color }};
+        {% else %}
+        background: linear-gradient(135deg, {{ palette|palette_gradient_css }});
+        {% endif %}
+        {% endwith %}
     }
 
     #animation-container svg {
@@ -34,8 +40,8 @@
     }
 
     .blob-svg {
-        filter: blur(40px);
-        opacity: 0.7;
+        filter: blur(60px);
+        opacity: 0.8;
     }
 
     .deal-container {
@@ -381,9 +387,9 @@
     var blobs = [];
 
     paletteColors.forEach(function(colorEntry, index) {
-        // Use weight to determine blob size and count
-        var blobSize = 300 * (colorEntry.weight * 2);
-        var blobCount = Math.max(1, Math.ceil(3 * colorEntry.weight));
+        // Use weight to determine blob size and count - more blobs for better coverage
+        var blobSize = 400 * (colorEntry.weight * 2.5);
+        var blobCount = Math.max(2, Math.ceil(5 * colorEntry.weight));
 
         for (var i = 0; i < blobCount; i++) {
             // Random position across canvas

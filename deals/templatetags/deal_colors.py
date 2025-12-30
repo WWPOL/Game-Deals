@@ -9,8 +9,9 @@ def palette_gradient_css(color_palette):
     """
     Generate CSS gradient stops from weighted color palette.
 
-    Calculates percentages dynamically from weights.
-    Returns: "color1 0%, color2 33%, color3 100%"
+    Distributes colors evenly across the gradient for smooth blending,
+    ordered by weight (most prominent first).
+    Returns: "color1 0%, color2 33%, color3 66%, color4 100%"
     """
     if not color_palette:
         return "#3b82f6 0%, #1e40af 100%"
@@ -18,18 +19,15 @@ def palette_gradient_css(color_palette):
     # Sort by weight descending (most prominent first)
     entries = sorted(color_palette, key=lambda x: x.weight, reverse=True)
 
-    # Calculate total weight
-    total_weight = sum(e.weight for e in entries)
-    if total_weight == 0:
-        total_weight = 1.0
-
-    # Generate cumulative gradient stops
-    position = 0
+    # Distribute colors evenly across gradient
+    count = len(entries)
     stops = []
-    for entry in entries:
-        percentage = (entry.weight / total_weight) * 100
-        stops.append(f"{entry.background_color} {position:.0f}%")
-        position += percentage
+    for i, entry in enumerate(entries):
+        if count == 1:
+            percentage = 0
+        else:
+            percentage = (i / (count - 1)) * 100
+        stops.append(f"{entry.background_color} {percentage:.0f}%")
 
     return ", ".join(stops)
 
