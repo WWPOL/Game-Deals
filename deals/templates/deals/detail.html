@@ -213,11 +213,11 @@
         justify-content: center;
         gap: 0.75rem;
         width: 100%;
-        {% with backgrounds=deal.color_palette.all|palette_backgrounds %}
-        background: linear-gradient(135deg, {{ backgrounds.0 }} 0%, {{ backgrounds.1 }} 100%);
-        box-shadow: 0 0 40px {{ backgrounds.0 }}60, 0 10px 30px rgba(0, 0, 0, 0.3);
+        {% with primary=deal.color_palette.all|first %}
+        background: {{ primary.background_color }};
+        box-shadow: 0 0 40px {{ primary.background_color }}60, 0 10px 30px rgba(0, 0, 0, 0.3);
+        color: {{ primary.foreground_color }};
         {% endwith %}
-        color: white;
         text-decoration: none;
         font-size: 1.25rem;
         font-weight: 700;
@@ -251,8 +251,8 @@
 
     .deal-link-button:hover {
         transform: translateY(-2px);
-        {% with backgrounds=deal.color_palette.all|palette_backgrounds %}
-        box-shadow: 0 0 50px {{ backgrounds.0 }}80, 0 15px 40px rgba(0, 0, 0, 0.4);
+        {% with primary=deal.color_palette.all|first %}
+        box-shadow: 0 0 50px {{ primary.background_color }}80, 0 15px 40px rgba(0, 0, 0, 0.4);
         {% endwith %}
     }
 
