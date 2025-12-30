@@ -84,11 +84,37 @@
         line-height: 1.2;
         text-align: center;
         z-index: 10;
-        padding: 0 1rem;
+        padding: 0.25rem;
         max-width: 90%;
         text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8),
                      0 2px 8px rgba(0, 0, 0, 0.6),
                      0 0 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .deal-title::before {
+        content: attr(data-text);
+        position: absolute;
+        left: 0;
+        top: 0;
+        z-index: -1;
+        padding: 0.25rem;
+        -webkit-text-stroke-width: 3px;
+        -webkit-text-stroke-color: transparent;
+        background: linear-gradient(
+            110deg,
+            {% for color in deal.palette_colors %}
+                {{ color }} {% widthratio forloop.counter0 deal.palette_colors|length|add:"-1" 100 %}%{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        );
+        background-size: 300% 100%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        animation: shimmer 6s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
     }
 
     @media (min-width: 768px) {
@@ -276,7 +302,7 @@
     <!-- Clickable Image Card with Title, Price and Expiry Markers -->
     <div class="image-card">
         <a href="{{ deal.link }}" target="_blank" rel="noopener noreferrer">
-            <h1 class="deal-title">{{ deal.name }}</h1>
+            <h1 class="deal-title" data-text="{{ deal.name }}">{{ deal.name }}</h1>
             <div class="deal-image-wrapper">
                 {% if deal.image %}
                 <img src="{{ deal.image }}" alt="{{ deal.name }}" class="deal-image">
