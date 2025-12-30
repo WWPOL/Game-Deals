@@ -4,6 +4,44 @@ from django import forms
 from django.utils.safestring import mark_safe
 
 
+class ColorPickerWidget(forms.Widget):
+    """Widget for a single color picker"""
+
+    def render(self, name, value, attrs=None, renderer=None):
+        """Render a single color picker with text input"""
+        if not value:
+            value = '#ffffff'
+
+        attrs_id = attrs.get('id', f'id_{name}') if attrs else f'id_{name}'
+
+        widget_html = f'''
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <input type="color"
+                   value="{value}"
+                   onchange="updateSingleColor_{attrs_id.replace('-', '_')}(this.value)"
+                   style="width: 60px; height: 60px; border: 2px solid #ddd; border-radius: 4px; cursor: pointer;">
+            <input type="text"
+                   name="{name}"
+                   value="{value}"
+                   id="{attrs_id}"
+                   onchange="updateColorPicker_{attrs_id.replace('-', '_')}(this.value)"
+                   style="width: 100px; font-size: 14px; padding: 5px; border: 1px solid #ddd; border-radius: 3px;">
+        </div>
+
+        <script>
+        function updateSingleColor_{attrs_id.replace('-', '_')}(newColor) {{
+            document.getElementById('{attrs_id}').value = newColor;
+        }}
+        function updateColorPicker_{attrs_id.replace('-', '_')}(newColor) {{
+            const colorPicker = document.querySelector('input[type="color"][onchange*="updateSingleColor_{attrs_id.replace('-', '_')}"]');
+            if (colorPicker) colorPicker.value = newColor;
+        }}
+        </script>
+        '''
+
+        return mark_safe(widget_html)
+
+
 class ColorPaletteWidget(forms.Widget):
     """Widget to display and edit color palette with color pickers"""
 

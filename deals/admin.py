@@ -18,13 +18,13 @@ class DealAdmin(ModelAdmin):
     list_display = ('name', 'status', 'price', 'expires', 'is_active', 'created_at')
     list_filter = ('status', 'expires', 'created_at')
     search_fields = ('name',)
-    readonly_fields = ('slug', 'created_at', 'updated_at', 'image_search_button', 'image_preview', 'color_palette_preview', 'reextract_colors_button')
+    readonly_fields = ('slug', 'created_at', 'updated_at', 'image_search_button', 'image_preview', 'reextract_colors_button')
     fieldsets = (
         ('Main Information', {
             'fields': ('name', 'status', 'image', 'image_preview', 'image_search_button', 'reextract_colors_button')
         }),
         ('Color Palette', {
-            'fields': ('palette_colors', 'foreground_color', 'color_palette_preview')
+            'fields': ('palette_colors', 'foreground_color')
         }),
         ('Pricing', {
             'fields': ('price',)
@@ -96,37 +96,6 @@ class DealAdmin(ModelAdmin):
             )
         return "No image selected"
     image_preview.short_description = 'Current Image'
-
-    def color_palette_preview(self, obj):
-        """Display color palette swatches"""
-        if not obj or not obj.palette_colors:
-            return "No colors extracted yet"
-
-        swatches_html = '<div style="display: flex; gap: 10px; align-items: center;">'
-
-        # Show all palette colors
-        for i, color in enumerate(obj.palette_colors, 1):
-            swatches_html += f'''
-                <div style="text-align: center;">
-                    <div style="width: 60px; height: 60px; background: {color}; border: 2px solid #ddd; border-radius: 5px;"></div>
-                    <div style="font-size: 10px; margin-top: 5px; color: #666;">{color}</div>
-                    <div style="font-size: 9px; color: #999;">Color {i}</div>
-                </div>
-            '''
-
-        # Show foreground color with label
-        if obj.foreground_color:
-            swatches_html += f'''
-                <div style="text-align: center; margin-left: 20px;">
-                    <div style="width: 60px; height: 60px; background: {obj.foreground_color}; border: 2px solid #ddd; border-radius: 5px;"></div>
-                    <div style="font-size: 10px; margin-top: 5px; color: #666;">{obj.foreground_color}</div>
-                    <div style="font-size: 9px; color: #999;">Foreground</div>
-                </div>
-            '''
-
-        swatches_html += '</div>'
-        return format_html(swatches_html)
-    color_palette_preview.short_description = 'Color Palette'
 
     def reextract_colors_button(self, obj):
         """Display a button to re-extract colors from current image"""
