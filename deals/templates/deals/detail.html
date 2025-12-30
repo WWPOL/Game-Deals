@@ -288,7 +288,7 @@
             <h1 class="deal-title" data-text="{{ deal.name }}">{{ deal.name }}</h1>
             <div class="deal-image-wrapper">
                 {% if deal.image %}
-                <img src="{{ deal.image }}" alt="{{ deal.name }}" class="deal-image">
+                <img src="{{ deal.image.url }}" alt="{{ deal.name }}" class="deal-image">
                 {% endif %}
             </div>
             <div class="image-overlay">

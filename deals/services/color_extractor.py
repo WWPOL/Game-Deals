@@ -1,9 +1,6 @@
 """Extract dominant colors from images"""
-import io
 import logging
-import requests
-from colorthief import ColorThief
-from typing import Tuple, Optional, List, Dict
+from typing import Tuple, List
 from PIL import Image
 import numpy as np
 from sklearn.cluster import KMeans
@@ -145,15 +142,15 @@ def find_foreground_color(palette: List[Tuple[int, int, int]], background_color:
     return "#ffffff" if white_contrast > black_contrast else "#000000"
 
 
-def extract_colors_from_url(image_url: str, max_colors: int = 6, min_colors: int = 2) -> List[ColorPalette]:
+def extract_colors_from_url(image_path: str, max_colors: int = 6, min_colors: int = 2) -> List[ColorPalette]:
     """
-    Extract weighted color palette with foreground/background pairs.
+    Extract weighted color palette with foreground/background pairs from a local image file.
 
     Returns 2-6 ColorPalette model instances (unsaved) sorted by weight descending (weights sum to 1.0).
     If fewer than min_colors diverse colors found, reduces distance threshold.
 
     Args:
-        image_url: URL of the image to analyze
+        image_path: Local file path of the image to analyze
         max_colors: Maximum number of colors to extract (default 6)
         min_colors: Minimum number of colors to extract (default 2)
 
@@ -161,14 +158,10 @@ def extract_colors_from_url(image_url: str, max_colors: int = 6, min_colors: int
         List of unsaved ColorPalette model instances sorted by weight descending
 
     Raises:
-        Exception: If color extraction fails (network error, invalid image, etc.)
+        Exception: If color extraction fails (file not found, invalid image, etc.)
     """
-    # Download the image
-    response = requests.get(image_url, timeout=10)
-    response.raise_for_status()
-
-    # Load image and resize for faster processing
-    img = Image.open(io.BytesIO(response.content))
+    # Load image from local file
+    img = Image.open(image_path)
     img = img.convert('RGB')
     img.thumbnail((200, 200))
 
@@ -215,7 +208,7 @@ def extract_colors_from_url(image_url: str, max_colors: int = 6, min_colors: int
     # Sort by weight descending (most prominent first)
     palette_entries.sort(key=lambda e: e.weight, reverse=True)
 
-    logger.info(f"Extracted {len(palette_entries)} diverse colors from {image_url}")
+    logger.info(f"Extracted {len(palette_entries)} diverse colors from {image_path}")
     for i, entry in enumerate(palette_entries):
         logger.debug(f"  {i+1}. {entry.background_color} (fg: {entry.foreground_color}): {entry.weight:.1%}")
 

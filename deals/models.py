@@ -54,11 +54,11 @@ class Deal(models.Model):
         blank=True,
         help_text="Deal expiration date (required when published)"
     )
-    image = models.URLField(
-        max_length=500,
+    image = models.ImageField(
+        upload_to='game_images/%Y/%m/',
         null=True,
         blank=True,
-        help_text="Game image URL (required when published)"
+        help_text="Game image (required when published)"
     )
     auto_extract_palette = models.BooleanField(
         default=True,

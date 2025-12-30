@@ -149,7 +149,7 @@ class DealDetailView(DetailView):
 def search_deal_images(request, deal_id=None):
     """Search for images for a deal and allow admin to select one"""
     from django.conf import settings
-    from .services.image_search import GoogleCustomSearchProvider
+    from .services.image_search import GoogleCustomSearchProvider, download_image_from_url
     from .services.color_extractor import extract_colors_from_url
 
     deal = None
@@ -163,24 +163,29 @@ def search_deal_images(request, deal_id=None):
         # User selected an image
         selected_image_url = request.POST.get('image_url')
         if selected_image_url:
-            # Extract colors from the image (returns ColorPalette instances)
-            palette_entries = extract_colors_from_url(selected_image_url)
-
             if deal_id:
-                # Update existing deal
-                deal.image = selected_image_url
-                deal.save(update_fields=['image'])
+                # Download and save the image
+                try:
+                    image_content, image_filename = download_image_from_url(selected_image_url)
+                    deal.image.save(image_filename, image_content, save=True)
 
-                # Clear existing palette and create new entries
-                deal.color_palette.all().delete()
-                for entry in palette_entries:
-                    entry.deal = deal
-                    entry.save()
+                    # Extract colors from the saved image
+                    palette_entries = extract_colors_from_url(deal.image.path)
 
-                return redirect('admin:deals_deal_change', deal.id)
+                    # Clear existing palette and create new entries
+                    deal.color_palette.all().delete()
+                    for entry in palette_entries:
+                        entry.deal = deal
+                        entry.save()
+
+                    return redirect('admin:deals_deal_change', deal.id)
+                except Exception as e:
+                    # Handle download error
+                    from django.contrib import messages
+                    messages.error(request, f'Error downloading image: {e}')
             else:
-                # Return to add form with image URL only
-                # The admin's save_model will handle color extraction if auto_extract is enabled
+                # For new deals, redirect to add form with the URL
+                # The admin's save_model will handle downloading and color extraction
                 return redirect(f'/admin/deals/deal/add/?image={quote(selected_image_url)}')
 
     # Use Google Custom Search to find images

@@ -10,7 +10,7 @@ from unfold.admin import ModelAdmin
 from django_object_actions import DjangoObjectActions
 from .models import Deal, PushSubscription, ColorPalette
 from .forms import DealAdminForm
-from .services.image_search import GoogleCustomSearchProvider
+from .services.image_search import GoogleCustomSearchProvider, download_image_from_url
 from .services.color_extractor import extract_colors_from_url
 from .admin_mixins import unfold_action
 from .widgets import ColorPickerWidget, ColorPalettePreviewWidget
@@ -65,7 +65,7 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
             'fields': ('original_price', 'price', 'link', 'expires')
         }),
         ('Image', {
-            'fields': ('image', 'image_preview', 'auto_extract_palette')
+            'fields': ('image', 'auto_extract_palette')
         }),
         ('Status', {
             'fields': ('status',)
@@ -100,13 +100,21 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
                 image_results = provider.search(search_query, limit=1)
 
                 if image_results:
-                    first_image = image_results[0].url
-                    obj.image = first_image
+                    first_image_url = image_results[0].url
+
+                    # Download the image
+                    try:
+                        image_content, image_filename = download_image_from_url(first_image_url)
+                        obj.image.save(image_filename, image_content, save=False)
+                    except Exception as e:
+                        messages.error(request, f'Error downloading image: {e}')
+                        super().save_model(request, obj, form, change)
+                        return
 
                     # Only extract colors if auto_extract is enabled
                     if obj.auto_extract_palette:
                         try:
-                            palette_entries = extract_colors_from_url(first_image)
+                            palette_entries = extract_colors_from_url(obj.image.path)
 
                             # Save Deal first to get pk for ColorPalette entries
                             super().save_model(request, obj, form, change)
@@ -129,9 +137,9 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
             except Exception as e:
                 messages.error(request, f'Error searching for image: {e}')
         elif image_changed and obj.auto_extract_palette:
-            # Image URL was changed and auto-extract is enabled - re-extract colors
+            # Image was changed and auto-extract is enabled - re-extract colors
             try:
-                palette_entries = extract_colors_from_url(obj.image)
+                palette_entries = extract_colors_from_url(obj.image.path)
 
                 # Save Deal first
                 super().save_model(request, obj, form, change)
@@ -169,22 +177,12 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
             initial['foreground_color'] = request.GET['foreground_color']
         return initial
 
-    def image_preview(self, obj):
-        """Display current image preview"""
-        if obj and obj.image:
-            return format_html(
-                '<img src="{}" style="max-width: 400px; max-height: 300px; border: 1px solid #ddd; border-radius: 5px;">',
-                obj.image
-            )
-        return "No image selected"
-    image_preview.short_description = 'Current Image'
-
     @unfold_action(label="Re-extract Colors", short_description="Extract color palette from current image")
     def reextract_colors(self, request, obj):
         """Action to manually re-extract colors from current image"""
         if obj and obj.image:
             try:
-                palette_entries = extract_colors_from_url(obj.image)
+                palette_entries = extract_colors_from_url(obj.image.path)
 
                 # Clear existing palette
                 obj.color_palette.all().delete()
@@ -223,7 +221,7 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         """Make slug readonly only when published"""
-        readonly = ['created_at', 'updated_at', 'image_preview']
+        readonly = ['created_at', 'updated_at']
         if obj and obj.status == Deal.Status.PUBLISHED:
             readonly.append('slug')
         return readonly
@@ -237,7 +235,7 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
         for deal in queryset:
             if deal.image:
                 try:
-                    palette_entries = extract_colors_from_url(deal.image)
+                    palette_entries = extract_colors_from_url(deal.image.path)
 
                     # Clear and recreate palette
                     deal.color_palette.all().delete()
