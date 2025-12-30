@@ -5,15 +5,19 @@
 
 {% block content %}
 <style>
-    /* Make header transparent on this page */
+    /* Make header use primary color on this page */
     nav {
-        background: transparent !important;
+        {% with primary=deal.color_palette.all|first %}
+        background: {{ primary.background_color }}80 !important;
+        {% endwith %}
         backdrop-filter: blur(20px);
         border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
 
     nav * {
-        color: {{ deal.primary_foreground_color }} !important;
+        {% with primary=deal.color_palette.all|first %}
+        color: {{ primary.foreground_color }} !important;
+        {% endwith %}
     }
 
     nav button {
