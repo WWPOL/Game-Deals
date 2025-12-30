@@ -24,7 +24,7 @@
         z-index: 0;
         overflow: hidden;
         {% if deal.palette_colors|length == 1 %}
-        background: {{ deal.palette_colors.0 }};
+        background: {{ deal.palette_colors|first }};
         {% else %}
         background: linear-gradient(135deg,
             {% for color in deal.palette_colors %}
@@ -126,26 +126,26 @@
     .deal-title {
         font-size: 2.5rem;
         font-weight: 900;
-        margin-bottom: 1.5rem;
+        margin-bottom: 0.5rem;
         line-height: 1.1;
         letter-spacing: -0.02em;
         position: relative;
         display: inline-block;
-        padding: 0.25rem 0.25rem 0.75rem 0.25rem;
+        padding: 0.25rem;
+        color: {{ deal.foreground_color }};
+        -webkit-text-fill-color: {{ deal.foreground_color }};
+        -webkit-text-stroke-width: 2px;
         background: linear-gradient(
             110deg,
-            {{ deal.foreground_color }} 0%,
-            {{ deal.palette_colors.3|default:"#fff" }} 35%,
-            {{ deal.palette_colors.5|default:"#fff" }} 50%,
-            {{ deal.palette_colors.3|default:"#fff" }} 65%,
-            {{ deal.foreground_color }} 100%
+            {% for color in deal.palette_colors %}
+                {{ color }} {% widthratio forloop.counter0 deal.palette_colors|length|add:"-1" 100 %}%{% if not forloop.last %},{% endif %}
+            {% endfor %}
         );
-        background-size: 250% 100%;
+        background-size: 300% 100%;
         -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
         background-clip: text;
         animation: shimmer 6s ease-in-out infinite;
-        filter: drop-shadow(0 0 20px {{ deal.palette_colors.0|default:"#fff" }}30)
+        filter: drop-shadow(0 0 20px {{ deal.palette_colors|first|default:"#fff" }}30)
                 drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
     }
 
@@ -156,16 +156,16 @@
 
     nav button {
         background: linear-gradient(135deg,
-            {{ deal.palette_colors.0|default:"#3b82f6" }} 0%,
-            {{ deal.palette_colors.1|default:"#1e40af" }} 100%
+            {{ deal.palette_colors|first|default:"#3b82f6" }} 0%,
+            {{ deal.palette_colors|slice:"1:2"|first|default:"#1e40af" }} 100%
         ) !important;
-        border-color: {{ deal.palette_colors.2|default:"#1e40af" }} !important;
+        border-color: {{ deal.palette_colors|slice:"2:3"|first|default:"#1e40af" }} !important;
     }
 
     nav button:hover {
         background: linear-gradient(135deg,
-            {{ deal.palette_colors.1|default:"#1e40af" }} 0%,
-            {{ deal.palette_colors.0|default:"#3b82f6" }} 100%
+            {{ deal.palette_colors|slice:"1:2"|first|default:"#1e40af" }} 0%,
+            {{ deal.palette_colors|first|default:"#3b82f6" }} 100%
         ) !important;
     }
 
@@ -186,16 +186,16 @@
     .price-tag {
         display: inline-block;
         background: linear-gradient(135deg,
-            {{ deal.palette_colors.0|default:"#3b82f6" }} 0%,
-            {{ deal.palette_colors.1|default:"#1e40af" }} 100%
+            {{ deal.palette_colors|first|default:"#3b82f6" }} 0%,
+            {{ deal.palette_colors|slice:"1:2"|first|default:"#1e40af" }} 100%
         );
         padding: 0.5rem 1rem;
         border-radius: 0.5rem;
         box-shadow:
-            0 0 40px {{ deal.palette_colors.0|default:"#3b82f6" }}60,
-            0 0 60px {{ deal.palette_colors.1|default:"#1e40af" }}30,
+            0 0 40px {{ deal.palette_colors|first|default:"#3b82f6" }}60,
+            0 0 60px {{ deal.palette_colors|slice:"1:2"|first|default:"#1e40af" }}30,
             inset 0 2px 4px rgba(255, 255, 255, 0.2);
-        border: 2px solid {{ deal.palette_colors.2|default:"rgba(255, 255, 255, 0.3)" }};
+        border: 2px solid {{ deal.palette_colors|slice:"2:3"|first|default:"rgba(255, 255, 255, 0.3)" }};
         position: relative;
         overflow: hidden;
     }
@@ -244,7 +244,7 @@
         font-size: 0.875rem;
         font-weight: 600;
         color: {{ deal.foreground_color }};
-        border: 1px solid {{ deal.palette_colors.3|default:"rgba(255, 255, 255, 0.2)" }};
+        border: 1px solid {{ deal.palette_colors|slice:"3:4"|first|default:"rgba(255, 255, 255, 0.2)" }};
         backdrop-filter: blur(10px);
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     }
@@ -265,10 +265,10 @@
         white-space: nowrap;
         text-align: center;
         background: linear-gradient(135deg,
-            {{ deal.palette_colors.0|default:"#3b82f6" }} 0%,
-            {{ deal.palette_colors.1|default:"#1e40af" }} 100%
+            {{ deal.palette_colors|first|default:"#3b82f6" }} 0%,
+            {{ deal.palette_colors|slice:"1:2"|first|default:"#1e40af" }} 100%
         );
-        border: 2px solid {{ deal.palette_colors.2|default:"rgba(255, 255, 255, 0.3)" }};
+        border: 2px solid {{ deal.palette_colors|slice:"2:3"|first|default:"rgba(255, 255, 255, 0.3)" }};
         color: white;
         text-decoration: none;
         font-size: 1.125rem;
@@ -277,7 +277,7 @@
         border-radius: 0.5rem;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         box-shadow:
-            0 0 40px {{ deal.palette_colors.0|default:"#3b82f6" }}60,
+            0 0 40px {{ deal.palette_colors|first|default:"#3b82f6" }}60,
             0 10px 30px rgba(0, 0, 0, 0.3);
         position: relative;
         overflow: hidden;
@@ -307,7 +307,7 @@
     .deal-button:hover {
         transform: translateY(-4px);
         box-shadow:
-            0 0 60px {{ deal.palette_colors.0|default:"#3b82f6" }}80,
+            0 0 60px {{ deal.palette_colors|first|default:"#3b82f6" }}80,
             0 15px 40px rgba(0, 0, 0, 0.4);
     }
 
