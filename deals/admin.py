@@ -105,25 +105,29 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
 
                     # Only extract colors if auto_extract is enabled
                     if obj.auto_extract_palette:
-                        palette_entries = extract_colors_from_url(first_image)
+                        try:
+                            palette_entries = extract_colors_from_url(first_image)
 
-                        # Save Deal first to get pk for ColorPalette entries
-                        super().save_model(request, obj, form, change)
+                            # Save Deal first to get pk for ColorPalette entries
+                            super().save_model(request, obj, form, change)
 
-                        # Create ColorPalette entries
-                        for entry in palette_entries:
-                            entry.deal = obj
-                            entry.save()
+                            # Create ColorPalette entries
+                            for entry in palette_entries:
+                                entry.deal = obj
+                                entry.save()
 
-                        messages.success(request, f'Automatically found image and extracted {len(palette_entries)} colors')
-                        return  # Don't call super() again
+                            messages.success(request, f'Automatically found image and extracted {len(palette_entries)} colors')
+                            return  # Don't call super() again
+                        except Exception as e:
+                            messages.error(request, f'Error extracting colors from image: {e}')
+                            # Continue to save the deal with the image, just without colors
                     else:
                         messages.success(request, f'Automatically found and set image for "{obj.name}"')
                 else:
                     messages.warning(request, f'No images found for "{obj.name}"')
 
             except Exception as e:
-                messages.error(request, f'Error finding image: {e}')
+                messages.error(request, f'Error searching for image: {e}')
         elif image_changed and obj.auto_extract_palette:
             # Image URL was changed and auto-extract is enabled - re-extract colors
             try:

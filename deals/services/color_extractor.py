@@ -159,71 +159,64 @@ def extract_colors_from_url(image_url: str, max_colors: int = 6, min_colors: int
 
     Returns:
         List of unsaved ColorPalette model instances sorted by weight descending
+
+    Raises:
+        Exception: If color extraction fails (network error, invalid image, etc.)
     """
-    try:
-        # Download the image
-        response = requests.get(image_url, timeout=10)
-        response.raise_for_status()
+    # Download the image
+    response = requests.get(image_url, timeout=10)
+    response.raise_for_status()
 
-        # Load image and resize for faster processing
-        img = Image.open(io.BytesIO(response.content))
-        img = img.convert('RGB')
-        img.thumbnail((200, 200))
+    # Load image and resize for faster processing
+    img = Image.open(io.BytesIO(response.content))
+    img = img.convert('RGB')
+    img.thumbnail((200, 200))
 
-        # Convert to numpy array
-        img_array = np.array(img)
-        pixels = img_array.reshape(-1, 3)
+    # Convert to numpy array
+    img_array = np.array(img)
+    pixels = img_array.reshape(-1, 3)
 
-        # Use k-means clustering with more clusters to get more color candidates
-        # We'll select the most diverse subset from these
-        n_clusters = max(12, max_colors * 2)
-        kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
-        kmeans.fit(pixels)
+    # Use k-means clustering with more clusters to get more color candidates
+    # We'll select the most diverse subset from these
+    n_clusters = max(12, max_colors * 2)
+    kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
+    kmeans.fit(pixels)
 
-        # Get colors and their proportions
-        colors = kmeans.cluster_centers_.astype(int)
-        labels = kmeans.labels_
-        counts = np.bincount(labels)
+    # Get colors and their proportions
+    colors = kmeans.cluster_centers_.astype(int)
+    labels = kmeans.labels_
+    counts = np.bincount(labels)
 
-        # Select diverse colors with adaptive threshold
-        diverse_indices = select_diverse_colors(colors, counts, max_colors, min_colors, min_distance=100)
+    # Select diverse colors with adaptive threshold
+    diverse_indices = select_diverse_colors(colors, counts, max_colors, min_colors, min_distance=100)
 
-        # Calculate normalized weights (sum to 1.0)
-        total_pixels = sum(counts[idx] for idx in diverse_indices)
-        weights = [counts[idx] / total_pixels for idx in diverse_indices]
+    # Calculate normalized weights (sum to 1.0)
+    total_pixels = sum(counts[idx] for idx in diverse_indices)
+    weights = [counts[idx] / total_pixels for idx in diverse_indices]
 
-        # Build palette RGB list for foreground color finding
-        palette_rgb = [tuple(colors[idx]) for idx in diverse_indices]
+    # Build palette RGB list for foreground color finding
+    palette_rgb = [tuple(colors[idx]) for idx in diverse_indices]
 
-        # Create ColorPalette instances (unsaved)
-        palette_entries = []
-        for idx, weight in zip(diverse_indices, weights):
-            bg_rgb = tuple(colors[idx])
-            bg_hex = rgb_to_hex(bg_rgb)
+    # Create ColorPalette instances (unsaved)
+    palette_entries = []
+    for idx, weight in zip(diverse_indices, weights):
+        bg_rgb = tuple(colors[idx])
+        bg_hex = rgb_to_hex(bg_rgb)
 
-            # Find best contrasting foreground color for this background
-            fg_hex = find_foreground_color(palette_rgb, bg_rgb)
+        # Find best contrasting foreground color for this background
+        fg_hex = find_foreground_color(palette_rgb, bg_rgb)
 
-            palette_entries.append(ColorPalette(
-                background_color=bg_hex,
-                foreground_color=fg_hex,
-                weight=weight
-            ))
+        palette_entries.append(ColorPalette(
+            background_color=bg_hex,
+            foreground_color=fg_hex,
+            weight=weight
+        ))
 
-        # Sort by weight descending (most prominent first)
-        palette_entries.sort(key=lambda e: e.weight, reverse=True)
+    # Sort by weight descending (most prominent first)
+    palette_entries.sort(key=lambda e: e.weight, reverse=True)
 
-        logger.info(f"Extracted {len(palette_entries)} diverse colors from {image_url}")
-        for i, entry in enumerate(palette_entries):
-            logger.debug(f"  {i+1}. {entry.background_color} (fg: {entry.foreground_color}): {entry.weight:.1%}")
+    logger.info(f"Extracted {len(palette_entries)} diverse colors from {image_url}")
+    for i, entry in enumerate(palette_entries):
+        logger.debug(f"  {i+1}. {entry.background_color} (fg: {entry.foreground_color}): {entry.weight:.1%}")
 
-        return palette_entries
-
-    except Exception as e:
-        logger.error(f"Error extracting colors from {image_url}: {e}")
-        # Return default color if extraction fails
-        return [ColorPalette(
-            background_color='#000000',
-            foreground_color='#ffffff',
-            weight=1.0
-        )]
+    return palette_entries
