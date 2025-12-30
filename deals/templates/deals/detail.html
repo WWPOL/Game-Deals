@@ -11,6 +11,10 @@
         border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
 
+    nav * {
+        color: {{ deal.foreground_color }} !important;
+    }
+
     #animation-container {
         position: fixed;
         top: 0;
@@ -116,7 +120,37 @@
         line-height: 1.1;
         letter-spacing: -0.02em;
         color: {{ deal.foreground_color }};
-        text-shadow: 0 4px 30px {{ deal.palette_colors.0|default:"#000" }}80;
+        position: relative;
+        display: inline-block;
+        overflow: hidden;
+        padding: 0.25rem 0.25rem 0.75rem 0.25rem;
+        -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.2);
+        text-shadow:
+            0 0 30px {{ deal.palette_colors.0|default:"#fff" }}40,
+            0 0 50px {{ deal.palette_colors.1|default:"#fff" }}20,
+            0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .deal-title::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.3),
+            transparent
+        );
+        animation: shimmer 3s infinite;
+        pointer-events: none;
+    }
+
+    @keyframes shimmer {
+        0% { left: -100%; }
+        100% { left: 200%; }
     }
 
     @media (min-width: 1024px) {
