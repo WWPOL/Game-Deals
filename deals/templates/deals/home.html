@@ -50,6 +50,9 @@
                          class="w-full h-full object-cover"
                          onerror="this.src='https://via.placeholder.com/400x225?text={{ deal.name|urlencode }}'">
                     <div class="absolute top-3 right-3 price-badge px-3 py-1 rounded-lg backdrop-blur-sm">
+                        {% if deal.original_price %}
+                        <span class="text-sm font-bold text-white mr-2" style="text-decoration: line-through; opacity: 0.7;">${{ deal.original_price }}</span>
+                        {% endif %}
                         {% if deal.price == 0 %}
                         <span class="text-xl font-bold text-white">FREE</span>
                         {% else %}

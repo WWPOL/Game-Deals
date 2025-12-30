@@ -310,6 +310,9 @@
             </div>
             <div class="image-overlay">
                 <div class="price-marker">
+                    {% if deal.original_price %}
+                    <span style="text-decoration: line-through; opacity: 0.7; margin-right: 0.5rem; font-size: 0.9em;">${{ deal.original_price }}</span>
+                    {% endif %}
                     {% if deal.price == 0 %}
                     FREE
                     {% else %}

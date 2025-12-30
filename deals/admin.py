@@ -26,7 +26,7 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
             'fields': ('name', 'slug')
         }),
         ('Deal Details', {
-            'fields': ('price', 'link', 'expires')
+            'fields': ('original_price', 'price', 'link', 'expires')
         }),
         ('Image', {
             'fields': ('image', 'image_preview')
