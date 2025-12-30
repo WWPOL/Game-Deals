@@ -22,17 +22,20 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
     search_fields = ('name',)
     readonly_fields = ('slug', 'created_at', 'updated_at', 'image_preview')
     fieldsets = (
-        ('Main Information', {
-            'fields': ('name', 'status', 'image', 'image_preview')
+        ('Basic Information', {
+            'fields': ('name',)
+        }),
+        ('Deal Details', {
+            'fields': ('price', 'link', 'expires')
+        }),
+        ('Image', {
+            'fields': ('image', 'image_preview')
+        }),
+        ('Status', {
+            'fields': ('status',)
         }),
         ('Color Palette', {
             'fields': ('palette_colors', 'foreground_color')
-        }),
-        ('Pricing', {
-            'fields': ('price',)
-        }),
-        ('Details', {
-            'fields': ('expires', 'link')
         }),
         ('Auto-Generated & Metadata', {
             'fields': ('slug', 'notifications_sent', 'created_at', 'updated_at'),
