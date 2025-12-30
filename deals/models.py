@@ -14,10 +14,6 @@ DEFAULT_PALETTE = [
 ]
 
 
-def default_palette():
-    return ['#000000']
-
-
 class Deal(models.Model):
     """Game deal model"""
 
@@ -67,18 +63,6 @@ class Deal(models.Model):
     auto_extract_palette = models.BooleanField(
         default=True,
         help_text="Automatically extract color palette when image changes"
-    )
-    palette_colors = models.JSONField(
-        default=default_palette,
-        blank=True,
-        null=False,
-        help_text="Color palette ordered by prominence (array of hex strings, most dominant first)"
-    )
-    foreground_color = models.CharField(
-        max_length=7,
-        blank=True,
-        default='#ffffff',
-        help_text="Foreground text color for contrast (from palette or black/white)"
     )
     link = models.URLField(
         max_length=500,
