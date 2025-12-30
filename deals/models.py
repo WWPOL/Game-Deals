@@ -60,6 +60,12 @@ class Deal(models.Model):
         blank=True,
         help_text="Game image (required when published)"
     )
+    image_attribution = models.URLField(
+        max_length=500,
+        null=True,
+        blank=True,
+        help_text="Source URL for image attribution (optional)"
+    )
     auto_extract_palette = models.BooleanField(
         default=True,
         help_text="Automatically extract color palette when image changes"

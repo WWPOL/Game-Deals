@@ -65,7 +65,7 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
             'fields': ('original_price', 'price', 'link', 'expires')
         }),
         ('Image', {
-            'fields': ('image', 'auto_extract_palette')
+            'fields': ('image', 'image_attribution', 'auto_extract_palette')
         }),
         ('Status', {
             'fields': ('status',)
@@ -100,12 +100,16 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
                 image_results = provider.search(search_query, limit=1)
 
                 if image_results:
-                    first_image_url = image_results[0].url
+                    first_image = image_results[0]
+                    first_image_url = first_image.url
 
                     # Download the image
                     try:
                         image_content, image_filename = download_image_from_url(first_image_url)
                         obj.image.save(image_filename, image_content, save=False)
+                        # Save attribution URL if available
+                        if first_image.page_url:
+                            obj.image_attribution = first_image.page_url
                     except Exception as e:
                         messages.error(request, f'Error downloading image: {e}')
                         super().save_model(request, obj, form, change)
@@ -160,21 +164,9 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
     def get_changeform_initial_data(self, request):
         """Populate initial data from URL parameters"""
         initial = super().get_changeform_initial_data(request)
-        # Get values from URL parameters for image search
-        if 'image' in request.GET:
-            initial['image'] = request.GET['image']
-        if 'palette_colors' in request.GET:
-            try:
-                palette_colors = request.GET['palette_colors']
-                # Check if it's already a list (from Django's query param parsing) or a JSON string
-                if isinstance(palette_colors, list):
-                    initial['palette_colors'] = palette_colors
-                else:
-                    initial['palette_colors'] = json.loads(palette_colors)
-            except (json.JSONDecodeError, TypeError):
-                pass
-        if 'foreground_color' in request.GET:
-            initial['foreground_color'] = request.GET['foreground_color']
+        # Get image attribution from URL parameters for image search
+        if 'image_attribution' in request.GET:
+            initial['image_attribution'] = request.GET['image_attribution']
         return initial
 
     @unfold_action(label="Re-extract Colors", short_description="Extract color palette from current image")

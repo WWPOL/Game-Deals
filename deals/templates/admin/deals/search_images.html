@@ -25,7 +25,7 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
                 {% for image in image_results %}
                 <div style="border: 2px solid #ddd; padding: 10px; border-radius: 5px; cursor: pointer; transition: all 0.2s;"
-                     onclick="selectAndSubmit('{{ image.url }}')"
+                     onclick="selectAndSubmit('{{ image.url }}', '{{ image.page_url|escapejs }}')"
                      onmouseover="this.style.borderColor='#417690'"
                      onmouseout="this.style.borderColor='#ddd'">
                     <img src="{{ image.thumbnail }}"
@@ -37,11 +37,15 @@
                     <p style="font-size: 11px; color: #999;">
                         {{ image.width }}x{{ image.height }}
                     </p>
+                    <p style="font-size: 10px; color: #999; margin-top: 5px;">
+                        Source: {{ image.source }}
+                    </p>
                 </div>
                 {% endfor %}
             </div>
 
             <input type="hidden" name="image_url" id="selected_image_url" value="">
+            <input type="hidden" name="page_url" id="selected_page_url" value="">
         </form>
     </div>
     {% else %}
@@ -53,8 +57,9 @@
 </div>
 
 <script>
-function selectAndSubmit(url) {
+function selectAndSubmit(url, pageUrl) {
     document.getElementById('selected_image_url').value = url;
+    document.getElementById('selected_page_url').value = pageUrl || '';
     // Always submit the form to extract colors on the server
     document.getElementById('image_form').submit();
 }

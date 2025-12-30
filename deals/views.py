@@ -162,12 +162,19 @@ def search_deal_images(request, deal_id=None):
     if request.method == 'POST':
         # User selected an image
         selected_image_url = request.POST.get('image_url')
+        selected_page_url = request.POST.get('page_url', '')
         if selected_image_url:
             if deal_id:
                 # Download and save the image
                 try:
                     image_content, image_filename = download_image_from_url(selected_image_url)
-                    deal.image.save(image_filename, image_content, save=True)
+                    deal.image.save(image_filename, image_content, save=False)
+
+                    # Save attribution if available
+                    if selected_page_url:
+                        deal.image_attribution = selected_page_url
+
+                    deal.save()
 
                     # Extract colors from the saved image
                     palette_entries = extract_colors_from_url(deal.image.path)
@@ -186,7 +193,10 @@ def search_deal_images(request, deal_id=None):
             else:
                 # For new deals, redirect to add form with the URL
                 # The admin's save_model will handle downloading and color extraction
-                return redirect(f'/admin/deals/deal/add/?image={quote(selected_image_url)}')
+                url_params = f'image={quote(selected_image_url)}'
+                if selected_page_url:
+                    url_params += f'&image_attribution={quote(selected_page_url)}'
+                return redirect(f'/admin/deals/deal/add/?{url_params}')
 
     # Use Google Custom Search to find images
     provider = GoogleCustomSearchProvider(

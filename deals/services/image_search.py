@@ -18,6 +18,7 @@ class ImageResult:
     width: int
     height: int
     source: str  # The website/domain the image came from
+    page_url: str  # The page where the image was found (for attribution)
 
 
 class ImageSearchProvider(ABC):
@@ -79,6 +80,7 @@ class GoogleCustomSearchProvider(ImageSearchProvider):
                 num=num_results,
                 imgSize='XXLARGE',  # Prefer biggest images
                 safe='active',      # Safe search
+                rights='cc_publicdomain,cc_attribute,cc_sharealike,cc_noncommercial,cc_nonderived',  # Filter by usage rights
             ).execute()
 
             images = []
@@ -91,7 +93,8 @@ class GoogleCustomSearchProvider(ImageSearchProvider):
                     title=item.get('title', ''),
                     width=image_info.get('width', 0),
                     height=image_info.get('height', 0),
-                    source=item.get('displayLink', '')
+                    source=item.get('displayLink', ''),
+                    page_url=image_info.get('contextLink', '')
                 ))
 
             return images
@@ -100,24 +103,6 @@ class GoogleCustomSearchProvider(ImageSearchProvider):
             # Log error in production
             print(f"Error searching images: {e}")
             return []
-
-
-class DummyImageSearchProvider(ImageSearchProvider):
-    """Dummy provider for testing without API keys"""
-
-    def search(self, query: str, limit: int = 10) -> List[ImageResult]:
-        """Return placeholder images for testing"""
-        return [
-            ImageResult(
-                url=f"https://via.placeholder.com/800x450?text={query.replace(' ', '+')}+{i+1}",
-                thumbnail=f"https://via.placeholder.com/200x150?text={query.replace(' ', '+')}+{i+1}",
-                title=f"{query} - Result {i+1}",
-                width=800,
-                height=450,
-                source="placeholder.com"
-            )
-            for i in range(min(limit, 10))
-        ]
 
 
 def download_image_from_url(url: str, timeout: int = 10) -> Tuple[ContentFile, str]:
