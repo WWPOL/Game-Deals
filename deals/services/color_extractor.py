@@ -2,7 +2,10 @@
 import io
 import requests
 from colorthief import ColorThief
-from typing import Tuple, Optional, List
+from typing import Tuple, Optional, List, Dict
+from PIL import Image
+import numpy as np
+from sklearn.cluster import KMeans
 
 
 def rgb_to_hex(rgb: Tuple[int, int, int]) -> str:
@@ -71,9 +74,81 @@ def find_foreground_color(palette: List[Tuple[int, int, int]], primary_color: Tu
     return "#ffffff" if white_contrast > black_contrast else "#000000"
 
 
+def extract_colors_with_proportions(image_url: str, num_colors: int = 6) -> Tuple[List[Dict[str, any]], str]:
+    """
+    Extract color palette with proportions and foreground color from an image URL.
+
+    Args:
+        image_url: URL of the image to analyze
+        num_colors: Number of colors to extract
+
+    Returns:
+        Tuple of (palette_data, foreground_color) where:
+        - palette_data is a list of dicts with 'color' (hex) and 'percentage' (0-100)
+        - foreground_color is a hex string for text color
+    """
+    try:
+        # Download the image
+        response = requests.get(image_url, timeout=10)
+        response.raise_for_status()
+
+        # Load image and resize for faster processing
+        img = Image.open(io.BytesIO(response.content))
+        img = img.convert('RGB')
+        img.thumbnail((200, 200))
+
+        # Convert to numpy array
+        img_array = np.array(img)
+        pixels = img_array.reshape(-1, 3)
+
+        # Use k-means clustering to find dominant colors
+        kmeans = KMeans(n_clusters=num_colors, random_state=42, n_init=10)
+        kmeans.fit(pixels)
+
+        # Get colors and their proportions
+        colors = kmeans.cluster_centers_.astype(int)
+        labels = kmeans.labels_
+        counts = np.bincount(labels)
+        percentages = (counts / len(labels)) * 100
+
+        # Sort by percentage (descending)
+        sorted_indices = np.argsort(percentages)[::-1]
+
+        # Build palette with proportions
+        palette_data = []
+        palette_rgb = []
+        for idx in sorted_indices:
+            color_rgb = tuple(colors[idx])
+            palette_data.append({
+                'color': rgb_to_hex(color_rgb),
+                'percentage': float(percentages[idx])
+            })
+            palette_rgb.append(color_rgb)
+
+        # Find best foreground color
+        dominant_color = palette_rgb[0]
+        foreground_hex = find_foreground_color(palette_rgb, dominant_color)
+
+        print(f"Extracted colors from {image_url}:")
+        for data in palette_data:
+            print(f"  {data['color']}: {data['percentage']:.1f}%")
+        print(f"  Foreground: {foreground_hex}")
+
+        return palette_data, foreground_hex
+
+    except Exception as e:
+        print(f"Error extracting colors from {image_url}: {e}")
+        # Return default colors if extraction fails
+        default_palette = [
+            {'color': '#000000', 'percentage': 100.0}
+        ]
+        return default_palette, "#ffffff"
+
+
 def extract_colors_from_url(image_url: str) -> Tuple[List[str], str]:
     """
     Extract color palette and foreground color from an image URL.
+    Legacy function for backward compatibility.
 
     Args:
         image_url: URL of the image to analyze
@@ -83,33 +158,6 @@ def extract_colors_from_url(image_url: str) -> Tuple[List[str], str]:
         - palette_colors is a list of 6 hex color strings
         - foreground_color is a hex string for text color
     """
-    try:
-        # Download the image
-        response = requests.get(image_url, timeout=10)
-        response.raise_for_status()
-
-        # Create ColorThief object from image bytes
-        color_thief = ColorThief(io.BytesIO(response.content))
-
-        # Get the dominant color (primary)
-        dominant_color = color_thief.get_color(quality=1)
-
-        # Get color palette (6 colors for variety)
-        palette = color_thief.get_palette(color_count=6, quality=1)
-
-        # Convert palette to hex strings
-        palette_hex = [rgb_to_hex(color) for color in palette]
-
-        # Find best foreground color
-        foreground_hex = find_foreground_color(palette, dominant_color)
-
-        print(f"Extracted colors from {image_url}:")
-        print(f"  Palette: {palette_hex}")
-        print(f"  Foreground: {foreground_hex}")
-
-        return palette_hex, foreground_hex
-
-    except Exception as e:
-        print(f"Error extracting colors from {image_url}: {e}")
-        # Return default colors if extraction fails
-        return ["#1a1a1a", "#2d2d2d", "#3a3a3a", "#4a4a4a", "#5a5a5a", "#6a6a6a"], "#ffffff"
+    palette_data, foreground = extract_colors_with_proportions(image_url, num_colors=6)
+    palette_hex = [item['color'] for item in palette_data]
+    return palette_hex, foreground

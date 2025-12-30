@@ -6,7 +6,7 @@ from django.utils.text import slugify
 
 
 def default_palette():
-    return ['#000000']
+    return [{'color': '#000000', 'percentage': 100.0}]
 
 
 class Deal(models.Model):
@@ -51,7 +51,7 @@ class Deal(models.Model):
         default=default_palette,
         blank=True,
         null=False,
-        help_text="6-color palette extracted from image (array of hex strings)"
+        help_text="Color palette with proportions (array of {color: hex, percentage: float})"
     )
     foreground_color = models.CharField(
         max_length=7,
