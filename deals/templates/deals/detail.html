@@ -280,6 +280,11 @@
         <a href="{% url 'deals:home' %}" class="back-link">
             ← Back
         </a>
+        {% if user.is_staff and deal.status == 'draft' %}
+        <span style="display: inline-block; margin-left: 1rem; background: #ca8a04; color: white; padding: 0.25rem 0.75rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: bold;">
+            DRAFT
+        </span>
+        {% endif %}
     </div>
 
     <!-- Clickable Image Card with Title, Price and Expiry Markers -->
