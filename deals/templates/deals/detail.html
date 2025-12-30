@@ -48,14 +48,11 @@
     .deal-container {
         position: relative;
         min-height: 100vh;
-        max-width: 1200px;
+        max-width: 1536px;
         margin: 0 auto;
-        padding: 1rem;
+        padding: 0.5rem 1rem 3rem 1rem;
+        color: {{ deal.foreground_color }};
         z-index: 1;
-    }
-
-    .header-section {
-        margin-bottom: 2rem;
     }
 
     .back-link {
@@ -64,6 +61,7 @@
         color: {{ deal.foreground_color }};
         text-decoration: none;
         opacity: 0.8;
+        margin-bottom: 1rem;
         font-size: 1rem;
         transition: opacity 0.2s;
     }
@@ -72,156 +70,97 @@
         opacity: 1;
     }
 
-    .deal-title {
-        position: fixed;
-        top: 5rem;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 2.5rem;
-        font-weight: 900;
-        color: {{ deal.foreground_color }};
-        margin: 0;
-        line-height: 1.2;
-        text-align: center;
-        z-index: 20;
-        padding: 0 1rem;
-        max-width: 90%;
-        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8),
-                     0 2px 8px rgba(0, 0, 0, 0.6),
-                     0 0 60px rgba(0, 0, 0, 0.5);
-        pointer-events: none;
-    }
-
-    @media (min-width: 768px) {
-        .deal-title {
-            font-size: 3.5rem;
-            top: 6rem;
-        }
-    }
-
-    @media (min-width: 1024px) {
-        .deal-title {
-            font-size: 4.5rem;
-            top: 7rem;
-        }
-    }
-
-    .image-card {
-        position: relative;
-        background: rgba(0, 0, 0, 0.3);
-        backdrop-filter: blur(20px);
-        border-radius: 1rem;
-        overflow: hidden;
-        border: 2px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-        margin-bottom: 1.5rem;
-    }
-
-    .image-card a {
-        display: block;
-        text-decoration: none;
-        color: inherit;
-        cursor: pointer;
-    }
-
-    .deal-image-wrapper {
-        position: relative;
-        width: 100%;
-        min-height: 100vh;
-        background: rgba(0, 0, 0, 0.2);
-    }
-
     .deal-image {
-        width: 100%;
+        max-width: 800px;
+        max-height: 60vh;
+        width: auto;
         height: auto;
-        display: block;
         object-fit: contain;
+        border-radius: 0.5rem;
+        margin: 2rem auto;
+        display: block;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
     }
 
-    .image-overlay {
+    .deal-main {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .deal-main > div {
+        margin-bottom: 2rem;
+    }
+
+    .deal-main {
+        padding-bottom: 6rem;
+    }
+
+    .floating-footer {
         position: fixed;
         bottom: 0;
         left: 0;
         right: 0;
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 50%, transparent 100%);
-        padding: 3rem 1.5rem 1.5rem;
+        background: transparent;
+        backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        z-index: 100;
+        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .floating-footer-content {
+        max-width: 1200px;
+        margin: 0 auto;
         display: flex;
-        gap: 1rem;
+        align-items: center;
+        justify-content: space-between;
+        gap: 2rem;
         flex-wrap: wrap;
-        align-items: flex-end;
-        justify-content: center;
-        z-index: 20;
-        pointer-events: none;
     }
 
-    .image-overlay > * {
-        pointer-events: auto;
+    .footer-info {
+        flex: 1;
+        min-width: 200px;
     }
 
-    .price-marker {
-        display: inline-flex;
-        align-items: center;
-        background: linear-gradient(135deg,
-            {{ deal.palette_colors|first|default:"#3b82f6" }} 0%,
-            {{ deal.palette_colors|slice:"1:2"|first|default:"#1e40af" }} 100%
-        );
-        padding: 0.75rem 1.25rem;
-        border-radius: 0.75rem;
-        font-size: 1.5rem;
+    .deal-title {
+        font-size: 2.5rem;
         font-weight: 900;
-        color: white;
-        box-shadow: 0 0 30px {{ deal.palette_colors|first|default:"#3b82f6" }}60,
-                    0 4px 15px rgba(0, 0, 0, 0.3);
-        border: 2px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .expiry-marker {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        background: rgba(0, 0, 0, 0.6);
-        backdrop-filter: blur(10px);
-        padding: 0.75rem 1.25rem;
-        border-radius: 0.75rem;
-        font-size: 1rem;
-        font-weight: 600;
+        margin-bottom: 0.5rem;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        position: relative;
+        display: inline-block;
+        padding: 0.25rem;
         color: {{ deal.foreground_color }};
-        border: 2px solid rgba(255, 255, 255, 0.15);
+        filter: drop-shadow(0 0 20px {{ deal.palette_colors|first|default:"#fff" }}30)
+                drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
     }
 
-    .deal-link-button {
-        display: none;
-    }
-
-    .deal-link-button::before {
-        content: '';
+    .deal-title::before {
+        content: attr(data-text);
         position: absolute;
+        left: 0;
         top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
+        z-index: -1;
+        padding: 0.25rem;
+        -webkit-text-stroke-width: 3px;
+        -webkit-text-stroke-color: transparent;
         background: linear-gradient(
-            90deg,
-            transparent,
-            rgba(255, 255, 255, 0.2),
-            transparent
+            110deg,
+            {% for color in deal.palette_colors %}
+                {{ color }} {% widthratio forloop.counter0 deal.palette_colors|length|add:"-1" 100 %}%{% if not forloop.last %},{% endif %}
+            {% endfor %}
         );
-        transition: left 0.5s;
+        background-size: 300% 100%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        animation: shimmer 6s ease-in-out infinite;
     }
 
-    .deal-link-button:hover::before {
-        left: 100%;
-    }
-
-    .deal-link-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 0 50px {{ deal.palette_colors|first|default:"#3b82f6" }}80,
-                    0 15px 40px rgba(0, 0, 0, 0.4);
-    }
-
-    .deal-link-button svg {
-        width: 1.5rem;
-        height: 1.5rem;
+    @keyframes shimmer {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
     }
 
     nav button {
@@ -238,6 +177,153 @@
             {{ deal.palette_colors|first|default:"#3b82f6" }} 100%
         ) !important;
     }
+
+    @media (min-width: 1024px) {
+        .deal-title {
+            font-size: 3.5rem;
+        }
+    }
+
+    .price-container {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 0;
+        flex-wrap: wrap;
+    }
+
+    .price-tag {
+        display: inline-block;
+        background: linear-gradient(135deg,
+            {{ deal.palette_colors|first|default:"#3b82f6" }} 0%,
+            {{ deal.palette_colors|slice:"1:2"|first|default:"#1e40af" }} 100%
+        );
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        box-shadow:
+            0 0 40px {{ deal.palette_colors|first|default:"#3b82f6" }}60,
+            0 0 60px {{ deal.palette_colors|slice:"1:2"|first|default:"#1e40af" }}30,
+            inset 0 2px 4px rgba(255, 255, 255, 0.2);
+        border: 2px solid {{ deal.palette_colors|slice:"2:3"|first|default:"rgba(255, 255, 255, 0.3)" }};
+        position: relative;
+        overflow: hidden;
+    }
+
+    .price-tag::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(
+            45deg,
+            transparent,
+            rgba(255, 255, 255, 0.1),
+            transparent
+        );
+        transform: rotate(45deg);
+        animation: shine 3s infinite;
+    }
+
+    @keyframes shine {
+        0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+        100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    }
+
+    .deal-price {
+        font-size: 0.875rem;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        color: {{ deal.foreground_color }};
+        position: relative;
+        z-index: 1;
+    }
+
+    @media (min-width: 1024px) {
+        .deal-price {
+            font-size: 1rem;
+        }
+    }
+
+    .deal-expiry {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: {{ deal.foreground_color }};
+        border: 1px solid {{ deal.palette_colors|slice:"3:4"|first|default:"rgba(255, 255, 255, 0.2)" }};
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    @media (min-width: 1024px) {
+        .deal-expiry {
+            font-size: 1rem;
+        }
+    }
+
+    .deal-expiry::before {
+        content: '⏱️ ';
+        margin-right: 0.5rem;
+    }
+
+    .deal-button {
+        display: inline-block;
+        white-space: nowrap;
+        text-align: center;
+        background: linear-gradient(135deg,
+            {{ deal.palette_colors|first|default:"#3b82f6" }} 0%,
+            {{ deal.palette_colors|slice:"1:2"|first|default:"#1e40af" }} 100%
+        );
+        border: 2px solid {{ deal.palette_colors|slice:"2:3"|first|default:"rgba(255, 255, 255, 0.3)" }};
+        color: white;
+        text-decoration: none;
+        font-size: 1.125rem;
+        font-weight: 700;
+        padding: 0.875rem 2rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow:
+            0 0 40px {{ deal.palette_colors|first|default:"#3b82f6" }}60,
+            0 10px 30px rgba(0, 0, 0, 0.3);
+        position: relative;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+
+    .deal-button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.2),
+            transparent
+        );
+        transition: left 0.5s;
+    }
+
+    .deal-button:hover::before {
+        left: 100%;
+    }
+
+    .deal-button:hover {
+        transform: translateY(-4px);
+        box-shadow:
+            0 0 60px {{ deal.palette_colors|first|default:"#3b82f6" }}80,
+            0 15px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .deal-button:active {
+        transform: translateY(-2px);
+    }
+
 </style>
 
 <div id="animation-container">
@@ -246,54 +332,57 @@
 </div>
 
 <div class="deal-container">
-    <!-- Header with Back Link -->
-    <div class="header-section">
-        <a href="{% url 'deals:home' %}" class="back-link">
-            ← Back
-        </a>
-    </div>
+    <a href="{% url 'deals:home' %}" class="back-link">
+        ← Back
+    </a>
 
-    <!-- Clickable Image Card with Title, Price and Expiry Markers -->
-    <div class="image-card">
-        <a href="{{ deal.link }}" target="_blank" rel="noopener noreferrer">
-            <h1 class="deal-title">{{ deal.name }}</h1>
-            <div class="deal-image-wrapper">
-                {% if deal.image %}
-                <img src="{{ deal.image }}" alt="{{ deal.name }}" class="deal-image">
-                {% endif %}
-            </div>
-            <div class="image-overlay">
-                <div class="price-marker">
-                    {% if deal.price == 0 %}
-                    FREE
-                    {% else %}
-                    ${{ deal.price }}
-                    {% endif %}
-                </div>
-                <div class="expiry-marker">
-                    <span>⏱️</span>
-                    <span>
-                        {% if deal.is_active %}
-                        Expires {{ deal.expires|timeuntil }}
+    <div class="deal-main">
+        <!-- Title -->
+        <div>
+            <h1 class="deal-title" data-text="{{ deal.name }}">{{ deal.name }}</h1>
+        </div>
+
+        <!-- Image -->
+        <div>
+            {% if deal.image %}
+            <img src="{{ deal.image }}" alt="{{ deal.name }}" class="deal-image">
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Floating Footer with Price, Expiration, and Button -->
+<div class="floating-footer">
+    <div class="floating-footer-content">
+        <div class="footer-info">
+            <div class="price-container">
+                <div class="price-tag">
+                    <span class="deal-price">
+                        {% if deal.price == 0 %}
+                        FREE
                         {% else %}
-                        <span style="color: #f87171;">Expired</span>
+                        ${{ deal.price }}
                         {% endif %}
                     </span>
                 </div>
+
+                <span class="deal-expiry">
+                    {% if deal.is_active %}
+                    Expires {{ deal.expires|timeuntil }}
+                    {% else %}
+                    <span style="color: #f87171;">Expired</span>
+                    {% endif %}
+                </span>
             </div>
+        </div>
+
+        <a href="{{ deal.link }}"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="deal-button">
+            Get This Deal →
         </a>
     </div>
-
-    <!-- Deal Link Button -->
-    <a href="{{ deal.link }}"
-       target="_blank"
-       rel="noopener noreferrer"
-       class="deal-link-button">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
-        </svg>
-        <span>Deal Link</span>
-    </a>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
@@ -326,11 +415,13 @@
     }
 
     // Create SVG blobs with prominence-based sizing
+    // First color (most dominant) gets biggest blobs, later colors get smaller
     var blobs = [];
 
     paletteColors.forEach(function(color, index) {
-        // Calculate blob size based on prominence
-        var prominenceFactor = 1 - (index / paletteColors.length * 0.7);
+        // Calculate blob size based on prominence (index 0 = most prominent)
+        // First color gets largest blobs, each subsequent color gets smaller
+        var prominenceFactor = 1 - (index / paletteColors.length * 0.7); // Scale from 1.0 to 0.3
         var blobSize = 300 * prominenceFactor;
 
         // More dominant colors get more blobs
@@ -350,11 +441,12 @@
         }
     });
 
-    // Animate morphing blobs with slow, gentle movement
+    // Animate morphing blobs with slow, gentle movement using CSS transforms
     blobs.forEach(function(blob, index) {
         var offsetX = anime.random(-60, 60);
         var offsetY = anime.random(-60, 60);
 
+        // Add CSS class to enable transforms
         blob.element.style.transformOrigin = 'center';
 
         anime({
