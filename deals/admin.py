@@ -123,19 +123,25 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
     change_actions = ('reextract_colors',)
 
 
-    def image_search_button(self, obj):
-        """Display a button to search for images (only for existing deals)"""
+    def image_search(self, request, obj):
+        """Action to search for images for this deal"""
         if obj and obj.pk:
-            # Existing deal - show search button
+            # Redirect to the image search page in a new window/tab
+            from django.http import HttpResponseRedirect
+            from django.urls import reverse
             url = reverse('admin_search_images_with_id', args=[obj.pk])
-            return format_html(
-                '<a class="button" href="{}" target="_blank">Search for Images</a>',
-                url
-            )
+            # This will open in the same window, but we can't control that with object actions
+            return HttpResponseRedirect(url)
         else:
-            # New deal - auto-find on save, no need for search button
-            return "Image will be auto-found when you save"
-    image_search_button.short_description = 'Image Search'
+            self.message_user(request, 'Please save the deal first before searching for images.', level=messages.WARNING)
+            return None  # Return to the same page
+
+    # Configure the object action
+    image_search.label = "Search for Images"
+    image_search.short_description = "Open image search in a new tab"
+
+    # Add the action to the change form
+    change_actions = ('reextract_colors', 'image_search')
 
 
 @admin.register(PushSubscription)

@@ -76,6 +76,8 @@ Fixed CSS gradient artifact in deal detail page. The gradient calculation in `de
 
 Fixed admin interface display issue by replacing the custom JavaScript button with django-object-actions package. The "Re-extract Colors" functionality now uses a proper Django admin action that integrates cleanly with the admin interface, eliminating the dash issue and providing better user experience.
 
+Extended the django-object-actions implementation to include the "Search for Images" functionality as a proper admin action as well.
+
 ## Key Files and Components
 
 ### `deals/admin.py`
