@@ -42,6 +42,19 @@ Game-Deals is a Django-based web application that manages game deals, allowing u
 - `dev.Dockerfile`: Defines the development Docker image
 - `docker-compose.yml`: Orchestrates the containers
 
+### Development Notes
+- The Django application automatically reloads when code changes are made (no manual restart required)
+- Changes to the Python code are reflected immediately in the running container due to volume mounting
+
+### Debugging Tips
+- To debug Django admin readonly fields, add logging statements to understand parameter values
+- Use `getattr(obj, 'attribute_name', 'default_value')` to safely access object attributes
+- When readonly fields show as dashes, ensure the method always returns visible HTML content
+- Check that the object has the expected attributes (pk, image, etc.) before showing interactive elements
+- For proper logging in Django, import logging at the module level: `import logging; logger = logging.getLogger(__name__)`
+- Django logging may require configuration in settings.py to output to console in Docker containers
+- To view Django logs in Docker, check container logs with `docker-compose logs web`
+
 ## Development Conventions
 
 ### Code Structure
@@ -60,6 +73,8 @@ The admin interface is heavily customized using Django's ModelAdmin with the Unf
 Fixed CSRF token issue in the "Re-extract Colors" button functionality in the admin interface. The `reextract_colors_button` method in `deals/admin.py` was updated to properly include the CSRF token by accessing the request context.
 
 Fixed CSS gradient artifact in deal detail page. The gradient calculation in `deals/templates/deals/detail.html` was improved to create a smoother transition between colors, eliminating the top-left triangle artifact.
+
+Fixed admin interface display issue by replacing the custom JavaScript button with django-object-actions package. The "Re-extract Colors" functionality now uses a proper Django admin action that integrates cleanly with the admin interface, eliminating the dash issue and providing better user experience.
 
 ## Key Files and Components
 

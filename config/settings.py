@@ -34,6 +34,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'unfold',  # Unfold admin theme (must be before django.contrib.admin)
+    'django_object_actions',  # Django Object Actions for custom admin actions
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

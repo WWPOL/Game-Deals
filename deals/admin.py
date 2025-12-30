@@ -6,6 +6,7 @@ from django.shortcuts import redirect
 from django.contrib import messages
 from django.conf import settings
 from unfold.admin import ModelAdmin
+from django_object_actions import DjangoObjectActions
 from .models import Deal, PushSubscription
 from .forms import DealAdminForm
 from .services.image_search import GoogleCustomSearchProvider
@@ -13,15 +14,15 @@ from .services.color_extractor import extract_colors_from_url
 
 
 @admin.register(Deal)
-class DealAdmin(ModelAdmin):
+class DealAdmin(DjangoObjectActions, ModelAdmin):
     form = DealAdminForm
     list_display = ('name', 'status', 'price', 'expires', 'is_active', 'created_at')
     list_filter = ('status', 'expires', 'created_at')
     search_fields = ('name',)
-    readonly_fields = ('slug', 'created_at', 'updated_at', 'image_search_button', 'image_preview', 'reextract_colors_button')
+    readonly_fields = ('slug', 'created_at', 'updated_at', 'image_search_button', 'image_preview')
     fieldsets = (
         ('Main Information', {
-            'fields': ('name', 'status', 'image', 'image_preview', 'image_search_button', 'reextract_colors_button')
+            'fields': ('name', 'status', 'image', 'image_preview', 'image_search_button')
         }),
         ('Color Palette', {
             'fields': ('palette_colors', 'foreground_color')
@@ -97,65 +98,30 @@ class DealAdmin(ModelAdmin):
         return "No image selected"
     image_preview.short_description = 'Current Image'
 
-    def reextract_colors_button(self, obj):
-        """Display a button to re-extract colors from current image"""
-        if obj and obj.pk and obj.image:
-            # Return a button that will trigger the re-extract colors functionality
-            # The actual form submission will be handled by the change_view method
-            return format_html(
-                '''
-                <button type="button" class="button" onclick="reextractColors({})">Re-extract Colors</button>
-                <script>
-                function reextractColors(objId) {
-                    if (confirm('Are you sure you want to re-extract colors?')) {
-                        // Create a form dynamically and submit it with the CSRF token
-                        var form = document.createElement('form');
-                        form.method = 'post';
-                        form.action = '';
+    def reextract_colors(self, request, obj):
+        """Action to re-extract colors from current image"""
+        if obj and obj.image:
+            try:
+                palette_colors, foreground_color = extract_colors_from_url(obj.image)
+                obj.palette_colors = palette_colors
+                obj.foreground_color = foreground_color
+                obj.save(update_fields=['palette_colors', 'foreground_color'])
+                self.message_user(request, 'Colors successfully re-extracted!')
+            except Exception as e:
+                self.message_user(request, f'Error extracting colors: {e}', level=messages.ERROR)
+        else:
+            self.message_user(request, 'No image to extract colors from.', level=messages.WARNING)
 
-                        // Get the CSRF token from the page
-                        var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-                        var csrfInput = document.createElement('input');
-                        csrfInput.type = 'hidden';
-                        csrfInput.name = 'csrfmiddlewaretoken';
-                        csrfInput.value = csrfToken;
-                        form.appendChild(csrfInput);
+        # Redirect back to the same change form
+        return redirect('admin:deals_deal_change', object_id=obj.pk)
 
-                        // Add the action
-                        var actionInput = document.createElement('input');
-                        actionInput.type = 'hidden';
-                        actionInput.name = 'action';
-                        actionInput.value = 'reextract_colors';
-                        form.appendChild(actionInput);
+    # Configure the object action
+    reextract_colors.label = "Re-extract Colors"
+    reextract_colors.short_description = "Extract color palette from current image"
 
-                        // Submit the form
-                        document.body.appendChild(form);
-                        form.submit();
-                    }
-                }
-                </script>
-                ''',
-                obj.pk
-            )
-        return "Save deal with an image first"
-    reextract_colors_button.short_description = 'Re-extract Colors'
+    # Add the action to the change form
+    change_actions = ('reextract_colors',)
 
-    def change_view(self, request, object_id, form_url='', extra_context=None):
-        """Handle color re-extraction in change view"""
-        if request.method == 'POST' and request.POST.get('action') == 'reextract_colors':
-            obj = self.get_object(request, object_id)
-            if obj and obj.image:
-                try:
-                    palette_colors, foreground_color = extract_colors_from_url(obj.image)
-                    obj.palette_colors = palette_colors
-                    obj.foreground_color = foreground_color
-                    obj.save(update_fields=['palette_colors', 'foreground_color'])
-                    messages.success(request, 'Colors successfully re-extracted!')
-                except Exception as e:
-                    messages.error(request, f'Error extracting colors: {e}')
-            return redirect('admin:deals_deal_change', object_id)
-
-        return super().change_view(request, object_id, form_url, extra_context)
 
     def image_search_button(self, obj):
         """Display a button to search for images (only for existing deals)"""
