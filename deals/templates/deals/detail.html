@@ -111,6 +111,16 @@
     .floating-footer-content {
         max-width: 1200px;
         margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .footer-info {
+        flex: 1;
+        min-width: 200px;
     }
 
     .deal-title {
@@ -249,8 +259,8 @@
     }
 
     .deal-button {
-        display: block;
-        width: 100%;
+        display: inline-block;
+        white-space: nowrap;
         text-align: center;
         background: linear-gradient(135deg,
             {{ deal.palette_colors.0|default:"#3b82f6" }} 0%,
@@ -269,6 +279,7 @@
             0 10px 30px rgba(0, 0, 0, 0.3);
         position: relative;
         overflow: hidden;
+        flex-shrink: 0;
     }
 
     .deal-button::before {
@@ -315,10 +326,24 @@
     </a>
 
     <div class="deal-main">
-        <!-- Title and Price Info -->
+        <!-- Title -->
         <div>
             <h1 class="deal-title">{{ deal.name }}</h1>
+        </div>
 
+        <!-- Image -->
+        <div>
+            {% if deal.image %}
+            <img src="{{ deal.image }}" alt="{{ deal.name }}" class="deal-image">
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Floating Footer with Price, Expiration, and Button -->
+<div class="floating-footer">
+    <div class="floating-footer-content">
+        <div class="footer-info">
             <div class="price-container">
                 <div class="price-tag">
                     <span class="deal-price">
@@ -340,18 +365,6 @@
             </div>
         </div>
 
-        <!-- Image -->
-        <div>
-            {% if deal.image %}
-            <img src="{{ deal.image }}" alt="{{ deal.name }}" class="deal-image">
-            {% endif %}
-        </div>
-    </div>
-</div>
-
-<!-- Floating Footer with Button -->
-<div class="floating-footer">
-    <div class="floating-footer-content">
         <a href="{{ deal.link }}"
            target="_blank"
            rel="noopener noreferrer"

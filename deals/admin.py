@@ -101,8 +101,13 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
             initial['image'] = request.GET['image']
         if 'palette_colors' in request.GET:
             try:
-                initial['palette_colors'] = json.loads(request.GET['palette_colors'])
-            except json.JSONDecodeError:
+                palette_colors = request.GET['palette_colors']
+                # Check if it's already a list (from Django's query param parsing) or a JSON string
+                if isinstance(palette_colors, list):
+                    initial['palette_colors'] = palette_colors
+                else:
+                    initial['palette_colors'] = json.loads(palette_colors)
+            except (json.JSONDecodeError, TypeError):
                 pass
         if 'foreground_color' in request.GET:
             initial['foreground_color'] = request.GET['foreground_color']

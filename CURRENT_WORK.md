@@ -40,6 +40,15 @@
   - Detects when image URL is modified on existing deals
   - Automatically re-extracts colors from new image
   - Shows success/error messages for re-extraction
+- [x] Enhanced deal detail page with palette-based styling
+  - Made header visible on detail page with transparent blur effect
+  - Added title shimmer effect using palette accent colors
+  - Styled subscribe button with palette color gradients
+  - Implemented floating footer with price, expiration, and CTA button
+  - Applied frosted glass effects to header and footer
+  - Added palette-based glowing effects to price tag and button
+  - Fixed image shadow to fit actual dimensions
+  - Fixed JSON parsing bug in ColorPaletteWidget for admin updates
 
 ### In Progress
 - [ ] Push notification implementation

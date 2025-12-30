@@ -51,11 +51,16 @@ class ColorPaletteWidget(forms.Widget):
             value = []
 
         # Ensure value is a list
-        if isinstance(value, str):
+        if isinstance(value, list):
+            # Already a list, use as-is
+            pass
+        elif isinstance(value, str):
             try:
                 value = json.loads(value)
             except json.JSONDecodeError:
                 value = []
+        else:
+            value = []
 
         # Ensure we have at least 6 colors
         while len(value) < 6:
@@ -111,9 +116,12 @@ class ColorPaletteWidget(forms.Widget):
     def value_from_datadict(self, data, files, name):
         """Extract value from form data"""
         value = data.get(name, '[]')
-        if isinstance(value, str):
+        if isinstance(value, list):
+            # Already a list, return as-is
+            return value
+        elif isinstance(value, str):
             try:
                 return json.loads(value)
             except json.JSONDecodeError:
                 return []
-        return value
+        return []
