@@ -23,11 +23,11 @@ class Deal(models.Model):
         default=Status.DRAFT,
         help_text="Deal status"
     )
-    slug = models.SlugField(
+    slug = models.CharField(
         max_length=255,
         unique=True,
         blank=True,
-        help_text="URL-friendly name (auto-generated)"
+        help_text="URL-friendly name with format: year/month/slug (auto-generated)"
     )
     price = models.DecimalField(
         max_digits=10,
