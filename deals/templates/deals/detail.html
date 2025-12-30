@@ -16,10 +16,8 @@
         background: {{ deal.palette_colors.0 }};
         {% else %}
         background: linear-gradient(135deg,
-            {{ deal.palette_colors.0 }} 0%,
-            {{ deal.palette_colors.0 }} 40%,
-            {% for color in deal.palette_colors|slice:"1:" %}
-                {{ color }} {% widthratio forloop.counter deal.palette_colors|length|add:"-1" 60 |add:40 %}%{% if not forloop.last %},{% endif %}
+            {% for color in deal.palette_colors %}
+                {{ color }} {% widthratio forloop.counter0 deal.palette_colors|length|add:"-1" 100 %}%{% if not forloop.last %},{% endif %}
             {% endfor %}
         );
         {% endif %}

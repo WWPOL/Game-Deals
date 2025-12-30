@@ -100,17 +100,42 @@ class DealAdmin(ModelAdmin):
     def reextract_colors_button(self, obj):
         """Display a button to re-extract colors from current image"""
         if obj and obj.pk and obj.image:
-            # Add a form that triggers color re-extraction
+            # Return a button that will trigger the re-extract colors functionality
+            # The actual form submission will be handled by the change_view method
             return format_html(
                 '''
-                <form method="post" action="{}">
-                    <input type="hidden" name="csrfmiddlewaretoken" value="{}">
-                    <input type="hidden" name="action" value="reextract_colors">
-                    <button type="submit" class="button">Re-extract Colors</button>
-                </form>
+                <button type="button" class="button" onclick="reextractColors({})">Re-extract Colors</button>
+                <script>
+                function reextractColors(objId) {
+                    if (confirm('Are you sure you want to re-extract colors?')) {
+                        // Create a form dynamically and submit it with the CSRF token
+                        var form = document.createElement('form');
+                        form.method = 'post';
+                        form.action = '';
+
+                        // Get the CSRF token from the page
+                        var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                        var csrfInput = document.createElement('input');
+                        csrfInput.type = 'hidden';
+                        csrfInput.name = 'csrfmiddlewaretoken';
+                        csrfInput.value = csrfToken;
+                        form.appendChild(csrfInput);
+
+                        // Add the action
+                        var actionInput = document.createElement('input');
+                        actionInput.type = 'hidden';
+                        actionInput.name = 'action';
+                        actionInput.value = 'reextract_colors';
+                        form.appendChild(actionInput);
+
+                        // Submit the form
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                }
+                </script>
                 ''',
-                reverse('admin:deals_deal_change', args=[obj.pk]),
-                format_html('{}', '')  # CSRF token will be added by Django
+                obj.pk
             )
         return "Save deal with an image first"
     reextract_colors_button.short_description = 'Re-extract Colors'
