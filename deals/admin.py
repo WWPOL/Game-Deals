@@ -20,10 +20,10 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
     list_display = ('name', 'status', 'price', 'expires', 'is_active', 'created_at')
     list_filter = ('status', 'expires', 'created_at')
     search_fields = ('name',)
-    readonly_fields = ('slug', 'created_at', 'updated_at', 'image_preview')
+    actions = ['reextract_colors_bulk', 'image_search_bulk']
     fieldsets = (
         ('Basic Information', {
-            'fields': ('name',)
+            'fields': ('name', 'slug')
         }),
         ('Deal Details', {
             'fields': ('price', 'link', 'expires')
@@ -37,8 +37,8 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
         ('Color Palette', {
             'fields': ('palette_colors', 'foreground_color')
         }),
-        ('Auto-Generated & Metadata', {
-            'fields': ('slug', 'notifications_sent', 'created_at', 'updated_at'),
+        ('Metadata', {
+            'fields': ('notifications_sent', 'created_at', 'updated_at'),
             'classes': ('collapse',)
         }),
     )
@@ -161,6 +161,50 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
 
     # Add both actions to the change form
     change_actions = ('reextract_colors', 'image_search')
+
+    def get_readonly_fields(self, request, obj=None):
+        """Make slug readonly only when published"""
+        readonly = ['created_at', 'updated_at', 'image_preview']
+        if obj and obj.status == Deal.Status.PUBLISHED:
+            readonly.append('slug')
+        return readonly
+
+    @admin.action(description='Re-extract colors from images')
+    def reextract_colors_bulk(self, request, queryset):
+        """Bulk action to re-extract colors from selected deals"""
+        success_count = 0
+        error_count = 0
+
+        for deal in queryset:
+            if deal.image:
+                try:
+                    palette_colors, foreground_color = extract_colors_from_url(deal.image)
+                    deal.palette_colors = palette_colors
+                    deal.foreground_color = foreground_color
+                    deal.save(update_fields=['palette_colors', 'foreground_color'])
+                    success_count += 1
+                except Exception as e:
+                    error_count += 1
+                    self.message_user(request, f'Error extracting colors for "{deal.name}": {e}', level=messages.ERROR)
+            else:
+                error_count += 1
+
+        if success_count:
+            self.message_user(request, f'Successfully re-extracted colors for {success_count} deal(s)')
+        if error_count:
+            self.message_user(request, f'{error_count} deal(s) skipped (no image or error)', level=messages.WARNING)
+
+    @admin.action(description='Search for images')
+    def image_search_bulk(self, request, queryset):
+        """Bulk action to open image search - only works with one selected item"""
+        if queryset.count() != 1:
+            self.message_user(request, 'Please select exactly one deal to search for images', level=messages.WARNING)
+            return
+
+        deal = queryset.first()
+        from django.http import HttpResponseRedirect
+        url = reverse('admin_search_images_with_id', args=[deal.pk])
+        return HttpResponseRedirect(url)
 
 
 @admin.register(PushSubscription)

@@ -123,7 +123,13 @@ class Deal(models.Model):
     def save(self, *args, **kwargs):
         """Auto-generate slug from name if not provided"""
         if not self.slug:
-            self.slug = slugify(self.name)
+            # Generate slug with year/month/name format
+            now = timezone.now()
+            year = now.year
+            month = f"{now.month:02d}"  # Zero-padded month
+            name_slug = slugify(self.name)
+            self.slug = f"{year}/{month}/{name_slug}"
+
             # Ensure uniqueness
             original_slug = self.slug
             counter = 1
