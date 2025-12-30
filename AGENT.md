@@ -68,17 +68,18 @@ Game-Deals is a Django-based web application that manages game deals, allowing u
 The admin interface is heavily customized using Django's ModelAdmin with the Unfold theme. Custom functionality includes:
 - Automatic image finding when creating new deals
 - Color palette extraction from images
+- Automatic color re-extraction when image URL changes
 - Image search functionality with external API integration
-- Custom buttons for re-extracting colors and searching images
+- Custom object actions with Unfold theme styling (`unfold_action` decorator in `deals/admin_mixins.py`)
 
-### Recent Changes
-Fixed CSRF token issue in the "Re-extract Colors" button functionality in the admin interface. The `reextract_colors_button` method in `deals/admin.py` was updated to properly include the CSRF token by accessing the request context.
+### Maintaining This Documentation
+**IMPORTANT**: This file documents the overall project architecture and setup. For tracking current work progress and recent changes, use `CURRENT_WORK.md` instead.
 
-Fixed CSS gradient artifact in deal detail page. The gradient calculation in `deals/templates/deals/detail.html` was improved to create a smoother transition between colors, eliminating the top-left triangle artifact.
-
-Fixed admin interface display issue by replacing the custom JavaScript button with django-object-actions package. The "Re-extract Colors" functionality now uses a proper Django admin action that integrates cleanly with the admin interface, eliminating the dash issue and providing better user experience.
-
-Extended the django-object-actions implementation to include the "Search for Images" functionality as a proper admin action as well.
+When making significant architectural changes or adding new features:
+1. Update this file to reflect new components, patterns, or conventions
+2. Keep descriptions high-level and focused on "what exists" not "what changed"
+3. Update `CURRENT_WORK.md` for tracking active development and recent completions
+4. Commit both files together when documenting major milestones
 
 ## Key Files and Components
 
@@ -86,8 +87,13 @@ Extended the django-object-actions implementation to include the "Search for Ima
 Contains the main admin interface customization for the Deal model, including:
 - Custom form handling
 - Automatic image finding on creation
+- Automatic color re-extraction when image changes
 - Color extraction functionality
 - Image search and re-extraction features
+
+### `deals/admin_mixins.py`
+Contains decorators and mixins for admin customization:
+- `unfold_action` decorator - Automatically applies Unfold theme CSS classes to django-object-actions buttons
 
 ### `deals/templates/deals/detail.html`
 Template for displaying individual deal details with animated background based on extracted colors.
