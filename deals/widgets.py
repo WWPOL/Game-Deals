@@ -117,11 +117,13 @@ class ColorPaletteWidget(forms.Widget):
         """Extract value from form data"""
         value = data.get(name, '[]')
         if isinstance(value, list):
-            # Already a list, return as-is
-            return value
+            # Convert list to JSON string for JSONField
+            return json.dumps(value)
         elif isinstance(value, str):
+            # Already a JSON string, validate it and return
             try:
-                return json.loads(value)
+                json.loads(value)  # Validate it's valid JSON
+                return value
             except json.JSONDecodeError:
-                return []
-        return []
+                return '[]'
+        return '[]'
