@@ -75,6 +75,8 @@ The admin interface is heavily customized using Django's ModelAdmin with the Unf
 ### Maintaining This Documentation
 **IMPORTANT**: This file documents the overall project architecture and setup. For tracking current work progress and recent changes, use `CURRENT_WORK.md` instead.
 
+**CRITICAL**: Always update `CURRENT_WORK.md` with every commit to keep project documentation current.
+
 When making significant architectural changes or adding new features:
 1. Update this file to reflect new components, patterns, or conventions
 2. Keep descriptions high-level and focused on "what exists" not "what changed"

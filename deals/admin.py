@@ -16,33 +16,17 @@ from .admin_mixins import unfold_action
 from .widgets import ColorPickerWidget, ColorPalettePreviewWidget
 
 
-class ColorPaletteInlineForm(forms.ModelForm):
-    class Meta:
-        model = ColorPalette
-        fields = ['background_color', 'foreground_color', 'weight']
-        widgets = {
-            'background_color': ColorPickerWidget(),
-            'foreground_color': ColorPickerWidget(),
-        }
-
-
 class ColorPaletteInline(admin.TabularInline):
     model = ColorPalette
-    form = ColorPaletteInlineForm
     extra = 0
     min_num = 0  # Don't auto-create empty rows
     max_num = 6
     can_delete = True
+    show_change_link = True  # Built-in Django feature to show edit link
 
-    fields = ['color_preview', 'weight', 'background_color', 'foreground_color']
+    fields = ['color_preview']
     readonly_fields = ['color_preview']
     ordering = ['-weight']
-
-    class Media:
-        css = {
-            'all': ('admin/css/colorpalette_inline.css',)
-        }
-        js = ('admin/js/colorpalette_inline.js',)
 
     def color_preview(self, obj):
         """Visual preview of foreground text on background"""
@@ -280,6 +264,68 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
         from django.http import HttpResponseRedirect
         url = reverse('admin_search_images_with_id', args=[deal.pk])
         return HttpResponseRedirect(url)
+
+
+class ColorPaletteAdminForm(forms.ModelForm):
+    class Meta:
+        model = ColorPalette
+        fields = '__all__'
+        widgets = {
+            'background_color': ColorPickerWidget(),
+            'foreground_color': ColorPickerWidget(),
+        }
+
+
+@admin.register(ColorPalette)
+class ColorPaletteAdmin(ModelAdmin):
+    form = ColorPaletteAdminForm
+    list_display = ('deal', 'color_preview_list', 'weight', 'created_at')
+    list_filter = ('deal', 'created_at')
+    search_fields = ('deal__name',)
+    readonly_fields = ('created_at', 'color_preview_display')
+
+    fieldsets = (
+        ('Deal', {
+            'fields': ('deal',)
+        }),
+        ('Colors', {
+            'fields': ('color_preview_display', 'background_color', 'foreground_color', 'weight')
+        }),
+        ('Metadata', {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def color_preview_list(self, obj):
+        """Preview in list view"""
+        if not obj:
+            return "-"
+
+        widget = ColorPalettePreviewWidget()
+        value = {
+            'background_color': obj.background_color,
+            'foreground_color': obj.foreground_color,
+            'weight': obj.weight
+        }
+        return widget.render(name='preview', value=value)
+
+    color_preview_list.short_description = 'Preview'
+
+    def color_preview_display(self, obj):
+        """Preview in change form"""
+        if not obj:
+            return "-"
+
+        widget = ColorPalettePreviewWidget()
+        value = {
+            'background_color': obj.background_color,
+            'foreground_color': obj.foreground_color,
+            'weight': obj.weight
+        }
+        return widget.render(name='preview', value=value)
+
+    color_preview_display.short_description = 'Current Preview'
 
 
 @admin.register(PushSubscription)
