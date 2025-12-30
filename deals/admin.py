@@ -41,10 +41,20 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
     )
 
     def save_model(self, request, obj, form, change):
-        """Automatically find image on creation if not set"""
+        """Automatically find image on creation if not set, and re-extract colors when image changes"""
         # Ensure palette_colors is always set to at least an empty list
         if not obj.palette_colors:
             obj.palette_colors = []
+
+        # Check if image URL has changed (for updates)
+        image_changed = False
+        if change and obj.pk:
+            try:
+                original_obj = Deal.objects.get(pk=obj.pk)
+                if original_obj.image != obj.image and obj.image:
+                    image_changed = True
+            except Deal.DoesNotExist:
+                pass
 
         if not change and obj.name and not obj.image:
             # This is a new deal - auto-find first image
@@ -71,6 +81,15 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
 
             except Exception as e:
                 messages.error(request, f'Error finding image: {e}')
+        elif image_changed:
+            # Image URL was changed - automatically re-extract colors
+            try:
+                palette_colors, foreground_color = extract_colors_from_url(obj.image)
+                obj.palette_colors = palette_colors
+                obj.foreground_color = foreground_color
+                messages.success(request, 'Image changed - color palette automatically re-extracted')
+            except Exception as e:
+                messages.error(request, f'Error extracting colors from new image: {e}')
 
         super().save_model(request, obj, form, change)
 
