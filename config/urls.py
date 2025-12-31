@@ -15,6 +15,7 @@ urlpatterns = [
     path('admin/deal/search-images/', deals_views.search_deal_images, name='admin_search_images'),
     path('admin/deal/<int:deal_id>/search-images/', deals_views.search_deal_images, name='admin_search_images_with_id'),
     path('admin/', admin.site.urls),
+    path('i18n/', include('django.conf.urls.i18n')),  # Language switching
     path('tz_detect/', include('tz_detect.urls')),
     path('', include('deals.urls')),
 ]
