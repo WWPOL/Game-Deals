@@ -9,6 +9,28 @@
         background: #0a0a0a;
     }
 
+    /* Nav bar styling with blur */
+    nav {
+        background: rgba(255, 255, 255, 0.15) !important;
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+    }
+
+    nav * {
+        color: white !important;
+    }
+
+    nav button {
+        background: #2563eb !important;
+        color: white !important;
+        box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);
+        border: 2px solid rgba(255, 255, 255, 0.2) !important;
+    }
+
+    nav button:hover {
+        box-shadow: 0 0 30px rgba(37, 99, 235, 0.6) !important;
+    }
+
     #home-animation-container {
         position: fixed;
         top: 0;
@@ -27,7 +49,7 @@
     }
 
     .home-blob-svg {
-        filter: blur(10px);
+        filter: blur(20px);
         opacity: 0.8;
     }
 
