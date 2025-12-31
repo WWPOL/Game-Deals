@@ -9,28 +9,6 @@
         background: #0a0a0a;
     }
 
-    /* Nav bar styling with blur */
-    nav {
-        background: rgba(255, 255, 255, 0.15) !important;
-        backdrop-filter: blur(20px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
-    }
-
-    nav * {
-        color: white !important;
-    }
-
-    nav button {
-        background: #2563eb !important;
-        color: white !important;
-        box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);
-        border: 2px solid rgba(255, 255, 255, 0.2) !important;
-    }
-
-    nav button:hover {
-        box-shadow: 0 0 30px rgba(37, 99, 235, 0.6) !important;
-    }
-
     #home-animation-container {
         position: fixed;
         top: 0;
@@ -39,7 +17,6 @@
         height: 100%;
         z-index: 0;
         overflow: hidden;
-        background: #0a0a0a;
     }
 
     #home-animation-container svg {
@@ -63,10 +40,10 @@
     </svg>
 </div>
 
-<div class="min-h-screen text-white" style="position: relative; z-index: 1;">
+<div class="min-h-screen relative deal-fg-primary">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <!-- Filter Section -->
-        <div class="mb-8 bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 p-6">
+        <div class="mb-8 backdrop-blur-sm rounded-lg border border-white/10 p-6">
             <form method="get" id="filterForm">
                 <!-- Search Bar -->
                 <div class="mb-6">
@@ -76,11 +53,11 @@
                             name="search"
                             value="{{ current_search }}"
                             placeholder="Search game deals..."
-                            class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 pl-10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            class="w-full border border-white/20 rounded-lg px-4 py-3 pl-10 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         >
-                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">🔍</span>
+                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2">🔍</span>
                         {% if current_search %}
-                        <a href="?" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white">✕</a>
+                        <a href="?" class="absolute right-3 top-1/2 transform -translate-y-1/2">✕</a>
                         {% endif %}
                     </div>
                 </div>
@@ -93,9 +70,9 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <!-- Sort Dropdown -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">Sort By</label>
+                        <label class="block text-sm font-medium  mb-2">Sort By</label>
                         <select name="sort"
-                                class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2  focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 onchange="this.form.submit()">
                             <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>Newest First</option>
                             <option value="price_low" {% if current_sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
@@ -106,9 +83,9 @@
 
                     <!-- Price Range Filter -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">Price Range</label>
+                        <label class="block text-sm font-medium  mb-2">Price Range</label>
                         <select id="priceRangeSelect"
-                                class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2  focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 onchange="setPriceRange(this.value)">
                             <option value="" {% if not current_price_gt and not current_price_lt %}selected{% endif %}>All Prices</option>
                             <option value="free" {% if current_price_gt == None and current_price_lt == 0.01 %}selected{% endif %}>FREE</option>
@@ -121,9 +98,9 @@
 
                     <!-- Status Filter -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">Status</label>
+                        <label class="block text-sm font-medium  mb-2">Status</label>
                         <select name="status_filter"
-                                class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2  focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 onchange="this.form.submit()">
                             <option value="active" {% if current_status_filter == 'active' %}selected{% endif %}>Active Only</option>
                             <option value="expired" {% if current_status_filter == 'expired' %}selected{% endif %}>Expired Only</option>
@@ -134,14 +111,14 @@
                     <!-- Staff-Only: Show Drafts Toggle -->
                     {% if user.is_staff %}
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">Staff Options</label>
+                        <label class="block text-sm font-medium  mb-2">Staff Options</label>
                         <label class="flex items-center space-x-2 bg-white/10 border border-yellow-500/50 rounded-lg px-4 py-2 cursor-pointer hover:bg-white/15">
                             <input type="checkbox"
                                    name="show_drafts"
                                    value="true"
                                    {% if show_drafts %}checked{% endif %}
                                    onchange="this.form.submit()"
-                                   class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
+                                   class="w-4 h-4 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
                             <span class="text-sm text-yellow-300">Show Drafts</span>
                         </label>
                     </div>
@@ -153,19 +130,19 @@
                 <div class="mt-4 pt-4 border-t border-white/10">
                     <div class="flex items-center justify-between flex-wrap gap-2">
                         <div class="flex items-center gap-2 flex-wrap">
-                            <span class="text-sm text-gray-400">Active filters:</span>
+                            <span class="text-sm ">Active filters:</span>
                             {% if current_search %}
-                            <span class="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded-full text-sm text-blue-300">
+                            <span class="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded-full text-sm ">
                                 Search: "{{ current_search }}"
                             </span>
                             {% endif %}
                             {% if current_price_gt or current_price_lt %}
-                            <span class="inline-flex items-center gap-1 px-3 py-1 bg-green-500/20 border border-green-500/30 rounded-full text-sm text-green-300">
+                            <span class="inline-flex items-center gap-1 px-3 py-1 bg-green-500/20 border border-green-500/30 rounded-full text-sm ">
                                 Price: {% if current_price_gt and current_price_lt %}${{ current_price_gt }} - ${{ current_price_lt }}{% elif current_price_gt %}${{ current_price_gt }}+{% elif current_price_lt %}Under ${{ current_price_lt }}{% endif %}
                             </span>
                             {% endif %}
                             {% if current_status_filter != 'active' %}
-                            <span class="inline-flex items-center gap-1 px-3 py-1 bg-purple-500/20 border border-purple-500/30 rounded-full text-sm text-purple-300">
+                            <span class="inline-flex items-center gap-1 px-3 py-1 bg-purple-500/20 border border-purple-500/30 rounded-full text-sm ">
                                 Status: {{ current_status_filter|title }}
                             </span>
                             {% endif %}
@@ -175,7 +152,7 @@
                             </span>
                             {% endif %}
                         </div>
-                        <a href="?" class="text-sm text-gray-400 hover:text-white underline">Clear all filters</a>
+                        <a href="?" class="text-sm underline">Clear all filters</a>
                     </div>
                 </div>
                 {% endif %}
@@ -220,7 +197,7 @@
             <h1 class="text-5xl font-bold mb-3">🎮
                 {% if current_search %}Search Results{% else %}{% if current_status_filter == 'expired' %}Expired Deals{% elif current_status_filter == 'all' %}All Deals{% else %}Active Deals{% endif %}{% endif %}
             </h1>
-            <p class="text-gray-400">
+            <p class="">
                 {{ total_results }} deal{{ total_results|pluralize }} found
                 {% if page_obj.paginator.num_pages > 1 %}
                 (Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }})
@@ -258,15 +235,15 @@
                             {{ deal.name }}
                         </h2>
                         {% if user.is_staff and deal.status == 'draft' %}
-                        <span class="bg-yellow-600 text-white px-2 py-1 rounded text-xs font-bold whitespace-nowrap">DRAFT</span>
+                        <span class="bg-yellow-600 px-2 py-1 rounded text-xs font-bold whitespace-nowrap">DRAFT</span>
                         {% endif %}
                     </div>
                     <div class="flex items-center text-sm">
                         {% if deal.is_active %}
-                        <span class="text-gray-400">⏰</span>
-                        <span class="ml-2 text-gray-400">Expires {{ deal.expires|timeuntil }}</span>
+                        <span class="">⏰</span>
+                        <span class="ml-2 ">Expires {{ deal.expires|timeuntil }}</span>
                         {% else %}
-                        <span class="bg-red-600 text-white px-2 py-1 rounded font-bold text-xs">EXPIRED</span>
+                        <span class="bg-red-600  px-2 py-1 rounded font-bold text-xs">EXPIRED</span>
                         {% endif %}
                     </div>
                 </div>
@@ -281,11 +258,11 @@
             <!-- Previous Button -->
             {% if page_obj.has_previous %}
             <a href="?page={{ page_obj.previous_page_number }}{% if query_string %}&{{ query_string }}{% endif %}"
-               class="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-colors">
+               class="px-4 py-2 bg-white/10 border border-white/20 rounded-lg  hover:bg-white/20 transition-colors">
                 ← Previous
             </a>
             {% else %}
-            <span class="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-gray-500 cursor-not-allowed">
+            <span class="px-4 py-2 bg-white/5 border border-white/10 rounded-lg  cursor-not-allowed">
                 ← Previous
             </span>
             {% endif %}
@@ -294,21 +271,21 @@
             <div class="flex gap-1 flex-wrap">
                 {% for num in page_obj.paginator.page_range %}
                     {% if num == page_obj.number %}
-                        <span class="px-4 py-2 bg-blue-600 border border-blue-500 rounded-lg text-white font-bold">
+                        <span class="px-4 py-2 bg-blue-600 border border-blue-500 rounded-lg  font-bold">
                             {{ num }}
                         </span>
                     {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                         <a href="?page={{ num }}{% if query_string %}&{{ query_string }}{% endif %}"
-                           class="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-colors">
+                           class="px-4 py-2 bg-white/10 border border-white/20 rounded-lg  hover:bg-white/20 transition-colors">
                             {{ num }}
                         </a>
                     {% elif num == 1 or num == page_obj.paginator.num_pages %}
                         <a href="?page={{ num }}{% if query_string %}&{{ query_string }}{% endif %}"
-                           class="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-colors">
+                           class="px-4 py-2 bg-white/10 border border-white/20 rounded-lg  hover:bg-white/20 transition-colors">
                             {{ num }}
                         </a>
                     {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
-                        <span class="px-4 py-2 text-gray-500">...</span>
+                        <span class="px-4 py-2 ">...</span>
                     {% endif %}
                 {% endfor %}
             </div>
@@ -316,11 +293,11 @@
             <!-- Next Button -->
             {% if page_obj.has_next %}
             <a href="?page={{ page_obj.next_page_number }}{% if query_string %}&{{ query_string }}{% endif %}"
-               class="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-colors">
+               class="px-4 py-2 bg-white/10 border border-white/20 rounded-lg  hover:bg-white/20 transition-colors">
                 Next →
             </a>
             {% else %}
-            <span class="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-gray-500 cursor-not-allowed">
+            <span class="px-4 py-2 bg-white/5 border border-white/10 rounded-lg  cursor-not-allowed">
                 Next →
             </span>
             {% endif %}
@@ -330,14 +307,14 @@
         <div class="text-center py-20">
             <div class="text-6xl mb-4">🔍</div>
             <h3 class="text-2xl font-bold mb-2">No deals found</h3>
-            <p class="text-gray-400 mb-6">
+            <p class=" mb-6">
                 {% if current_search %}
                 No deals match your search for "{{ current_search }}"
                 {% else %}
                 Try adjusting your filters to see more results
                 {% endif %}
             </p>
-            <a href="?" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors">
+            <a href="?" class="inline-block bg-blue-600 hover:bg-blue-700  px-6 py-3 rounded-lg transition-colors">
                 Clear all filters
             </a>
         </div>
@@ -358,6 +335,25 @@
             {% endfor %}
         {% endfor %}
     ];
+
+    // If no colors found, use default darker purplish palette
+    if (allColors.length === 0) {
+        var defaultColors = [
+            '#1a0f2e', // Dark purple
+            '#2d1b4e', // Deep purple
+            '#1e1b3c', // Dark blue-purple
+            '#251640', // Dark violet
+            '#1c1333', // Very dark purple
+            '#2a1f3d', // Dark plum
+        ];
+
+        allColors = defaultColors.map(function(color) {
+            return {
+                background: color,
+                weight: 1
+            };
+        });
+    }
 
     // Remove duplicates and combine weights
     var colorMap = {};
