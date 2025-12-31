@@ -1,0 +1,117 @@
+/* ==========================================
+   Deal Color Utilities
+   Tailwind-esque utility classes for deal-specific colors
+   Uses CSS custom properties scoped per deal
+   ========================================== */
+
+/* Background Colors */
+.deal-bg-primary {
+  background: var(--deal-bg-primary);
+}
+
+.deal-bg-primary-20 {
+  background: var(--deal-bg-primary-20);
+}
+
+.deal-bg-primary-40 {
+  background: var(--deal-bg-primary-40);
+}
+
+.deal-bg-primary-60 {
+  background: var(--deal-bg-primary-60);
+}
+
+.deal-bg-primary-80 {
+  background: var(--deal-bg-primary-80);
+}
+
+/* Foreground/Text Colors */
+.deal-fg-primary {
+  color: var(--deal-fg-primary);
+}
+
+/* Borders */
+.deal-border-primary {
+  border-color: var(--deal-bg-primary);
+}
+
+.deal-border-primary-20 {
+  border-color: var(--deal-bg-primary-20);
+}
+
+/* Box Shadows - Glows */
+.deal-glow-sm {
+  box-shadow: 0 0 20px var(--deal-bg-primary-60);
+}
+
+.deal-glow-md {
+  box-shadow: 0 0 30px var(--deal-bg-primary-60);
+}
+
+.deal-glow-lg {
+  box-shadow: 0 0 40px var(--deal-bg-primary-60);
+}
+
+/* Combined Glow + Shadow */
+.deal-glow-shadow-sm {
+  box-shadow: 0 0 20px var(--deal-bg-primary-60),
+              0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.deal-glow-shadow-md {
+  box-shadow: 0 0 30px var(--deal-bg-primary-60),
+              0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.deal-glow-shadow-lg {
+  box-shadow: 0 0 40px var(--deal-bg-primary-60),
+              0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Hover States - Glows Only */
+.deal-glow-sm-hover:hover {
+  box-shadow: 0 0 25px var(--deal-bg-primary-80);
+}
+
+.deal-glow-md-hover:hover {
+  box-shadow: 0 0 35px var(--deal-bg-primary-80);
+}
+
+.deal-glow-lg-hover:hover {
+  box-shadow: 0 0 50px var(--deal-bg-primary-80);
+}
+
+/* Hover States - Glow + Shadow Combined */
+.deal-glow-shadow-sm-hover:hover {
+  box-shadow: 0 0 25px var(--deal-bg-primary-80),
+              0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.deal-glow-shadow-md-hover:hover {
+  box-shadow: 0 0 35px var(--deal-bg-primary-80),
+              0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.deal-glow-shadow-lg-hover:hover {
+  box-shadow: 0 0 50px var(--deal-bg-primary-80),
+              0 15px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Gradients */
+.deal-gradient-bg {
+  background: var(--deal-gradient);
+}
+
+.deal-gradient-text {
+  background: var(--deal-gradient-shimmer);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Wrapper utility for card borders */
+.deal-wrapper-primary {
+  background: var(--deal-bg-primary);
+  padding: 2px;
+  border-radius: 0.5rem;
+}

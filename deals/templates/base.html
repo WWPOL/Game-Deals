@@ -7,6 +7,7 @@
     <title>{% block title %}Game Deals{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{% static 'css/common.css' %}">
+    <link rel="stylesheet" href="{% static 'css/deal-colors.css' %}">
     <style>
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
@@ -18,23 +19,25 @@
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <nav class="bg-white shadow-sm border-b border-gray-200 fixed top-0 left-0 right-0 z-10">
+    {% block nav %}
+    <nav class="deal-bg-primary-80 shadow-sm fixed top-0 left-0 right-0 z-10 deal-fg-primary backdrop-blur">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <div class="flex items-center">
                     <a href="{% url 'deals:home' %}" class="flex items-center">
-                        <span class="text-2xl font-bold text-gray-900">🎮 Game Deals</span>
-                        <span class="ml-3 text-sm text-gray-500 hidden sm:block">by Olly G</span>
+                        <span class="text-2xl font-bold deal-fg-primary">🎮 Game Deals</span>
+                        <span class="ml-3 text-sm deal-fg-primary hidden sm:block">by Olly G</span>
                     </a>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <button id="subscribe-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg transition-all hover:shadow-lg font-semibold">
+                    <button id="subscribe-btn" class="deal-bg-primary deal-fg-primary px-4 py-2 rounded-lg transition-all hover:shadow-lg deal-glow-sm deal-glow-md-hover font-semibold border-white-20">
                         Subscribe to Alerts
                     </button>
                 </div>
             </div>
         </div>
     </nav>
+    {% endblock %}
 
     <main class="pt-16">
         {% block content %}{% endblock %}

@@ -23,3 +23,17 @@
 .hover-sheen:hover::before {
     left: 100%;
 }
+
+/* Backdrop blur utilities */
+.backdrop-blur {
+    backdrop-filter: blur(20px);
+}
+
+/* White border utilities */
+.border-white-20 {
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.border-white-10 {
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}

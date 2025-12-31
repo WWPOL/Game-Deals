@@ -3,38 +3,16 @@
 
 {% block title %}{{ deal.name }} - Olly G's Game Deals{% endblock %}
 
+{% block nav %}
+{% deal_variables deal %}
+<div class="{% deal_scope deal %}">
+{{ block.super }}
+</div>
+{% endblock %}
+
 {% block content %}
+<div class="{% deal_scope deal %}">
 <style>
-    /* Make header use primary color on this page */
-    nav {
-        {% with primary=deal.color_palette.all|first %}
-        background: {{ primary.background_color }}80 !important;
-        {% endwith %}
-        backdrop-filter: blur(20px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-    }
-
-    nav * {
-        {% with primary=deal.color_palette.all|first %}
-        color: {{ primary.foreground_color }} !important;
-        {% endwith %}
-    }
-
-    nav button {
-        {% with primary=deal.color_palette.all|first %}
-        background: {{ primary.background_color }} !important;
-        color: {{ primary.foreground_color }} !important;
-        box-shadow: 0 0 20px {{ primary.background_color }}60;
-        border: 2px solid rgba(255, 255, 255, 0.2) !important;
-        {% endwith %}
-    }
-
-    nav button:hover {
-        {% with primary=deal.color_palette.all|first %}
-        box-shadow: 0 0 30px {{ primary.background_color }}80 !important;
-        {% endwith %}
-    }
-
     #animation-container {
         position: fixed;
         top: 0;
@@ -482,4 +460,5 @@
     }
 </script>
 
+</div>
 {% endblock %}
