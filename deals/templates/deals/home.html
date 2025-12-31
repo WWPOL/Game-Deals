@@ -180,52 +180,27 @@
             {% for deal in deals %}
             <style>
                 .card-{{ forloop.counter }} {
-                    border-top: 4px solid transparent;
-                    {% with backgrounds=deal.color_palette.all|palette_backgrounds|slice:":4" %}
-                    border-image: linear-gradient(90deg,
-                        {% for color in backgrounds %}
-                            {{ color }} {% widthratio forloop.counter0 3 100 %}%{% if not forloop.last %},{% endif %}
-                        {% endfor %}) 1;
+                    {% with primary=deal.color_palette.all|first %}
+                    background: {{ primary.background_color }}20 !important;
+                    border: 2px solid {{ primary.background_color }}40;
                     {% endwith %}
                 }
                 .card-{{ forloop.counter }}:hover {
-                    {% with backgrounds=deal.color_palette.all|palette_backgrounds|slice:"1:5" %}
-                    border-image: linear-gradient(90deg,
-                        {% for color in backgrounds %}
-                            {{ color }} {% widthratio forloop.counter0 3 100 %}%{% if not forloop.last %},{% endif %}
-                        {% endfor %}) 1;
-                    {% with bg0=deal.color_palette.all|palette_backgrounds|first bg1=deal.color_palette.all|palette_backgrounds|slice:"1:2"|first %}
-                    box-shadow: 0 0 30px {{ bg0 }}40, 0 0 50px {{ bg1 }}20;
-                    {% endwith %}
+                    {% with primary=deal.color_palette.all|first %}
+                    background: {{ primary.background_color }}30 !important;
+                    border: 2px solid {{ primary.background_color }}60;
+                    box-shadow: 0 0 30px {{ primary.background_color }}40;
                     {% endwith %}
                 }
                 .card-{{ forloop.counter }} .price-badge {
-                    {% with backgrounds=deal.color_palette.all|palette_backgrounds %}
-                    background: linear-gradient(135deg, {{ backgrounds.0 }} 0%, {{ backgrounds.2 }} 100%);
-                    box-shadow: 0 0 20px {{ backgrounds.0 }}60;
+                    {% with primary=deal.color_palette.all|first %}
+                    background: {{ primary.background_color }};
+                    box-shadow: 0 0 20px {{ primary.background_color }}60;
+                    color: {{ primary.foreground_color }};
                     {% endwith %}
                 }
-                {% if not deal.is_active %}
-                .card-{{ forloop.counter }} {
-                    opacity: 0.6;
-                    filter: grayscale(40%);
-                }
-                .card-{{ forloop.counter }}:hover {
-                    opacity: 0.8;
-                }
-                {% endif %}
             </style>
             <a href="{% url 'deals:detail' deal.slug %}" class="card-{{ forloop.counter }} deal-card block bg-white/5 rounded-lg overflow-hidden border border-white/10 hover:border-white/20 transition-all hover:transform hover:scale-[1.02] relative">
-                {% if not deal.is_active %}
-                <div class="absolute top-0 left-0 right-0 bg-red-600/90 text-white text-center py-1 text-sm font-bold z-10">
-                    EXPIRED
-                </div>
-                {% endif %}
-                {% if user.is_staff and deal.status == 'draft' %}
-                <div class="absolute top-0 right-0 bg-yellow-600/90 text-white px-3 py-1 text-xs font-bold z-10 rounded-bl-lg">
-                    DRAFT
-                </div>
-                {% endif %}
                 <div class="relative" style="aspect-ratio: 16 / 9; overflow: hidden;">
                     <img src="{{ deal.image.url }}"
                          alt="{{ deal.name }}"
@@ -233,22 +208,31 @@
                          onerror="this.src='https://via.placeholder.com/400x225?text={{ deal.name|urlencode }}'">
                     <div class="absolute top-3 right-3 price-badge px-3 py-1 rounded-lg backdrop-blur-sm">
                         {% if deal.original_price %}
-                        <span class="text-sm font-bold text-white mr-2" style="text-decoration: line-through; opacity: 0.7;">${{ deal.original_price }}</span>
+                        <span class="text-sm font-bold mr-2" style="text-decoration: line-through; opacity: 0.7;">${{ deal.original_price }}</span>
                         {% endif %}
                         {% if deal.price == 0 %}
-                        <span class="text-xl font-bold text-white">FREE</span>
+                        <span class="text-xl font-bold">FREE</span>
                         {% else %}
-                        <span class="text-xl font-bold text-white">${{ deal.price }}</span>
+                        <span class="text-xl font-bold">${{ deal.price }}</span>
                         {% endif %}
                     </div>
                 </div>
                 <div class="p-5">
-                    <h2 class="text-xl font-bold mb-3 line-clamp-2">
-                        {{ deal.name }}
-                    </h2>
-                    <div class="flex items-center text-sm text-gray-400">
-                        ⏰
-                        <span class="ml-2">Expires {{ deal.expires|timeuntil }}</span>
+                    <div class="flex items-start gap-2 mb-3">
+                        <h2 class="text-xl font-bold line-clamp-2 flex-1">
+                            {{ deal.name }}
+                        </h2>
+                        {% if user.is_staff and deal.status == 'draft' %}
+                        <span class="bg-yellow-600 text-white px-2 py-1 rounded text-xs font-bold whitespace-nowrap">DRAFT</span>
+                        {% endif %}
+                    </div>
+                    <div class="flex items-center text-sm">
+                        {% if deal.is_active %}
+                        <span class="text-gray-400">⏰</span>
+                        <span class="ml-2 text-gray-400">Expires {{ deal.expires|timeuntil }}</span>
+                        {% else %}
+                        <span class="bg-red-600 text-white px-2 py-1 rounded font-bold text-xs">EXPIRED</span>
+                        {% endif %}
                     </div>
                 </div>
             </a>
