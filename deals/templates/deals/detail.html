@@ -21,13 +21,6 @@
         height: 100%;
         z-index: 0;
         overflow: hidden;
-        {% with palette=deal.color_palette.all %}
-        {% if palette|length == 1 %}
-        background: {{ palette.0.background_color }};
-        {% else %}
-        background: linear-gradient(135deg, {{ palette|palette_gradient_css }});
-        {% endif %}
-        {% endwith %}
     }
 
     #animation-container svg {
@@ -57,24 +50,15 @@
     .back-link {
         display: inline-flex;
         align-items: center;
-        {% with primary=deal.color_palette.all|first %}
-        background: {{ primary.background_color }};
-        color: {{ primary.foreground_color }};
-        box-shadow: 0 0 20px {{ primary.background_color }}60, 0 2px 8px rgba(0, 0, 0, 0.3);
-        {% endwith %}
         text-decoration: none;
         font-size: 1rem;
         padding: 0.5rem 1rem;
         border-radius: 0.5rem;
-        border: 2px solid rgba(255, 255, 255, 0.2);
         transition: all 0.2s;
     }
 
     .back-link:hover {
         transform: translateY(-1px);
-        {% with primary=deal.color_palette.all|first %}
-        box-shadow: 0 0 25px {{ primary.background_color }}80, 0 4px 12px rgba(0, 0, 0, 0.4);
-        {% endwith %}
     }
 
     .deal-title {
@@ -187,32 +171,20 @@
     .price-marker {
         display: inline-flex;
         align-items: center;
-        {% with primary=deal.color_palette.all|first %}
-        background: {{ primary.background_color }};
-        box-shadow: 0 0 30px {{ primary.background_color }}60, 0 4px 15px rgba(0, 0, 0, 0.3);
-        color: {{ primary.foreground_color }};
-        {% endwith %}
         padding: 0.75rem 1.25rem;
         border-radius: 0.75rem;
         font-size: 1.5rem;
         font-weight: 900;
-        border: 2px solid rgba(255, 255, 255, 0.2);
     }
 
     .expiry-marker {
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        {% with primary=deal.color_palette.all|first %}
-        background: {{ primary.background_color }};
-        box-shadow: 0 0 30px {{ primary.background_color }}60, 0 4px 15px rgba(0, 0, 0, 0.3);
-        color: {{ primary.foreground_color }};
-        {% endwith %}
         padding: 0.75rem 1.25rem;
         border-radius: 0.75rem;
         font-size: 1rem;
         font-weight: 600;
-        border: 2px solid rgba(255, 255, 255, 0.2);
     }
 
     .deal-link-button {
@@ -221,29 +193,20 @@
         justify-content: center;
         gap: 0.75rem;
         width: 100%;
-        {% with primary=deal.color_palette.all|first %}
-        background: {{ primary.background_color }};
-        box-shadow: 0 0 40px {{ primary.background_color }}60, 0 10px 30px rgba(0, 0, 0, 0.3);
-        color: {{ primary.foreground_color }};
-        {% endwith %}
         text-decoration: none;
         font-size: 1.25rem;
         font-weight: 700;
         padding: 1rem 2rem;
         border-radius: 0.75rem;
-        border: 2px solid rgba(255, 255, 255, 0.2);
         transition: all 0.3s;
     }
 
     .deal-link-button:hover {
         transform: translateY(-2px);
-        {% with primary=deal.color_palette.all|first %}
-        box-shadow: 0 0 50px {{ primary.background_color }}80, 0 15px 40px rgba(0, 0, 0, 0.4);
-        {% endwith %}
     }
 </style>
 
-<div id="animation-container">
+<div id="animation-container" class="deal-gradient-bg">
     <svg id="blob-svg" class="blob-svg" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
     </svg>
 </div>
@@ -251,7 +214,7 @@
 <div class="deal-container">
     <!-- Header with Back Link -->
     <div class="header-section">
-        <a href="{% url 'deals:home' %}" class="back-link">
+        <a href="{% url 'deals:home' %}" class="back-link deal-bg-primary deal-fg-primary deal-glow-shadow-sm deal-glow-shadow-sm-hover border-white-20">
             ← Back
         </a>
         {% if user.is_staff and deal.status == 'draft' %}
@@ -271,7 +234,7 @@
                 {% endif %}
             </div>
             <div class="image-overlay">
-                <div class="price-marker">
+                <div class="price-marker deal-bg-primary deal-fg-primary deal-glow-shadow-md border-white-20">
                     {% if deal.original_price %}
                     <span style="text-decoration: line-through; opacity: 0.7; margin-right: 0.5rem; font-size: 0.9em;">${{ deal.original_price }}</span>
                     {% endif %}
@@ -281,7 +244,7 @@
                     ${{ deal.price }}
                     {% endif %}
                 </div>
-                <div class="expiry-marker">
+                <div class="expiry-marker deal-bg-primary deal-fg-primary deal-glow-shadow-md border-white-20">
                     <span>⏱️</span>
                     <span>
                         {% if deal.is_active %}
@@ -299,7 +262,7 @@
     <a href="{{ deal.link }}"
        target="_blank"
        rel="noopener noreferrer"
-       class="deal-link-button hover-sheen">
+       class="deal-link-button hover-sheen deal-bg-primary deal-fg-primary deal-glow-shadow-lg deal-glow-shadow-lg-hover border-white-20">
         <span>🔗</span>
         <span>Deal Link</span>
     </a>
