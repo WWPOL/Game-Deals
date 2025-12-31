@@ -24,16 +24,29 @@
     <nav class="deal-bg-primary-80 shadow-sm fixed top-0 left-0 right-0 z-10 deal-fg-primary backdrop-blur">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
+                <!-- Brand -->
                 <div class="flex items-center">
                     <a href="{% url 'deals:home' %}" class="flex items-center">
                         <span class="text-2xl font-bold deal-fg-primary">🎮 Game Deals</span>
                         <span class="ml-3 text-sm deal-fg-primary hidden sm:block">by Olly G</span>
                     </a>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <button id="subscribe-btn" class="deal-bg-primary deal-fg-primary px-4 py-2 rounded-lg transition-all hover:shadow-lg deal-glow-sm deal-glow-md-hover font-semibold border-white-20">
-                        Subscribe to Alerts
-                    </button>
+
+                <!-- Right hand part of header -->
+                <div class="flex space-x-4">
+                    <!-- Subscribe button -->
+                    <div class="flex items-center space-x-4">
+                        <button id="subscribe-btn" class="deal-bg-primary deal-fg-primary px-4 py-2 rounded-lg transition-all hover:shadow-lg deal-glow-sm deal-glow-md-hover font-semibold border-white-20">
+                            Subscribe to Alerts
+                        </button>
+                    </div>
+
+                    <!-- Admin button if logged in -->
+                    {% if user.is_authenticated %}
+                    <div class="rounded-lg deal-bg-primary deal-fg-primary px-4 py-2 font-semibold">
+                      <a href="{% url 'admin:index' %}">Go to Console</a>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
