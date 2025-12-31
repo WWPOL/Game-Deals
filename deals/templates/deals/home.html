@@ -260,7 +260,7 @@
                 }
             </style>
             <div class="card-wrapper-{{ forloop.counter }}">
-            <a href="{% url 'deals:detail' deal.slug %}" class="card-{{ forloop.counter }} deal-card block bg-white/5 rounded-lg overflow-hidden relative">
+            <a href="{% url 'deals:detail' deal.slug %}" class="card-{{ forloop.counter }} deal-card block bg-white/5 rounded-lg overflow-hidden relative hover-sheen">
                 <div class="relative" style="aspect-ratio: 16 / 9; overflow: hidden;">
                     <img src="{{ deal.image.url }}"
                          alt="{{ deal.name }}"
