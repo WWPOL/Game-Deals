@@ -70,9 +70,6 @@
 
     .deal-title {
         position: absolute;
-        top: 3rem;
-        left: 50%;
-        transform: translateX(-50%);
         font-size: 2.5rem;
         font-weight: 900;
         color: {{ deal.primary_foreground_color }};
@@ -82,9 +79,7 @@
         z-index: 10;
         padding: 0.25rem;
         max-width: 90%;
-        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8),
-                     0 2px 8px rgba(0, 0, 0, 0.6),
-                     0 0 60px rgba(0, 0, 0, 0.5);
+
     }
 
     .deal-title::before {
@@ -224,6 +219,11 @@
         <a href="{% url 'deals:home' %}" class="back-link deal-bg-primary deal-fg-primary deal-glow-shadow-sm deal-glow-shadow-sm-hover border-white-20">
             ← Back
         </a>
+
+        <div>
+          <h1 class="deal-title" data-text="{{ deal.name }}">{{ deal.name }}</h1>
+        </div>
+
         {% if user.is_staff and deal.status == 'draft' %}
         <span style="display: inline-block; margin-left: 1rem; background: #ca8a04; color: white; padding: 0.25rem 0.75rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: bold;">
             DRAFT
@@ -234,7 +234,6 @@
     <!-- Clickable Image Card with Title, Price and Expiry Markers -->
     <div class="image-card">
         <a href="{{ deal.link }}" target="_blank" rel="noopener noreferrer">
-            <h1 class="deal-title" data-text="{{ deal.name }}">{{ deal.name }}</h1>
             <div class="deal-image-wrapper">
                 {% if deal.image %}
                 <img src="{{ deal.image.url }}" alt="{{ deal.name }}" class="deal-image">
