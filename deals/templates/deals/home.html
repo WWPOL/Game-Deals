@@ -233,14 +233,16 @@
             {% for deal in deals %}
             <style>
                 .card-wrapper-{{ forloop.counter }} {
-                    background: linear-gradient(135deg, {% for color in deal.color_palette.all %}{{ color.foreground_color }}{% if not forloop.last %}, {% endif %}{% endfor %});
+                    {% with primary=deal.color_palette.all|first %}
+                    background: {{ primary.background_color }};
+                    {% endwith %}
                     padding: 2px;
                     border-radius: 0.5rem;
                     transition: all 0.3s ease;
                 }
                 .card-wrapper-{{ forloop.counter }}:hover {
                     filter: brightness(1.2);
-                    box-shadow: 0 0 30px {% with primary=deal.color_palette.all|first %}{{ primary.foreground_color }}{% endwith %}60;
+                    box-shadow: 0 0 30px {% with primary=deal.color_palette.all|first %}{{ primary.background_color }}{% endwith %}60;
                 }
                 .card-{{ forloop.counter }} {
                     {% with primary=deal.color_palette.all|first %}
@@ -261,11 +263,10 @@
                 }
                 .card-{{ forloop.counter }} .card-footer {
                     {% with primary=deal.color_palette.all|first %}
-                    background: {{ primary.background_color }};
+                    background: {{ primary.background_color }}40;
                     color: {{ primary.foreground_color }};
+                    border-top: 3px solid {{ primary.background_color }};
                     {% endwith %}
-                    border-top: 3px solid transparent;
-                    border-image: linear-gradient(90deg, {% for color in deal.color_palette.all %}{{ color.background_color }}{% if not forloop.last %}, {% endif %}{% endfor %}) 1;
                 }
             </style>
             <div class="card-wrapper-{{ forloop.counter }}">
