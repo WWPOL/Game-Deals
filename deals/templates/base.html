@@ -57,19 +57,26 @@
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="bg-white border-t border-gray-200 mt-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="text-center">
-                <p class="text-gray-900 font-semibold mb-2">🎮 Olly G's Game Deals</p>
-                <p class="text-gray-600 text-sm">
-                    Never miss a great deal on your favorite games
-                </p>
-                <p class="text-gray-500 text-xs mt-3">
-                    No affiliate links • No ads • Always free
-                </p>
+    {% block footer %}
+      <footer class="bg-transparent mt-12 relative">
+        <div class="flex items-center">
+            <div class="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+              <div class="text-center deal-bg-primary-40 deal-fg-primary p-5">
+                    <p class="font-semibold mb-2">🎮 Olly G's Game Deals</p>
+                    <p class="text-sm">
+                        Never miss a great deal on your favorite games
+                    </p>
+                    <p class="text-xs mt-3">
+                        No affiliate links • No ads • Always free
+                    </p>
+                    <p class="text-xs mt-3">
+                      <a href="{% url 'admin:index' %}">Login</a>
+                    </p>
+                </div>
             </div>
         </div>
     </footer>
+    {% endblock %}
 
     {% block extra_js %}{% endblock %}
     {% tz_detect %}

@@ -5,9 +5,16 @@
 
 {% block nav %}
 {% deal_variables deal %}
-<div class="{% deal_scope deal %}">
-{{ block.super }}
-</div>
+  <div class="{% deal_scope deal %}">
+    {{ block.super }}
+  </div>
+{% endblock %}
+
+{% block footer %}
+  {% deal_variables deal %}
+  <div class="{% deal_scope deal %}">
+    {{ block.super }}
+  </div>
 {% endblock %}
 
 {% block content %}
