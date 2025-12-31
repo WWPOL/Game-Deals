@@ -231,42 +231,15 @@
         {% if deals %}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {% for deal in deals %}
-            <style>
-                .card-wrapper-{{ forloop.counter }} {
-                    {% with primary=deal.color_palette.all|first %}
-                    background: {{ primary.background_color }};
-                    {% endwith %}
-                    padding: 2px;
-                    border-radius: 0.5rem;
-                }
-                .card-{{ forloop.counter }} {
-                    {% with primary=deal.color_palette.all|first %}
-                    background: {{ primary.background_color }}20 !important;
-                    {% endwith %}
-                }
-                .card-{{ forloop.counter }} .price-badge {
-                    {% with primary=deal.color_palette.all|first %}
-                    background: {{ primary.background_color }};
-                    box-shadow: 0 0 20px {{ primary.background_color }}60;
-                    color: {{ primary.foreground_color }};
-                    {% endwith %}
-                }
-                .card-{{ forloop.counter }} .card-footer {
-                    {% with primary=deal.color_palette.all|first %}
-                    background: {{ primary.background_color }}40;
-                    color: {{ primary.foreground_color }};
-                    border-top: 3px solid {{ primary.background_color }};
-                    {% endwith %}
-                }
-            </style>
-            <div class="card-wrapper-{{ forloop.counter }}">
-            <a href="{% url 'deals:detail' deal.slug %}" class="card-{{ forloop.counter }} deal-card block bg-white/5 rounded-lg overflow-hidden relative hover-sheen">
+            {% deal_variables deal %}
+            <div class="{% deal_scope deal %} deal-wrapper-primary">
+            <a href="{% url 'deals:detail' deal.slug %}" class="deal-card block bg-white/5 deal-bg-primary-20 rounded-lg overflow-hidden relative hover-sheen">
                 <div class="relative" style="aspect-ratio: 16 / 9; overflow: hidden;">
                     <img src="{{ deal.image.url }}"
                          alt="{{ deal.name }}"
                          class="w-full h-full object-cover"
                          onerror="this.src='https://via.placeholder.com/400x225?text={{ deal.name|urlencode }}'">
-                    <div class="absolute top-3 right-3 price-badge px-3 py-1 rounded-lg backdrop-blur-sm">
+                    <div class="absolute top-3 right-3 price-badge px-3 py-1 rounded-lg backdrop-blur-sm deal-bg-primary deal-fg-primary deal-glow-sm">
                         {% if deal.original_price %}
                         <span class="text-sm font-bold mr-2" style="text-decoration: line-through; opacity: 0.7;">${{ deal.original_price }}</span>
                         {% endif %}
@@ -277,7 +250,7 @@
                         {% endif %}
                     </div>
                 </div>
-                <div class="p-5 card-footer">
+                <div class="p-5 card-footer deal-bg-primary-40 deal-fg-primary deal-border-primary" style="border-top-width: 3px;">
                     <div class="flex items-start gap-2 mb-3">
                         <h2 class="text-xl font-bold line-clamp-2 flex-1">
                             {{ deal.name }}
