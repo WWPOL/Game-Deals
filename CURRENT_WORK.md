@@ -123,10 +123,62 @@ All work from plan `/home/noah/.claude/plans/structured-stargazing-river.md` is 
 - ✓ Template tags for gradients, colors, and percentages
 - ✓ Migrations regenerated (fresh 0001_initial.py)
 
+### Discord Notification System Complete ✓
+- ✓ Created notification models:
+  - `NotificationChannel` - Base channel config with auto_notify (default: True) and active flags
+  - `DiscordWebhookConfig` - Discord-specific config (1:1 with NotificationChannel)
+  - `NotificationLog` - Tracks notification history with success/failed status
+- ✓ Implemented Celery tasks in `deals/tasks.py`:
+  - `send_discord_webhook` - Send notification to single channel
+  - `notify_deal` - Send to multiple channels with force option
+- ✓ Created Discord notification service in `deals/services/discord_notifier.py`
+  - Rich embed with game image, pricing, expiration
+  - Color extracted from deal's palette
+  - Proper error handling with DiscordNotificationError
+- ✓ Admin interface enhancements:
+  - NotificationChannel admin with DiscordWebhookConfig inline
+  - NotificationLog admin (read-only)
+  - NotificationLogInline added to DealAdmin (tabular view of notification history)
+- ✓ Auto-notification on deal publish
+  - Triggers when deal status changes to published
+  - Sends to all channels with auto_notify=True
+- ✓ Admin UI improvements:
+  - Moved slug to Metadata section (collapsed)
+  - Reordered fields: price before original_price
+  - Fixed invalid field reference error (removed notifications_sent field)
+
+### Notification Action Refactoring Complete ✓
+- ✓ Removed send_notifications actions from DealAdmin (both single and bulk)
+- ✓ Added NotificationChannelAdmin actions:
+  - Single object action: "Send Notifications" button on channel detail page
+  - Bulk action: "Send notifications for selected deals" in channel list
+- ✓ Created deal selection workflow:
+  - Created `SelectDealsForm` with CheckboxSelectMultiple widget
+  - Created `select_deals_to_notify` view at `deals/views.py`
+  - Added URL routes at `config/urls.py:17-18`
+  - Custom `DealMultipleChoiceField` shows deal status in labels
+- ✓ Created admin template helpers:
+  - `admin_render()` helper function in `deals/admin_helpers.py`
+  - `base_admin_page.html` template that includes Unfold theme + branding
+  - Templates now properly inherit sidebar, header, and branding
+- ✓ Created template at `deals/templates/admin/deals/select_deals_to_notify.html`
+  - Checkbox list with scrollable container
+  - Shows channel info with TEST badge for test channels
+  - Proper Unfold theme styling
+
+### Test Channel Support Complete ✓
+- ✓ Added `is_test_channel` field to NotificationChannel model (default: False)
+- ✓ Test channels can receive notifications for draft deals (for testing)
+- ✓ Non-test channels can only receive published deal notifications
+- ✓ SelectDealsForm shows draft+published deals for test channels, published-only for others
+- ✓ Validation prevents draft deals from being sent to non-test channels
+- ✓ Template shows TEST badge next to test channels
+- ✓ Deal status displayed in checkbox labels (e.g., "Game Name (Published)")
+
 ### Next Steps
-1. Test color extraction and admin workflow end-to-end
-2. Push notification implementation
-3. Subscription endpoints for web push
+1. Web push notification implementation
+2. Subscription endpoints for web push
+3. Add more notification channel types (Email, etc.)
 
 ## Blockers
 None currently

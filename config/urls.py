@@ -14,6 +14,8 @@ urlpatterns = [
     # Custom admin URLs must come before admin.site.urls
     path('admin/deal/search-images/', deals_views.search_deal_images, name='admin_search_images'),
     path('admin/deal/<int:deal_id>/search-images/', deals_views.search_deal_images, name='admin_search_images_with_id'),
+    path('admin/notification-channel/select-deals/', deals_views.select_deals_to_notify, name='admin_select_deals_to_notify'),
+    path('admin/notification-channel/<str:channel_ids>/select-deals/', deals_views.select_deals_to_notify, name='admin_select_deals_to_notify_with_ids'),
     path('admin/', admin.site.urls),
     path('i18n/', include('django.conf.urls.i18n')),  # Language switching
     path('tz_detect/', include('tz_detect.urls')),
