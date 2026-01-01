@@ -1,43 +1,40 @@
-{% extends "admin/base_site.html" %}
-{% load static %}
+{% extends "admin/deals/base_admin_page.html" %}
 
 {% block title %}Search Images for {{ game_name|default:"Game" }}{% endblock %}
 
 {% block content %}
-<div style="padding: 20px;">
+<div class="module">
     <h1>Search Images for: {{ game_name|default:"Game" }}</h1>
 
-    <div style="margin: 20px 0;">
+    <div class="mb-4">
         {% if deal %}
-        <a href="{% url 'admin:deals_deal_change' deal.id %}" class="button">← Back to Deal</a>
+        <a href="{% url 'admin:deals_deal_change' deal.id %}" class="button default">← Back to Deal</a>
         {% else %}
-        <a href="javascript:window.close()" class="button">← Close Window</a>
+        <a href="javascript:window.close()" class="button default">← Close Window</a>
         {% endif %}
     </div>
 
     {% if image_results %}
-    <div style="margin: 30px 0;">
-        <h2>Select an Image</h2>
-        <p style="color: #666;">Click on an image to use it for this deal.</p>
+    <div class="my-6">
+        <h2 class="font-bold text-lg mb-2">Select an Image</h2>
+        <p class="text-gray-600 dark:text-gray-400 mb-4">Click on an image to use it for this deal.</p>
 
-        <form method="post" style="margin-top: 20px;" id="image_form">
+        <form method="post" class="mt-4" id="image_form">
             {% csrf_token %}
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
                 {% for image in image_results %}
-                <div style="border: 2px solid #ddd; padding: 10px; border-radius: 5px; cursor: pointer; transition: all 0.2s;"
-                     onclick="selectAndSubmit('{{ image.url }}', '{{ image.page_url|escapejs }}')"
-                     onmouseover="this.style.borderColor='#417690'"
-                     onmouseout="this.style.borderColor='#ddd'">
+                <div class="border border-gray-300 p-3 rounded cursor-pointer transition-all hover:border-blue-500 dark:border-gray-600 dark:hover:border-blue-400"
+                     onclick="selectAndSubmit('{{ image.url }}', '{{ image.page_url|escapejs }}')">
                     <img src="{{ image.thumbnail }}"
                          alt="{{ image.title }}"
-                         style="width: 100%; height: 200px; object-fit: cover; border-radius: 3px;">
-                    <p style="margin-top: 10px; font-size: 12px; color: #666;">
+                         class="w-full h-48 object-cover rounded">
+                    <p class="mt-2 text-xs text-gray-600 dark:text-gray-400 truncate">
                         {{ image.title|truncatewords:8 }}
                     </p>
-                    <p style="font-size: 11px; color: #999;">
+                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
                         {{ image.width }}x{{ image.height }}
                     </p>
-                    <p style="font-size: 10px; color: #999; margin-top: 5px;">
+                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-1 truncate">
                         Source: {{ image.source }}
                     </p>
                 </div>
@@ -49,9 +46,9 @@
         </form>
     </div>
     {% else %}
-    <div style="margin: 30px 0; padding: 40px; background: #f8f8f8; border-radius: 5px; text-align: center;">
-        <p style="color: #666; font-size: 16px;">No images found. Implementing image search...</p>
-        <p style="color: #999; margin-top: 10px;">Image search functionality will be added soon.</p>
+    <div class="my-6 p-6 bg-gray-100 rounded text-center dark:bg-gray-800/50">
+        <p class="text-gray-600 dark:text-gray-400 text-lg">No images found. Implementing image search...</p>
+        <p class="text-gray-500 dark:text-gray-500 mt-2">Image search functionality will be added soon.</p>
     </div>
     {% endif %}
 </div>

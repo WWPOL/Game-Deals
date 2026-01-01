@@ -1,11 +1,16 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.contrib import admin
 from django.utils.decorators import method_decorator
 from django.utils import timezone
 from django import forms
+from django.contrib import messages
 from urllib.parse import quote
-from .models import Deal, ColorPalette
+from .models import Deal, ColorPalette, NotificationChannel
+from .tasks import notify_deal
+from .admin_helpers import admin_render
 
 
 class DealFilterForm(forms.Form):
@@ -145,7 +150,7 @@ class DealDetailView(DetailView):
         return Deal.objects.filter(status=Deal.Status.PUBLISHED).prefetch_related('color_palette')
 
 
-@staff_member_required
+@admin.site.admin_view
 def search_deal_images(request, deal_id=None):
     """Search for images for a deal and allow admin to select one"""
     from django.conf import settings
@@ -214,4 +219,62 @@ def search_deal_images(request, deal_id=None):
         'image_results': image_results,
     }
 
-    return render(request, 'admin/deals/search_images.html', context)
+    return admin_render(request, 'admin/deals/search_images.html', context)
+
+
+class SelectDealsForm(forms.Form):
+    """Form for selecting deals to send notifications for"""
+    deals = forms.ModelMultipleChoiceField(
+        queryset=Deal.objects.filter(status=Deal.Status.PUBLISHED).order_by('-created_at'),
+        widget=FilteredSelectMultiple('Deals', is_stacked=False),
+        required=True,
+        help_text='Select one or more deals to send notifications for'
+    )
+
+
+@admin.site.admin_view
+def select_deals_to_notify(request, channel_ids=None):
+    """Select deals to send notifications for to specific channels"""
+    # Get channel IDs from URL parameter (comma-separated)
+    if channel_ids:
+        channel_id_list = [int(cid) for cid in channel_ids.split(',')]
+    else:
+        channel_id_list = request.GET.getlist('channel_ids')
+        if channel_id_list:
+            channel_id_list = [int(cid) for cid in channel_id_list]
+
+    if not channel_id_list:
+        messages.error(request, 'No channels specified')
+        return redirect('admin:deals_notificationchannel_changelist')
+
+    channels = NotificationChannel.objects.filter(id__in=channel_id_list)
+
+    if not channels.exists():
+        messages.error(request, 'No valid channels found')
+        return redirect('admin:deals_notificationchannel_changelist')
+
+    if request.method == 'POST':
+        form = SelectDealsForm(request.POST)
+        if form.is_valid():
+            selected_deals = form.cleaned_data['deals']
+            task_count = 0
+            for deal in selected_deals:
+                notify_deal.delay(deal.id, channel_ids=channel_id_list)
+                task_count += 1
+
+            channel_names = ', '.join(channels.values_list('name', flat=True))
+            messages.success(
+                request,
+                f'Queued notifications for {task_count} deal(s) to {len(channel_id_list)} channel(s): {channel_names}'
+            )
+            return redirect('admin:deals_notificationchannel_changelist')
+    else:
+        form = SelectDealsForm()
+
+    context = {
+        'channels': channels,
+        'channel_ids': channel_id_list,
+        'form': form,
+    }
+
+    return admin_render(request, 'admin/deals/select_deals_to_notify.html', context)
