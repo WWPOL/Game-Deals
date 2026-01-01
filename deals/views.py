@@ -222,14 +222,63 @@ def search_deal_images(request, deal_id=None):
     return admin_render(request, 'admin/deals/search_images.html', context)
 
 
+class DealMultipleChoiceField(forms.ModelMultipleChoiceField):
+    """Custom field to show deal status in labels"""
+    def label_from_instance(self, obj):
+        return f"{obj.name} ({obj.get_status_display()})"
+
+
 class SelectDealsForm(forms.Form):
     """Form for selecting deals to send notifications for"""
-    deals = forms.ModelMultipleChoiceField(
-        queryset=Deal.objects.filter(status=Deal.Status.PUBLISHED).order_by('-created_at'),
-        widget=FilteredSelectMultiple('Deals', is_stacked=False),
+    deals = DealMultipleChoiceField(
+        queryset=Deal.objects.none(),  # Set dynamically in __init__
+        widget=forms.CheckboxSelectMultiple,
         required=True,
         help_text='Select one or more deals to send notifications for'
     )
+
+    def __init__(self, *args, channels=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.channels = channels or []
+
+        # Determine if any channel is a test channel
+        has_test_channel = any(ch.is_test_channel for ch in self.channels)
+
+        # Build queryset based on channel types
+        if has_test_channel:
+            # Show both published and draft deals for test channels
+            queryset = Deal.objects.filter(
+                status__in=[Deal.Status.PUBLISHED, Deal.Status.DRAFT]
+            ).order_by('-created_at')
+            self.fields['deals'].help_text = 'Select deals to send notifications for. Draft deals can only be sent to test channels.'
+        else:
+            # Only show published deals for non-test channels
+            queryset = Deal.objects.filter(status=Deal.Status.PUBLISHED).order_by('-created_at')
+
+        self.fields['deals'].queryset = queryset
+
+    def clean_deals(self):
+        """Validate that draft deals are only sent to test channels"""
+        deals = self.cleaned_data.get('deals')
+        if not deals:
+            return deals
+
+        # Check if any selected deals are drafts
+        draft_deals = [deal for deal in deals if deal.status == Deal.Status.DRAFT]
+
+        if draft_deals:
+            # Ensure all channels are test channels
+            non_test_channels = [ch for ch in self.channels if not ch.is_test_channel]
+
+            if non_test_channels:
+                channel_names = ', '.join(ch.name for ch in non_test_channels)
+                draft_names = ', '.join(deal.name for deal in draft_deals)
+                raise forms.ValidationError(
+                    f'Cannot send draft deals ({draft_names}) to non-test channels ({channel_names}). '
+                    f'Either mark the channels as test channels or select only published deals.'
+                )
+
+        return deals
 
 
 @admin.site.admin_view
@@ -254,7 +303,7 @@ def select_deals_to_notify(request, channel_ids=None):
         return redirect('admin:deals_notificationchannel_changelist')
 
     if request.method == 'POST':
-        form = SelectDealsForm(request.POST)
+        form = SelectDealsForm(request.POST, channels=channels)
         if form.is_valid():
             selected_deals = form.cleaned_data['deals']
             task_count = 0
@@ -269,7 +318,7 @@ def select_deals_to_notify(request, channel_ids=None):
             )
             return redirect('admin:deals_notificationchannel_changelist')
     else:
-        form = SelectDealsForm()
+        form = SelectDealsForm(channels=channels)
 
     context = {
         'channels': channels,

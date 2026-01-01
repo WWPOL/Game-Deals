@@ -76,7 +76,7 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
     list_display = ('name', 'status', 'price', 'expires', 'is_active', 'created_at')
     list_filter = ('status', 'expires', 'created_at')
     search_fields = ('name',)
-    actions = ['publish_deals_bulk', 'send_notifications_bulk', 'reextract_colors_bulk', 'image_search_bulk']
+    actions = ['publish_deals_bulk', 'reextract_colors_bulk', 'image_search_bulk']
     fieldsets = (
         ('Basic Information', {
             'fields': ('name',)
@@ -263,21 +263,8 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
 
         return redirect('admin:deals_deal_change', object_id=obj.pk)
 
-    @unfold_action(label="Send Notifications", short_description="Send notifications to all auto-notify channels")
-    def send_notifications(self, request, obj):
-        """Action to send notifications for this deal to all auto-notify channels"""
-        if not obj or not obj.pk:
-            self.message_user(request, 'Please save the deal first.', level=messages.WARNING)
-            return redirect('admin:deals_deal_change', object_id=obj.pk)
-
-        # Queue notification task
-        notify_deal.delay(obj.pk)
-
-        self.message_user(request, f'Queued notifications for "{obj.name}" to all auto-notify channels')
-        return redirect('admin:deals_deal_change', object_id=obj.pk)
-
     # Add actions to the change form
-    change_actions = ('publish_deal', 'send_notifications', 'reextract_colors', 'image_search')
+    change_actions = ('publish_deal', 'reextract_colors', 'image_search')
 
     def get_readonly_fields(self, request, obj=None):
         """Make slug readonly only when published"""
@@ -358,15 +345,6 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
         if error_count:
             self.message_user(request, f'{error_count} deal(s) failed validation', level=messages.WARNING)
 
-    @admin.action(description='Send notifications to channels')
-    def send_notifications_bulk(self, request, queryset):
-        """Bulk action to send notifications for selected deals"""
-        task_count = 0
-        for deal in queryset:
-            notify_deal.delay(deal.pk)
-            task_count += 1
-
-        self.message_user(request, f'Queued notifications for {task_count} deal(s) to all auto-notify channels')
 
 
 class DiscordWebhookConfigInline(admin.StackedInline):
@@ -388,19 +366,20 @@ class DiscordWebhookConfigInline(admin.StackedInline):
 
 
 @admin.register(NotificationChannel)
-class NotificationChannelAdmin(ModelAdmin):
-    list_display = ('name', 'type', 'active', 'auto_notify', 'created_at')
-    list_filter = ('type', 'active', 'auto_notify')
+class NotificationChannelAdmin(DjangoObjectActions, ModelAdmin):
+    list_display = ('name', 'type', 'active', 'auto_notify', 'is_test_channel', 'created_at')
+    list_filter = ('type', 'active', 'auto_notify', 'is_test_channel')
     search_fields = ('name',)
     readonly_fields = ('created_at', 'updated_at')
     inlines = [DiscordWebhookConfigInline]
+    actions = ['send_notifications_bulk']
 
     fieldsets = (
         ('Channel Information', {
             'fields': ('name', 'type')
         }),
         ('Settings', {
-            'fields': ('auto_notify', 'active')
+            'fields': ('auto_notify', 'active', 'is_test_channel')
         }),
         ('Metadata', {
             'fields': ('created_at', 'updated_at'),
@@ -414,6 +393,23 @@ class NotificationChannelAdmin(ModelAdmin):
         return qs.annotate(
             notification_count=models.Count('notification_logs')
         )
+
+    @unfold_action(label="Send Notifications", short_description="Select deals to notify about")
+    def send_notifications(self, request, obj):
+        """Action to select deals to send notifications for"""
+        # Redirect to deal selection page with this channel's ID
+        url = reverse('admin_select_deals_to_notify_with_ids', args=[str(obj.id)])
+        return HttpResponseRedirect(url)
+
+    @admin.action(description='Send notifications for selected deals')
+    def send_notifications_bulk(self, request, queryset):
+        """Bulk action to select deals to send notifications for to selected channels"""
+        channel_ids = ','.join(str(ch_id) for ch_id in queryset.values_list('id', flat=True))
+        url = reverse('admin_select_deals_to_notify_with_ids', args=[channel_ids])
+        return HttpResponseRedirect(url)
+
+    # Add actions to the change form
+    change_actions = ('send_notifications',)
 
 
 @admin.register(NotificationLog)

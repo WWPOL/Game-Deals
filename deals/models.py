@@ -242,6 +242,10 @@ class NotificationChannel(models.Model):
         default=True,
         help_text="Enable/disable this channel without deleting it"
     )
+    is_test_channel = models.BooleanField(
+        default=False,
+        help_text="Test channels can receive notifications for draft deals (for testing purposes)"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
