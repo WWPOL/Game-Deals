@@ -52,10 +52,27 @@ class ColorPaletteInline(admin.TabularInline):
     color_preview.short_description = 'Preview'
 
 
+class NotificationLogInline(admin.TabularInline):
+    model = NotificationLog
+    extra = 0
+    can_delete = False
+    show_change_link = False
+    verbose_name = "Notification Log"
+    verbose_name_plural = "Notification Logs"
+
+    fields = ['channel', 'status', 'status_message', 'sent_at']
+    readonly_fields = ['channel', 'status', 'status_message', 'sent_at']
+    ordering = ['-sent_at']
+
+    def has_add_permission(self, request, obj=None):
+        """Prevent manual creation of notification logs"""
+        return False
+
+
 @admin.register(Deal)
 class DealAdmin(DjangoObjectActions, ModelAdmin):
     form = DealAdminForm
-    inlines = [ColorPaletteInline]
+    inlines = [ColorPaletteInline, NotificationLogInline]
     list_display = ('name', 'status', 'price', 'expires', 'is_active', 'created_at')
     list_filter = ('status', 'expires', 'created_at')
     search_fields = ('name',)
