@@ -7,14 +7,16 @@ from django.utils.html import format_html
 from django.shortcuts import redirect
 from django.contrib import messages
 from django.conf import settings
+from django.http import HttpResponseRedirect
 from unfold.admin import ModelAdmin
 from django_object_actions import DjangoObjectActions
-from .models import Deal, PushSubscription, ColorPalette
+from .models import Deal, PushSubscription, ColorPalette, NotificationChannel, NotificationLog, DiscordWebhookConfig
 from .forms import DealAdminForm
 from .services.image_search import GoogleCustomSearchProvider, download_image_from_url
 from .services.color_extractor import extract_colors_from_url
 from .admin_mixins import unfold_action
 from .widgets import ColorPickerWidget, ColorPalettePreviewWidget
+from .tasks import notify_deal
 
 
 class ColorPaletteInline(admin.TabularInline):
@@ -57,7 +59,7 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
     list_display = ('name', 'status', 'price', 'expires', 'is_active', 'created_at')
     list_filter = ('status', 'expires', 'created_at')
     search_fields = ('name',)
-    actions = ['reextract_colors_bulk', 'image_search_bulk']
+    actions = ['publish_deals_bulk', 'send_notifications_bulk', 'reextract_colors_bulk', 'image_search_bulk']
     fieldsets = (
         ('Basic Information', {
             'fields': ('name', 'slug')
@@ -79,15 +81,24 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         """Automatically find image on creation if not set, and re-extract colors when image changes if auto_extract is enabled"""
-        # Check if image URL has changed (for updates)
+        # Check if image URL has changed (for updates) and if status changed to published
         image_changed = False
+        was_published = False
+        is_now_published = obj.status == Deal.Status.PUBLISHED
+
         if change and obj.pk:
             try:
                 original_obj = Deal.objects.get(pk=obj.pk)
                 if original_obj.image != obj.image and obj.image:
                     image_changed = True
+                # Check if status changed from draft to published
+                if original_obj.status != Deal.Status.PUBLISHED and is_now_published:
+                    was_published = True
             except Deal.DoesNotExist:
                 pass
+        elif not change and is_now_published:
+            # New deal being created as published
+            was_published = True
 
         if not change and obj.name and not obj.image:
             # This is a new deal - auto-find first image
@@ -162,6 +173,11 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
 
         super().save_model(request, obj, form, change)
 
+        # Send notifications if deal was just published
+        if was_published:
+            notify_deal.delay(obj.pk)
+            messages.info(request, f'Deal published - notifications queued for auto-notify channels')
+
     def get_changeform_initial_data(self, request):
         """Populate initial data from URL parameters"""
         initial = super().get_changeform_initial_data(request)
@@ -198,19 +214,53 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
     def image_search(self, request, obj):
         """Action to search for images for this deal"""
         if obj and obj.pk:
-            # For image search, we want to open in a new tab, but django-object-actions
-            # doesn't support this directly. We'll redirect to the URL which will be
-            # handled by the existing view.
-            from django.http import HttpResponseRedirect
-            from django.urls import reverse
             url = reverse('admin_search_images_with_id', args=[obj.pk])
             return HttpResponseRedirect(url)
         else:
             self.message_user(request, 'Please save the deal first before searching for images.', level=messages.WARNING)
-            return None  # Return to the same page
+            return None
 
-    # Add both actions to the change form
-    change_actions = ('reextract_colors', 'image_search')
+    @unfold_action(label="Publish Deal", short_description="Publish this deal and send notifications")
+    def publish_deal(self, request, obj):
+        """Action to publish the deal and send notifications"""
+        if not obj or not obj.pk:
+            self.message_user(request, 'Please save the deal first.', level=messages.WARNING)
+            return redirect('admin:deals_deal_change', object_id=obj.pk)
+
+        if obj.status == Deal.Status.PUBLISHED:
+            self.message_user(request, f'"{obj.name}" is already published.', level=messages.INFO)
+            return redirect('admin:deals_deal_change', object_id=obj.pk)
+
+        # Try to publish - this will run validation
+        obj.status = Deal.Status.PUBLISHED
+        try:
+            obj.full_clean()
+            obj.save()
+
+            # Send notifications
+            notify_deal.delay(obj.pk)
+
+            self.message_user(request, f'Successfully published "{obj.name}" and queued notifications')
+        except Exception as e:
+            self.message_user(request, f'Error publishing deal: {e}', level=messages.ERROR)
+
+        return redirect('admin:deals_deal_change', object_id=obj.pk)
+
+    @unfold_action(label="Send Notifications", short_description="Send notifications to all auto-notify channels")
+    def send_notifications(self, request, obj):
+        """Action to send notifications for this deal to all auto-notify channels"""
+        if not obj or not obj.pk:
+            self.message_user(request, 'Please save the deal first.', level=messages.WARNING)
+            return redirect('admin:deals_deal_change', object_id=obj.pk)
+
+        # Queue notification task
+        notify_deal.delay(obj.pk)
+
+        self.message_user(request, f'Queued notifications for "{obj.name}" to all auto-notify channels')
+        return redirect('admin:deals_deal_change', object_id=obj.pk)
+
+    # Add actions to the change form
+    change_actions = ('publish_deal', 'send_notifications', 'reextract_colors', 'image_search')
 
     def get_readonly_fields(self, request, obj=None):
         """Make slug readonly only when published"""
@@ -256,9 +306,114 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
             return
 
         deal = queryset.first()
-        from django.http import HttpResponseRedirect
         url = reverse('admin_search_images_with_id', args=[deal.pk])
         return HttpResponseRedirect(url)
+
+    @admin.action(description='Publish deals and send notifications')
+    def publish_deals_bulk(self, request, queryset):
+        """Bulk action to publish selected deals and send notifications"""
+        published_count = 0
+        already_published = 0
+        error_count = 0
+
+        for deal in queryset:
+            if deal.status == Deal.Status.PUBLISHED:
+                already_published += 1
+                continue
+
+            try:
+                deal.status = Deal.Status.PUBLISHED
+                deal.full_clean()
+                deal.save()
+
+                # Send notifications
+                notify_deal.delay(deal.pk)
+
+                published_count += 1
+            except Exception as e:
+                error_count += 1
+                self.message_user(request, f'Error publishing "{deal.name}": {e}', level=messages.ERROR)
+
+        if published_count:
+            self.message_user(request, f'Published {published_count} deal(s) and queued notifications')
+        if already_published:
+            self.message_user(request, f'{already_published} deal(s) already published', level=messages.INFO)
+        if error_count:
+            self.message_user(request, f'{error_count} deal(s) failed validation', level=messages.WARNING)
+
+    @admin.action(description='Send notifications to channels')
+    def send_notifications_bulk(self, request, queryset):
+        """Bulk action to send notifications for selected deals"""
+        task_count = 0
+        for deal in queryset:
+            notify_deal.delay(deal.pk)
+            task_count += 1
+
+        self.message_user(request, f'Queued notifications for {task_count} deal(s) to all auto-notify channels')
+
+
+class DiscordWebhookConfigInline(admin.StackedInline):
+    model = DiscordWebhookConfig
+    extra = 0
+    min_num = 1  # Require at least one for discord_webhook type
+    max_num = 1  # Enforce 1:1 relationship
+    can_delete = False
+
+    fields = ['webhook_url', 'username', 'avatar']
+
+    def get_formset(self, request, obj=None, **kwargs):
+        """Only show this inline for discord_webhook type channels"""
+        formset = super().get_formset(request, obj, **kwargs)
+        if obj and obj.type != NotificationChannel.ChannelType.DISCORD_WEBHOOK:
+            # Don't show for other types
+            return None
+        return formset
+
+
+@admin.register(NotificationChannel)
+class NotificationChannelAdmin(ModelAdmin):
+    list_display = ('name', 'type', 'active', 'auto_notify', 'created_at')
+    list_filter = ('type', 'active', 'auto_notify')
+    search_fields = ('name',)
+    readonly_fields = ('created_at', 'updated_at')
+    inlines = [DiscordWebhookConfigInline]
+
+    fieldsets = (
+        ('Channel Information', {
+            'fields': ('name', 'type')
+        }),
+        ('Settings', {
+            'fields': ('auto_notify', 'active')
+        }),
+        ('Metadata', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def get_queryset(self, request):
+        """Add notification count annotation"""
+        qs = super().get_queryset(request)
+        return qs.annotate(
+            notification_count=models.Count('notification_logs')
+        )
+
+
+@admin.register(NotificationLog)
+class NotificationLogAdmin(ModelAdmin):
+    list_display = ('deal', 'channel', 'status', 'sent_at')
+    list_filter = ('status', 'channel', 'sent_at')
+    search_fields = ('deal__name', 'channel__name', 'status_message')
+    readonly_fields = ('deal', 'channel', 'status', 'status_message', 'sent_at')
+    date_hierarchy = 'sent_at'
+
+    def has_add_permission(self, request):
+        """Prevent manual creation of notification logs"""
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        """Make logs read-only"""
+        return False
 
 
 @admin.register(PushSubscription)

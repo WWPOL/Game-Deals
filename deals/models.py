@@ -77,14 +77,6 @@ class Deal(models.Model):
         help_text="Store URL to purchase (required when published)"
     )
 
-    # Notification tracking - JSON field to track which channels have been notified
-    # Structure: {"main": true, "test": false, ...}
-    notifications_sent = models.JSONField(
-        default=dict,
-        blank=True,
-        help_text="Track notification status per channel"
-    )
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -112,14 +104,21 @@ class Deal(models.Model):
         first_entry = self.color_palette.order_by('-weight').first()
         return first_entry.foreground_color if first_entry else DEFAULT_FOREGROUND_COLOR
 
-    def has_notification_sent(self, channel='main'):
-        """Check if notification was sent for a specific channel"""
-        return self.notifications_sent.get(channel, False)
+    def has_notification_sent(self, channel):
+        """
+        Check if notification was successfully sent for a specific channel.
 
-    def mark_notification_sent(self, channel='main'):
-        """Mark notification as sent for a specific channel"""
-        self.notifications_sent[channel] = True
-        self.save(update_fields=['notifications_sent'])
+        Args:
+            channel: NotificationChannel instance or ID
+
+        Returns:
+            bool: True if a successful notification log exists
+        """
+        channel_id = channel.id if hasattr(channel, 'id') else channel
+        return self.notification_logs.filter(
+            channel_id=channel_id,
+            status='success'
+        ).exists()
 
     def clean(self):
         """Validate that required fields are present when publishing"""
@@ -214,6 +213,148 @@ class ColorPalette(models.Model):
 
     def __str__(self):
         return f"{self.deal.name}: {self.background_color} (weight: {self.weight:.3f})"
+
+
+class NotificationChannel(models.Model):
+    """Base notification channel configuration for sending deal notifications"""
+
+    class ChannelType(models.TextChoices):
+        DISCORD_WEBHOOK = 'discord_webhook', 'Discord Webhook'
+        # Future: DISCORD_BOT = 'discord_bot', 'Discord Bot'
+        # Future: EMAIL = 'email', 'Email'
+        # Future: PUSH = 'push', 'Web Push'
+
+    name = models.CharField(
+        max_length=100,
+        unique=True,
+        help_text="Human-readable channel name (e.g., 'Main Discord', 'Test Channel')"
+    )
+    type = models.CharField(
+        choices=ChannelType.choices,
+        default=ChannelType.DISCORD_WEBHOOK,
+        help_text="Type of notification channel"
+    )
+    auto_notify = models.BooleanField(
+        default=False,
+        help_text="Automatically send notifications when new deals are published"
+    )
+    active = models.BooleanField(
+        default=True,
+        help_text="Enable/disable this channel without deleting it"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+        indexes = [
+            models.Index(fields=['type', 'active']),
+            models.Index(fields=['auto_notify', 'active']),
+        ]
+
+    def __str__(self):
+        status = "✓" if self.active else "✗"
+        auto = "🔔" if self.auto_notify else ""
+        return f"{status} {self.name} ({self.get_type_display()}) {auto}"
+
+    def get_config(self):
+        """Get the type-specific configuration object"""
+        if self.type == self.ChannelType.DISCORD_WEBHOOK:
+            return getattr(self, 'discord_webhook_config', None)
+        return None
+
+
+class DiscordWebhookConfig(models.Model):
+    """Discord webhook-specific configuration (1:1 with NotificationChannel)"""
+
+    channel = models.OneToOneField(
+        NotificationChannel,
+        on_delete=models.CASCADE,
+        related_name='discord_webhook_config',
+        help_text="Parent notification channel"
+    )
+    webhook_url = models.URLField(
+        max_length=500,
+        help_text="Discord webhook URL (from Server Settings -> Integrations -> Webhooks)"
+    )
+    username = models.CharField(
+        max_length=80,
+        default="Game Deals Bot",
+        help_text="Bot username displayed in Discord (max 80 characters)"
+    )
+    avatar = models.ImageField(
+        upload_to='discord_avatars/',
+        null=True,
+        blank=True,
+        help_text="Bot avatar image (optional, will be uploaded and URL used)"
+    )
+
+    class Meta:
+        verbose_name = "Discord Webhook Configuration"
+        verbose_name_plural = "Discord Webhook Configurations"
+
+    def __str__(self):
+        return f"Discord config for {self.channel.name}"
+
+    def clean(self):
+        """Validate webhook URL format"""
+        super().clean()
+        if not self.webhook_url.startswith('https://discord.com/api/webhooks/'):
+            raise ValidationError({
+                'webhook_url': 'Discord webhook URL must start with https://discord.com/api/webhooks/'
+            })
+
+
+class NotificationLog(models.Model):
+    """Log of notifications sent to channels for deals"""
+
+    class Status(models.TextChoices):
+        SUCCESS = 'success', 'Success'
+        FAILED = 'failed', 'Failed'
+        PENDING = 'pending', 'Pending'
+
+    deal = models.ForeignKey(
+        'Deal',
+        on_delete=models.CASCADE,
+        related_name='notification_logs',
+        help_text="Deal that was notified"
+    )
+    channel = models.ForeignKey(
+        'NotificationChannel',
+        on_delete=models.CASCADE,
+        related_name='notification_logs',
+        help_text="Channel the notification was sent to"
+    )
+    status = models.CharField(
+        choices=Status.choices,
+        default=Status.PENDING,
+        help_text="Status of the notification"
+    )
+    status_message = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Additional details about the notification status (error message, success info, etc.)"
+    )
+    sent_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-sent_at']
+        indexes = [
+            models.Index(fields=['deal', 'channel']),
+            models.Index(fields=['channel', '-sent_at']),
+            models.Index(fields=['status', '-sent_at']),
+        ]
+        # Prevent duplicate successful notifications for same deal+channel
+        constraints = [
+            models.UniqueConstraint(
+                fields=['deal', 'channel'],
+                condition=models.Q(status='success'),
+                name='unique_successful_notification'
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.deal.name} → {self.channel.name} ({self.get_status_display()})"
 
 
 class PushSubscription(models.Model):
