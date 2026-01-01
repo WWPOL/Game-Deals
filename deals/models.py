@@ -235,7 +235,7 @@ class NotificationChannel(models.Model):
         help_text="Type of notification channel"
     )
     auto_notify = models.BooleanField(
-        default=False,
+        default=True,
         help_text="Automatically send notifications when new deals are published"
     )
     active = models.BooleanField(
