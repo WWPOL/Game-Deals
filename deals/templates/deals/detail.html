@@ -52,6 +52,10 @@
 
     .header-section {
         margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        flex-wrap: wrap;
     }
 
     .back-link {
@@ -69,17 +73,15 @@
     }
 
     .deal-title {
-        position: absolute;
+        position: relative;
         font-size: 2.5rem;
         font-weight: 900;
         color: {{ deal.primary_foreground_color }};
         margin: 0;
         line-height: 1.2;
-        text-align: center;
         z-index: 10;
         padding: 0.25rem;
-        max-width: 90%;
-
+        flex: 1;
     }
 
     .deal-title::before {
@@ -106,14 +108,12 @@
     @media (min-width: 768px) {
         .deal-title {
             font-size: 3.5rem;
-            top: 4rem;
         }
     }
 
     @media (min-width: 1024px) {
         .deal-title {
             font-size: 4.5rem;
-            top: 5rem;
         }
     }
 
@@ -220,12 +220,10 @@
             ← Back
         </a>
 
-        <div>
-          <h1 class="deal-title" data-text="{{ deal.name }}">{{ deal.name }}</h1>
-        </div>
+        <h1 class="deal-title" data-text="{{ deal.name }}">{{ deal.name }}</h1>
 
         {% if user.is_staff and deal.status == 'draft' %}
-        <span style="display: inline-block; margin-left: 1rem; background: #ca8a04; color: white; padding: 0.25rem 0.75rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: bold;">
+        <span style="display: inline-block; background: #ca8a04; color: white; padding: 0.25rem 0.75rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: bold;">
             DRAFT
         </span>
         {% endif %}

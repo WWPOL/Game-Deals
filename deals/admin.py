@@ -261,68 +261,6 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
         return HttpResponseRedirect(url)
 
 
-class ColorPaletteAdminForm(forms.ModelForm):
-    class Meta:
-        model = ColorPalette
-        fields = '__all__'
-        widgets = {
-            'background_color': ColorPickerWidget(),
-            'foreground_color': ColorPickerWidget(),
-        }
-
-
-@admin.register(ColorPalette)
-class ColorPaletteAdmin(ModelAdmin):
-    form = ColorPaletteAdminForm
-    list_display = ('deal', 'color_preview_list', 'weight', 'created_at')
-    list_filter = ('deal', 'created_at')
-    search_fields = ('deal__name',)
-    readonly_fields = ('created_at', 'color_preview_display')
-
-    fieldsets = (
-        ('Deal', {
-            'fields': ('deal',)
-        }),
-        ('Colors', {
-            'fields': ('color_preview_display', 'background_color', 'foreground_color', 'weight')
-        }),
-        ('Metadata', {
-            'fields': ('created_at',),
-            'classes': ('collapse',)
-        }),
-    )
-
-    def color_preview_list(self, obj):
-        """Preview in list view"""
-        if not obj:
-            return "-"
-
-        widget = ColorPalettePreviewWidget()
-        value = {
-            'background_color': obj.background_color,
-            'foreground_color': obj.foreground_color,
-            'weight': obj.weight
-        }
-        return widget.render(name='preview', value=value)
-
-    color_preview_list.short_description = 'Preview'
-
-    def color_preview_display(self, obj):
-        """Preview in change form"""
-        if not obj:
-            return "-"
-
-        widget = ColorPalettePreviewWidget()
-        value = {
-            'background_color': obj.background_color,
-            'foreground_color': obj.foreground_color,
-            'weight': obj.weight
-        }
-        return widget.render(name='preview', value=value)
-
-    color_preview_display.short_description = 'Current Preview'
-
-
 @admin.register(PushSubscription)
 class PushSubscriptionAdmin(ModelAdmin):
     list_display = ('endpoint_preview', 'channel', 'created_at')
