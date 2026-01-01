@@ -74,7 +74,7 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
             'fields': ('status',)
         }),
         ('Metadata', {
-            'fields': ('notifications_sent', 'created_at', 'updated_at'),
+            'fields': ('created_at', 'updated_at'),
             'classes': ('collapse',)
         }),
     )
