@@ -79,10 +79,10 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
     actions = ['publish_deals_bulk', 'send_notifications_bulk', 'reextract_colors_bulk', 'image_search_bulk']
     fieldsets = (
         ('Basic Information', {
-            'fields': ('name', 'slug')
+            'fields': ('name',)
         }),
         ('Deal Details', {
-            'fields': ('original_price', 'price', 'link', 'expires')
+            'fields': ('price', 'original_price', 'link', 'expires')
         }),
         ('Image', {
             'fields': ('image', 'image_attribution', 'auto_extract_palette')
@@ -91,7 +91,7 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
             'fields': ('status',)
         }),
         ('Metadata', {
-            'fields': ('created_at', 'updated_at'),
+            'fields': ('slug', 'created_at', 'updated_at'),
             'classes': ('collapse',)
         }),
     )
