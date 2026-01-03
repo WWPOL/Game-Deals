@@ -29,6 +29,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# Site URL for building absolute URLs (e.g., in Discord embeds)
+SITE_URL = os.environ.get('SITE_URL', 'http://localhost:8000')
+
 
 # Application definition
 

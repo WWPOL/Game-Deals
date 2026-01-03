@@ -10,9 +10,9 @@ from django.conf import settings
 from django.utils import timezone
 from decimal import Decimal
 
-
 # Import models for type hints - no circular dependency since this is a service
 from deals.models import Deal, NotificationChannel, DiscordWebhookConfig
+from deals.utils import build_site_url
 
 
 class DiscordNotificationError(Exception):
@@ -101,13 +101,18 @@ def build_deal_embed(deal: Deal) -> DiscordEmbed:
             description_parts.append(f"\n📅 {expires_str}")
 
     # Build the embed using Pydantic model
+    # Build absolute URL for image (Discord needs full URLs)
+    image_embed = None
+    if deal.image:
+        image_embed = DiscordEmbedImage(url=build_site_url(deal.image.url))
+
     return DiscordEmbed(
         title=deal.name,
         url=deal.link if deal.link else None,
         color=primary_color,
         description="\n".join(description_parts),
         timestamp=timezone.now().isoformat(),
-        image=DiscordEmbedImage(url=deal.image.url) if deal.image else None,
+        image=image_embed,
         footer=DiscordEmbedFooter(text="Game Deals")
     )
 
@@ -145,11 +150,16 @@ def send_discord_notification(deal: Deal, channel: NotificationChannel) -> bool:
     # Build the embed
     embed = build_deal_embed(deal)
 
+    # Build absolute URL for avatar (Discord needs full URLs)
+    avatar_url = None
+    if config.avatar:
+        avatar_url = build_site_url(config.avatar.url)
+
     # Prepare the payload with config-specific settings
     payload = DiscordWebhookPayload(
         embeds=[embed],
         username=config.username,
-        avatar_url=config.avatar.url if config.avatar else None
+        avatar_url=avatar_url
     )
 
     # Send the request
