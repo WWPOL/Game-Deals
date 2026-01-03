@@ -19,20 +19,16 @@ class DealQuerySet(models.QuerySet):
 
     def active(self, user=None):
         """
-        Get active (non-expired) deals.
+        Get active (non-expired) published deals.
 
         Args:
-            user: Request user to determine permissions (optional)
+            user: Request user to determine permissions (optional, unused but kept for compatibility)
 
         Returns:
-            QuerySet of active deals ordered by newest first
+            QuerySet of active published deals ordered by newest first
         """
         now = timezone.now()
-        queryset = self.filter(expires__gt=now)
-
-        # Filter by status if user is not staff
-        if user and not user.is_staff:
-            queryset = queryset.filter(status='published')
+        queryset = self.filter(expires__gt=now, status='published')
 
         return queryset.prefetch_related('color_palette').order_by('-created_at')
 

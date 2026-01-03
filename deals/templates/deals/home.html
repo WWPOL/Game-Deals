@@ -10,163 +10,44 @@
     }
 </style>
 
+{% if first_active_deal %}
+<!-- Show featured active deal -->
+{% load deal_colors %}
+{% deal_variables first_active_deal %}
+<div class="{% deal_scope first_active_deal %}">
+
+    <!-- Blob Background -->
+    {% include 'components/blob_background.html' with colors=first_active_deal.color_palette.all %}
+
+    <!-- Navigation Buttons (fixed on sides) -->
+    {% include 'components/deal_pagination_prev.html' %}
+    {% include 'components/deal_pagination_next.html' %}
+
+    <!-- Deal Card Component -->
+    {% include 'components/deal_card.html' with deal=first_active_deal %}
+
+</div>
+
+{% else %}
+<!-- No active deals - show filter and expired deals list -->
+
 <!-- Wave Background -->
 {% include 'components/wave_background.html' with colors=page_colors %}
 
 <div class="min-h-screen relative deal-fg-primary">
-    <!-- Deal Pagination -->
-    {% include 'components/deal_pagination.html' %}
-
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <!-- Filter Section -->
-        <div class="mb-8 backdrop-blur-sm rounded-lg border border-white/10 p-6">
-            <form method="get" id="filterForm">
-                <!-- Search Bar -->
-                <div class="mb-6">
-                    <div class="relative">
-                        <input
-                            type="text"
-                            name="search"
-                            value="{{ current_search }}"
-                            placeholder="Search game deals..."
-                            class="w-full border border-white/20 rounded-lg px-4 py-3 pl-10 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2">🔍</span>
-                        {% if current_search %}
-                        <a href="?" class="absolute right-3 top-1/2 transform -translate-y-1/2">✕</a>
-                        {% endif %}
-                    </div>
-                </div>
 
-                <!-- Hidden price range inputs -->
-                <input type="hidden" name="price_gt" id="price_gt" value="{{ current_price_gt|default:'' }}">
-                <input type="hidden" name="price_lt" id="price_lt" value="{{ current_price_lt|default:'' }}">
-
-                <!-- Filter Grid -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <!-- Sort Dropdown -->
-                    <div>
-                        <label class="block text-sm font-medium  mb-2">Sort By</label>
-                        <select name="sort"
-                                class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2  focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                onchange="this.form.submit()">
-                            <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>Newest First</option>
-                            <option value="price_low" {% if current_sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
-                            <option value="price_high" {% if current_sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
-                            <option value="expiring_soon" {% if current_sort == 'expiring_soon' %}selected{% endif %}>Expiring Soon</option>
-                        </select>
-                    </div>
-
-                    <!-- Price Range Filter -->
-                    <div>
-                        <label class="block text-sm font-medium  mb-2">Price Range</label>
-                        <select id="priceRangeSelect"
-                                class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2  focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                onchange="setPriceRange(this.value)">
-                            <option value="" {% if not current_price_gt and not current_price_lt %}selected{% endif %}>All Prices</option>
-                            <option value="free" {% if current_price_gt == None and current_price_lt == 0.01 %}selected{% endif %}>FREE</option>
-                            <option value="under_10" {% if current_price_gt == 0 and current_price_lt == 10 %}selected{% endif %}>Under $10</option>
-                            <option value="10_to_20" {% if current_price_gt == 10 and current_price_lt == 20 %}selected{% endif %}>$10 - $20</option>
-                            <option value="20_to_30" {% if current_price_gt == 20 and current_price_lt == 30 %}selected{% endif %}>$20 - $30</option>
-                            <option value="over_30" {% if current_price_gt == 30 and not current_price_lt %}selected{% endif %}>$30+</option>
-                        </select>
-                    </div>
-
-                    <!-- Status Filter -->
-                    <div>
-                        <label class="block text-sm font-medium  mb-2">Status</label>
-                        <select name="status_filter"
-                                class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2  focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                onchange="this.form.submit()">
-                            <option value="active" {% if current_status_filter == 'active' %}selected{% endif %}>Active Only</option>
-                            <option value="expired" {% if current_status_filter == 'expired' %}selected{% endif %}>Expired Only</option>
-                            <option value="all" {% if current_status_filter == 'all' %}selected{% endif %}>All Deals</option>
-                        </select>
-                    </div>
-
-                    <!-- Staff-Only: Show Drafts Toggle -->
-                    {% if user.is_staff %}
-                    <div>
-                        <label class="block text-sm font-medium  mb-2">Staff Options</label>
-                        <label class="flex items-center space-x-2 bg-white/10 border border-yellow-500/50 rounded-lg px-4 py-2 cursor-pointer hover:bg-white/15">
-                            <input type="checkbox"
-                                   name="show_drafts"
-                                   value="true"
-                                   {% if show_drafts %}checked{% endif %}
-                                   onchange="this.form.submit()"
-                                   class="w-4 h-4 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
-                            <span class="text-sm text-yellow-300">Show Drafts</span>
-                        </label>
-                    </div>
-                    {% endif %}
-                </div>
-
-                <!-- Active Filters Summary -->
-                {% if current_search or current_price_gt or current_price_lt or current_status_filter != 'active' or show_drafts %}
-                <div class="mt-4 pt-4 border-t border-white/10">
-                    <div class="flex items-center justify-between flex-wrap gap-2">
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <span class="text-sm ">Active filters:</span>
-                            {% if current_search %}
-                            <span class="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded-full text-sm ">
-                                Search: "{{ current_search }}"
-                            </span>
-                            {% endif %}
-                            {% if current_price_gt or current_price_lt %}
-                            <span class="inline-flex items-center gap-1 px-3 py-1 bg-green-500/20 border border-green-500/30 rounded-full text-sm ">
-                                Price: {% if current_price_gt and current_price_lt %}${{ current_price_gt }} - ${{ current_price_lt }}{% elif current_price_gt %}${{ current_price_gt }}+{% elif current_price_lt %}Under ${{ current_price_lt }}{% endif %}
-                            </span>
-                            {% endif %}
-                            {% if current_status_filter != 'active' %}
-                            <span class="inline-flex items-center gap-1 px-3 py-1 bg-purple-500/20 border border-purple-500/30 rounded-full text-sm ">
-                                Status: {{ current_status_filter|title }}
-                            </span>
-                            {% endif %}
-                            {% if show_drafts %}
-                            <span class="inline-flex items-center gap-1 px-3 py-1 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-sm text-yellow-300">
-                                Showing Drafts
-                            </span>
-                            {% endif %}
-                        </div>
-                        <a href="?" class="text-sm underline">Clear all filters</a>
-                    </div>
-                </div>
-                {% endif %}
-            </form>
+        <!-- No Active Deals Message -->
+        <div class="text-center mb-12">
+            <div class="text-6xl mb-4">😴</div>
+            <h1 class="text-4xl font-bold mb-3">No Active Deals Right Now</h1>
+            <p class="text-lg opacity-80 mb-6">
+                Check back soon for new deals, or browse our expired deals below to see what you missed!
+            </p>
         </div>
 
-        <script>
-            function setPriceRange(value) {
-                const priceGt = document.getElementById('price_gt');
-                const priceLt = document.getElementById('price_lt');
-
-                priceGt.value = '';
-                priceLt.value = '';
-
-                switch(value) {
-                    case 'free':
-                        priceLt.value = '0.01';
-                        break;
-                    case 'under_10':
-                        priceGt.value = '0';
-                        priceLt.value = '10';
-                        break;
-                    case '10_to_20':
-                        priceGt.value = '10';
-                        priceLt.value = '20';
-                        break;
-                    case '20_to_30':
-                        priceGt.value = '20';
-                        priceLt.value = '30';
-                        break;
-                    case 'over_30':
-                        priceGt.value = '30';
-                        break;
-                }
-
-                document.getElementById('filterForm').submit();
-            }
-        </script>
+        <!-- Filter Section -->
+        {% include 'components/deal_filter_ui.html' with current_search=current_search current_sort=current_sort current_price_gt=current_price_gt current_price_lt=current_price_lt current_status_filter=current_status_filter show_drafts=show_drafts user=user %}
 
         <!-- Results Header -->
         <div class="mb-6 text-center">
@@ -392,4 +273,8 @@
         animateWave(wave, index);
     });
 </script>
+    </div>
+</div>
+{% endif %}
+
 {% endblock %}

@@ -144,8 +144,14 @@ class HomeView(ListView):
 
         context['page_colors'] = all_colors
 
+        # Get first active deal for featured display
+        active_deals = Deal.objects.active(self.request.user)
+        first_active_deal = active_deals.first() if active_deals.exists() else None
+        context['first_active_deal'] = first_active_deal
+
         # Add pagination context for deal carousel navigation
-        context.update(get_deal_pagination_context(None, self.request.user))
+        # Pass first_active_deal so navigation buttons work on home page
+        context.update(get_deal_pagination_context(first_active_deal, self.request.user))
 
         return context
 
