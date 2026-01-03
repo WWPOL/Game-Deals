@@ -25,38 +25,40 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <!-- Brand -->
-                <div class="flex items-center gap-6">
+                <div class="flex items-center">
                     <a href="{% url 'deals:home' %}" class="flex items-center">
-                        <span class="text-2xl font-bold deal-fg-primary">🎮 Game Deals</span>
+                        <span class="text-2xl font-bold deal-fg-primary whitespace-nowrap">🎮 Game Deals</span>
                         <span class="ml-3 text-sm deal-fg-primary hidden sm:block">by Olly G</span>
-                    </a>
-
-                    <!-- Browse Link -->
-                    <a href="{% url 'deals:browse' %}" class="text-sm font-medium deal-fg-primary hover:opacity-80 transition-opacity">
-                        Browse All
                     </a>
                 </div>
 
-                <!-- Center: Pagination Header -->
-                <div class="flex-1 flex justify-center px-4">
+                <!-- Center: Pagination Header (hidden on mobile) -->
+                <div class="hidden md:flex flex-1 justify-center px-4">
                     {% include 'components/deal_pagination_header.html' %}
                 </div>
 
-                <!-- Right hand part of header -->
-                <div class="flex space-x-4">
-                    <!-- Subscribe button -->
-                  <!-- <div class="flex items-center space-x-4">
-                       <button id="subscribe-btn" class="deal-bg-primary deal-fg-primary px-4 py-2 rounded-lg transition-all hover:shadow-lg deal-glow-sm deal-glow-md-hover font-semibold border-white-20">
-                       Subscribe to Alerts
-                       </button>
-                       </div> -->
+                <!-- Mobile: Active Deals Header -->
+                <div class="flex md:hidden flex-1 justify-center px-2">
+                    {% include 'components/deal_pagination_header.html' %}
+                </div>
 
-                    <!-- Admin button if logged in -->
-                    {% if user.is_authenticated %}
-                    <div class="rounded-lg deal-bg-primary deal-fg-primary px-4 py-2 font-semibold">
-                      <a href="{% url 'admin:index' %}">Go to Console</a>
-                    </div>
-                    {% endif %}
+                <!-- Desktop Nav Items (right-aligned) -->
+                <div class="hidden md:flex items-center gap-4">
+                    {% include 'components/nav_items.html' %}
+                </div>
+
+                <!-- Mobile Hamburger Button -->
+                <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg deal-fg-primary hover:opacity-80 transition-opacity">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Mobile Menu Dropdown -->
+            <div id="mobile-menu" class="hidden md:hidden border-t border-white/20">
+                <div class="py-2">
+                    {% include 'components/nav_items.html' with mobile=True %}
                 </div>
             </div>
         </div>
@@ -89,6 +91,19 @@
     {% endblock %}
 
     {% block extra_js %}{% endblock %}
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        if (mobileMenuBtn && mobileMenu) {
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+    </script>
+
     {% tz_detect %}
 </body>
 </html>
