@@ -398,7 +398,7 @@ class NotificationChannelAdmin(DjangoObjectActions, ModelAdmin):
             'fields': ('name', 'type')
         }),
         ('Settings', {
-            'fields': ('auto_notify', 'active', 'is_test_channel')
+            'fields': ('auto_notify', 'active', 'is_test_channel', 'message_preamble')
         }),
         ('Metadata', {
             'fields': ('created_at', 'updated_at'),

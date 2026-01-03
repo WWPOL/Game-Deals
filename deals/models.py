@@ -246,6 +246,11 @@ class NotificationChannel(models.Model):
         default=False,
         help_text="Test channels can receive notifications for draft deals (for testing purposes)"
     )
+    message_preamble = models.TextField(
+        blank=True,
+        default='',
+        help_text="Optional text message to send before the embed (e.g., '@everyone New deal!')"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

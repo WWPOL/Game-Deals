@@ -44,6 +44,7 @@ class DiscordEmbed(BaseModel):
 
 class DiscordWebhookPayload(BaseModel):
     """Discord webhook payload"""
+    content: Optional[str] = None
     embeds: list[DiscordEmbed]
     username: Optional[str] = None
     avatar_url: Optional[str] = None
@@ -157,6 +158,7 @@ def send_discord_notification(deal: Deal, channel: NotificationChannel) -> bool:
 
     # Prepare the payload with config-specific settings
     payload = DiscordWebhookPayload(
+        content=channel.message_preamble if channel.message_preamble else None,
         embeds=[embed],
         username=config.username,
         avatar_url=avatar_url
