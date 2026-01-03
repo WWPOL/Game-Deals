@@ -73,6 +73,7 @@ class NotificationLogForChannelInline(admin.TabularInline):
     """Notification log inline for NotificationChannel admin - shows deal instead of channel"""
     model = NotificationLog
     extra = 0
+    max_num = 20  # Limit to 20 most recent logs
     can_delete = False
     show_change_link = False
     verbose_name = "Notification Log"
