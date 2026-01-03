@@ -39,7 +39,7 @@ services:
     build:
       context: .
       dockerfile: dev.Dockerfile
-    command: celery -A config worker -l info
+    command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A config worker -l info
     volumes:
       - .:/app
     env_file:
@@ -55,7 +55,7 @@ services:
     build:
       context: .
       dockerfile: dev.Dockerfile
-    command: celery -A config beat -l info
+    command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A config beat -l info
     volumes:
       - .:/app
     env_file:
