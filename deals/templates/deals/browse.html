@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+{% load deal_colors %}
+
+{% block title %}Browse All Deals - Olly G's Game Deals{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        background: #0a0a0a;
+    }
+</style>
+
+<!-- Wave Background -->
+{% include 'components/wave_background.html' with colors=page_colors %}
+
+<div class="min-h-screen relative deal-fg-primary">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+        <!-- Filter Section -->
+        {% include 'components/deal_filter_ui.html' with current_search=current_search current_sort=current_sort current_price_gt=current_price_gt current_price_lt=current_price_lt current_status_filter=current_status_filter show_drafts=show_drafts user=user %}
+
+        <!-- Results Header -->
+        <div class="mb-6 text-center">
+            <h1 class="text-5xl font-bold mb-3">🎮
+                {% if current_search %}Search Results{% else %}{% if current_status_filter == 'expired' %}Expired Deals{% elif current_status_filter == 'all' %}All Deals{% else %}Active Deals{% endif %}{% endif %}
+            </h1>
+            <p class="">
+                {{ total_results }} deal{{ total_results|pluralize }} found
+                {% if page_obj.paginator.num_pages > 1 %}
+                (Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }})
+                {% endif %}
+            </p>
+        </div>
+
+        {% if deals %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for deal in deals %}
+            {% include 'components/deal_list_item.html' with deal=deal %}
+            {% endfor %}
+        </div>
+
+        <!-- Pagination Controls -->
+        {% if page_obj.paginator.num_pages > 1 %}
+        <div class="mt-12 flex justify-center items-center gap-2 flex-wrap">
+            <!-- Previous Button -->
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if query_string %}&{{ query_string }}{% endif %}"
+               class="px-4 py-2 bg-white/10 border border-white/20 rounded-lg  hover:bg-white/20 transition-colors">
+                ← Previous
+            </a>
+            {% else %}
+            <span class="px-4 py-2 bg-white/5 border border-white/10 rounded-lg  cursor-not-allowed">
+                ← Previous
+            </span>
+            {% endif %}
+
+            <!-- Page Numbers -->
+            <div class="flex gap-1 flex-wrap">
+                {% for num in page_obj.paginator.page_range %}
+                    {% if num == page_obj.number %}
+                        <span class="px-4 py-2 bg-blue-600 border border-blue-500 rounded-lg  font-bold">
+                            {{ num }}
+                        </span>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <a href="?page={{ num }}{% if query_string %}&{{ query_string }}{% endif %}"
+                           class="px-4 py-2 bg-white/10 border border-white/20 rounded-lg  hover:bg-white/20 transition-colors">
+                            {{ num }}
+                        </a>
+                    {% elif num == 1 or num == page_obj.paginator.num_pages %}
+                        <a href="?page={{ num }}{% if query_string %}&{{ query_string }}{% endif %}"
+                           class="px-4 py-2 bg-white/10 border border-white/20 rounded-lg  hover:bg-white/20 transition-colors">
+                            {{ num }}
+                        </a>
+                    {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
+                        <span class="px-4 py-2 ">...</span>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <!-- Next Button -->
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if query_string %}&{{ query_string }}{% endif %}"
+               class="px-4 py-2 bg-white/10 border border-white/20 rounded-lg  hover:bg-white/20 transition-colors">
+                Next →
+            </a>
+            {% else %}
+            <span class="px-4 py-2 bg-white/5 border border-white/10 rounded-lg  cursor-not-allowed">
+                Next →
+            </span>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="text-center py-20">
+            <div class="text-6xl mb-4">🔍</div>
+            <h3 class="text-2xl font-bold mb-2">No deals found</h3>
+            <p class=" mb-6">
+                {% if current_search %}
+                No deals match your search for "{{ current_search }}"
+                {% else %}
+                Try adjusting your filters to see more results
+                {% endif %}
+            </p>
+            <a href="?" class="inline-block bg-blue-600 hover:bg-blue-700  px-6 py-3 rounded-lg transition-colors">
+                Clear all filters
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script>
+    // Collect all background colors from all deals on the page
+    var allColors = [
+        {% for deal in deals %}
+            {% for color in deal.color_palette.all %}
+            {
+                background: "{{ color.background_color }}",
+                weight: {{ color.weight }}
+            }{% if not forloop.last or not forloop.parentloop.last %},{% endif %}
+            {% endfor %}
+        {% endfor %}
+    ];
+
+    // If no colors found, use default darker purplish palette
+    if (allColors.length === 0) {
+        var defaultColors = [
+            '#1a0f2e', // Dark purple
+            '#2d1b4e', // Deep purple
+            '#1e1b3c', // Dark blue-purple
+            '#251640', // Dark violet
+            '#1c1333', // Very dark purple
+            '#2a1f3d', // Dark plum
+        ];
+
+        allColors = defaultColors.map(function(color) {
+            return {
+                background: color,
+                weight: 1
+            };
+        });
+    }
+
+    // Remove duplicates and combine weights
+    var colorMap = {};
+    allColors.forEach(function(color) {
+        if (colorMap[color.background]) {
+            colorMap[color.background] += color.weight;
+        } else {
+            colorMap[color.background] = color.weight;
+        }
+    });
+
+    // Convert back to array
+    var uniqueColors = Object.keys(colorMap).map(function(bg) {
+        return { background: bg, weight: colorMap[bg] };
+    });
+
+    // Normalize weights
+    var totalWeight = uniqueColors.reduce(function(sum, c) { return sum + c.weight; }, 0);
+    uniqueColors.forEach(function(c) { c.weight = c.weight / totalWeight; });
+
+    var svg = document.getElementById('home-blob-svg');
+
+    // Helper function to create wave path
+    function createWavePath(yPosition, amplitude, frequency, phase) {
+        var path = 'M -200,' + yPosition;
+
+        for (var x = -200; x <= 1200; x += 10) {
+            var y = yPosition + Math.sin((x + phase) * frequency) * amplitude;
+            path += ' L ' + x + ',' + y;
+        }
+
+        // Close the path at the bottom
+        path += ' L 1200,1200 L -200,1200 Z';
+        return path;
+    }
+
+    // Create SVG waves
+    var waves = [];
+    var waveCount = Math.min(uniqueColors.length * 3, 20); // Create multiple waves per color
+
+    for (var i = 0; i < waveCount; i++) {
+        var colorIndex = i % uniqueColors.length;
+        var colorEntry = uniqueColors[colorIndex];
+
+        // Distribute waves across the viewport
+        var yPosition = (i / waveCount) * 1200 - 100;
+        var amplitude = 40 + Math.random() * 60;
+        var frequency = 0.003 + Math.random() * 0.005;
+        var phase = Math.random() * 1000;
+
+        var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('class', 'wave-path');
+        path.setAttribute('d', createWavePath(yPosition, amplitude, frequency, phase));
+        path.setAttribute('fill', colorEntry.background);
+        path.setAttribute('opacity', 0.3 + Math.random() * 0.4);
+        svg.appendChild(path);
+
+        waves.push({
+            element: path,
+            yPosition: yPosition,
+            amplitude: amplitude,
+            frequency: frequency,
+            phase: phase
+        });
+    }
+
+    // Animate waves with smooth continuous animation
+    function animateWave(wave, index) {
+        var direction = index % 2 === 0 ? 1 : -1;
+        var phaseSpeed = 15000 + Math.random() * 20000;
+        var verticalSpeed = 25000 + Math.random() * 15000;
+
+        var baseYPosition = wave.yPosition;
+        var startTime = Date.now() + (index * 500); // Stagger start times
+
+        function updateWave() {
+            var elapsed = Date.now() - startTime;
+
+            // Continuous phase animation (horizontal flow)
+            wave.phase = wave.phase + (direction * 0.5);
+
+            // Smooth vertical oscillation using sine wave
+            var verticalOffset = Math.sin(elapsed / verticalSpeed * Math.PI * 2) * 50 * direction;
+            wave.yPosition = baseYPosition + verticalOffset;
+
+            wave.element.setAttribute('d', createWavePath(
+                wave.yPosition,
+                wave.amplitude,
+                wave.frequency,
+                wave.phase
+            ));
+
+            requestAnimationFrame(updateWave);
+        }
+
+        updateWave();
+    }
+
+    waves.forEach(function(wave, index) {
+        animateWave(wave, index);
+    });
+</script>
+{% endblock %}

@@ -41,12 +41,8 @@ class DealFilterForm(forms.Form):
     show_drafts = forms.BooleanField(required=False)
 
 
-class HomeView(ListView):
-    """Display list of active deals"""
-    model = Deal
-    template_name = 'deals/home.html'
-    context_object_name = 'deals'
-    paginate_by = 12
+class DealFilterMixin:
+    """Mixin to share filter logic between HomeView and BrowseView"""
 
     def get_filter_form(self):
         """Get and validate filter form from GET parameters"""
@@ -107,10 +103,8 @@ class HomeView(ListView):
 
         return queryset
 
-    def get_context_data(self, **kwargs):
-        """Add filter form and pagination query string to context"""
-        context = super().get_context_data(**kwargs)
-
+    def add_filter_context(self, context):
+        """Add filter-related context data (shared between views)"""
         # Add filter form to context
         form = self.get_filter_form()
         context['filter_form'] = form
@@ -144,6 +138,23 @@ class HomeView(ListView):
 
         context['page_colors'] = all_colors
 
+        return context
+
+
+class HomeView(DealFilterMixin, ListView):
+    """Display list of active deals"""
+    model = Deal
+    template_name = 'deals/home.html'
+    context_object_name = 'deals'
+    paginate_by = 12
+
+    def get_context_data(self, **kwargs):
+        """Add filter form and pagination query string to context"""
+        context = super().get_context_data(**kwargs)
+
+        # Add shared filter context
+        self.add_filter_context(context)
+
         # Get first active deal for featured display
         active_deals = Deal.objects.active(self.request.user)
         first_active_deal = active_deals.first() if active_deals.exists() else None
@@ -152,6 +163,23 @@ class HomeView(ListView):
         # Add pagination context for deal carousel navigation
         # Pass first_active_deal so navigation buttons work on home page
         context.update(get_deal_pagination_context(first_active_deal, self.request.user))
+
+        return context
+
+
+class BrowseView(DealFilterMixin, ListView):
+    """Display filterable list of all deals"""
+    model = Deal
+    template_name = 'deals/browse.html'
+    context_object_name = 'deals'
+    paginate_by = 12
+
+    def get_context_data(self, **kwargs):
+        """Add filter form and pagination query string to context"""
+        context = super().get_context_data(**kwargs)
+
+        # Add shared filter context
+        self.add_filter_context(context)
 
         return context
 
