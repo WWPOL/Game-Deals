@@ -206,7 +206,7 @@ All work from plan `/home/noah/.claude/plans/structured-stargazing-river.md` is 
   - `deals/templates/components/blob_background.html` - Blob animation background with color palette
   - `deals/templates/components/wave_background.html` - Wave animation for home page
 
-### Horizontal Carousel Pagination Complete ✓
+### Deal Navigation Pagination Complete ✓
 - ✓ Created `DealQuerySet` custom queryset with `active()` method
   - Filters non-expired deals with permission awareness (staff vs public)
   - Attached to Deal model via `objects` manager
@@ -214,17 +214,23 @@ All work from plan `/home/noah/.claude/plans/structured-stargazing-river.md` is 
 - ✓ Added `deals/view_helpers.py` module with pagination context helper
   - `get_deal_pagination_context()` generates navigation context
   - Returns active deal count, current position, previous/next deals
-  - Works for both detail pages (with current deal) and home page (without)
+  - Linear navigation (no wrapping at boundaries)
 - ✓ Refactored pagination into modular components:
-  - `deal_pagination_header.html`: Active deals count/position
+  - `deal_pagination_header.html`: Pill-shaped badge with count/position
+    - Game controller emoji (🎮) as visual indicator
+    - Deal color background with border and glow effects
+    - Compact two-line layout fits in navigation bar
+    - Centered in site header between brand and subscribe button
   - `deal_pagination_prev.html`: Fixed previous button (left side, vertical middle)
   - `deal_pagination_next.html`: Fixed next button (right side, vertical middle)
   - Navigation buttons labeled "Previous Deal" / "Next Deal" for clarity
-  - Header integrated inline with back button at top of detail page
-  - Carousel wraps around (last → first, first → last)
+  - Disabled state shown at boundaries (opacity-30, cursor-not-allowed)
+- ✓ Layout improvements:
+  - Pagination header integrated into site navigation (base.html)
+  - Back button moved to deal title row (same line as title and DRAFT badge)
+  - Back button added as optional parameter to deal_card component
 - ✓ Integrated pagination into views:
-  - `DealDetailView`: Shows navigation between active deals
-  - `HomeView`: Shows first/last deal navigation for carousel entry
+  - `DealDetailView`: Shows linear navigation between active deals
   - Both views share same logic via helper function
 
 ### Next Steps
