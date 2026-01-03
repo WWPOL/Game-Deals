@@ -264,6 +264,29 @@ All work from plan `/home/noah/.claude/plans/structured-stargazing-river.md` is 
   - HomeView adds featured deal and pagination context
   - BrowseView uses only shared filter context
 
+### Mobile Responsive Design Complete ✓
+- ✓ Deal detail page mobile improvements:
+  - Image aspect ratio adapts to screen size (3:4 on mobile, 4:3 on tablet, 16:9 on desktop)
+  - More vertical space for deal image on mobile devices
+  - Header section stacks vertically on mobile (back button on own line above title)
+  - Horizontal layout on desktop (back button, title, and badges on same line)
+- ✓ Navigation redesign for mobile:
+  - Created `nav_items.html` component for DRY menu structure
+  - Mobile: Hamburger menu with dropdown for navigation links
+  - Desktop: Centered active deals badge with right-aligned nav items
+  - Brand name no longer wraps (whitespace-nowrap)
+  - Mobile menu includes Browse All, Subscribe to Alerts (commented), and Go to Console
+- ✓ Active deals badge improvements:
+  - Changed from rounded-full to rounded-lg (prevents circular appearance)
+  - Added whitespace-nowrap to prevent multi-line text wrapping
+  - Better mobile display with proper width
+- ✓ Deal color context refactoring:
+  - Centralized deal_variables and deal_scope logic in base.html
+  - Automatically applies deal colors to nav, content, and footer
+  - Works for both deal detail page (deal) and home page (first_active_deal)
+  - Removed redundant template code from home.html and detail.html
+  - Single source of truth for deal context handling
+
 ### Next Steps
 1. Web push notification implementation
 2. Subscription endpoints for web push
