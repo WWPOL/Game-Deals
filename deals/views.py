@@ -14,6 +14,35 @@ from .admin_helpers import admin_render
 from .view_helpers import get_deal_pagination_context
 
 
+class DealPaginationMixin:
+    """Mixin to provide active deals pagination context to views"""
+
+    def get_pagination_context(self, include_position=True):
+        """Get pagination context for header badge and navigation
+
+        Args:
+            include_position: If True, includes current position and prev/next for navigation.
+                            If False, only includes count and first_deal for badge link.
+
+        Returns:
+            Dict with pagination context variables
+        """
+        active_deals = Deal.objects.active(self.request.user)
+        first_active_deal = active_deals.first() if active_deals.exists() else None
+
+        if include_position:
+            # Full pagination context for pages with deal colors and navigation
+            pagination_context = {'first_active_deal': first_active_deal}
+            pagination_context.update(get_deal_pagination_context(first_active_deal, self.request.user))
+            return pagination_context
+        else:
+            # Minimal context for browse page (clickable badge, no colors/position)
+            return {
+                'first_deal': first_active_deal,
+                'active_deals_count': active_deals.count(),
+            }
+
+
 class DealFilterForm(forms.Form):
     """Form to declare and validate deal filter parameters"""
     search = forms.CharField(required=False, max_length=255)
@@ -42,7 +71,7 @@ class DealFilterForm(forms.Form):
 
 
 class DealFilterMixin:
-    """Mixin to share filter logic between HomeView and BrowseView"""
+    """Mixin to provide filter logic for views"""
 
     def get_filter_form(self):
         """Get and validate filter form from GET parameters"""
@@ -110,20 +139,17 @@ class DealFilterMixin:
 
         return queryset
 
-    def add_filter_context(self, context):
-        """Add filter-related context data (shared between views)"""
-        # Add filter form to context
+    def get_filter_context(self):
+        """Get filter-related context data (shared between views)
+
+        Returns:
+            Dict with filter context variables
+        """
+        # Get filter form
         form = self.get_filter_form()
-        context['filter_form'] = form
 
         # Get cleaned filter values for template
         filters = form.cleaned_data if form.is_valid() else {}
-        context['current_search'] = filters.get('search', '')
-        context['current_sort'] = filters.get('sort')
-        context['current_price_gt'] = filters.get('price_gt')
-        context['current_price_lt'] = filters.get('price_lt')
-        context['current_status_filter'] = filters.get('status_filter')
-        context['show_drafts'] = filters.get('show_drafts', False)
 
         # Determine selected price range for template (avoids fragile decimal comparisons)
         price_gt = filters.get('price_gt')
@@ -141,32 +167,44 @@ class DealFilterMixin:
         elif price_gt == 30 and not price_lt:
             current_price_range = 'over_30'
 
-        context['current_price_range'] = current_price_range
-
         # Query string for pagination (preserve filters)
         query_params = self.request.GET.copy()
         if 'page' in query_params:
             query_params.pop('page')
-        context['query_string'] = query_params.urlencode()
 
-        # Total results count
-        context['total_results'] = self.get_queryset().count()
+        return {
+            'filter_form': form,
+            'current_search': filters.get('search', ''),
+            'current_sort': filters.get('sort'),
+            'current_price_gt': filters.get('price_gt'),
+            'current_price_lt': filters.get('price_lt'),
+            'current_status_filter': filters.get('status_filter'),
+            'show_drafts': filters.get('show_drafts', False),
+            'current_price_range': current_price_range,
+            'query_string': query_params.urlencode(),
+            'total_results': self.get_queryset().count(),
+        }
 
-        # Collect color palette data for wave background
+    def get_wave_background_context(self, deals):
+        """Get color palette data for wave background
+
+        Args:
+            deals: QuerySet or list of Deal objects
+
+        Returns:
+            Dict with page_colors list for wave background
+        """
         all_colors = []
-        for deal in context['deals']:
+        for deal in deals:
             for color in deal.color_palette.all():
                 all_colors.append({
                     'background_color': color.background_color,
                     'weight': color.weight
                 })
-
-        context['page_colors'] = all_colors
-
-        return context
+        return {'page_colors': all_colors}
 
 
-class HomeView(DealFilterMixin, ListView):
+class HomeView(DealPaginationMixin, DealFilterMixin, ListView):
     """Display list of active deals"""
     model = Deal
     template_name = 'deals/home.html'
@@ -178,21 +216,18 @@ class HomeView(DealFilterMixin, ListView):
         context = super().get_context_data(**kwargs)
 
         # Add shared filter context
-        self.add_filter_context(context)
+        context.update(self.get_filter_context())
 
-        # Get first active deal for featured display
-        active_deals = Deal.objects.active(self.request.user)
-        first_active_deal = active_deals.first() if active_deals.exists() else None
-        context['first_active_deal'] = first_active_deal
+        # Add pagination context for header badge and navigation
+        context.update(self.get_pagination_context())
 
-        # Add pagination context for deal carousel navigation
-        # Pass first_active_deal so navigation buttons work on home page
-        context.update(get_deal_pagination_context(first_active_deal, self.request.user))
+        # Add wave background colors
+        context.update(self.get_wave_background_context(context['deals']))
 
         return context
 
 
-class BrowseView(DealFilterMixin, ListView):
+class BrowseView(DealPaginationMixin, DealFilterMixin, ListView):
     """Display filterable list of all deals"""
     model = Deal
     template_name = 'deals/browse.html'
@@ -204,12 +239,18 @@ class BrowseView(DealFilterMixin, ListView):
         context = super().get_context_data(**kwargs)
 
         # Add shared filter context
-        self.add_filter_context(context)
+        context.update(self.get_filter_context())
+
+        # Add pagination context for header badge (count only, no position)
+        context.update(self.get_pagination_context(include_position=False))
+
+        # Add wave background colors
+        context.update(self.get_wave_background_context(context['deals']))
 
         return context
 
 
-class DealDetailView(DetailView):
+class DealDetailView(DealPaginationMixin, DetailView):
     """Display individual deal details"""
     model = Deal
     template_name = 'deals/detail.html'
@@ -226,7 +267,13 @@ class DealDetailView(DetailView):
     def get_context_data(self, **kwargs):
         """Add pagination context for navigating between active deals"""
         context = super().get_context_data(**kwargs)
+
+        # Add header badge context (first_active_deal, active_deals_count)
+        context.update(self.get_pagination_context())
+
+        # Override with current deal's pagination (for prev/next navigation)
         context.update(get_deal_pagination_context(self.object, self.request.user))
+
         return context
 
 
