@@ -120,6 +120,28 @@ class Deal(models.Model):
             status='success'
         ).exists()
 
+    def extract_and_save_colors(self):
+        """
+        Extract colors from image and replace existing palette.
+
+        Returns:
+            int: Number of colors extracted
+        """
+        from .services.color_extractor import extract_colors_from_url
+
+        if not self.image:
+            return 0
+
+        palette_entries = extract_colors_from_url(self.image.path)
+
+        # Clear existing palette and create new entries
+        self.color_palette.all().delete()
+        for entry in palette_entries:
+            entry.deal = self
+            entry.save()
+
+        return len(palette_entries)
+
     def clean(self):
         """Validate that required fields are present when publishing"""
         super().clean()
@@ -142,7 +164,23 @@ class Deal(models.Model):
                 raise ValidationError(errors)
 
     def save(self, *args, **kwargs):
-        """Auto-generate slug from name if not provided"""
+        """Auto-generate slug from name if not provided, and auto-extract colors if image changed"""
+        # Track if image changed for auto-extraction
+        image_changed = False
+
+        if self.pk:
+            # Existing object - check if image changed
+            try:
+                old_obj = Deal.objects.get(pk=self.pk)
+                if old_obj.image != self.image and self.image:
+                    image_changed = True
+            except Deal.DoesNotExist:
+                pass
+        else:
+            # New object - check if image is set
+            if self.image:
+                image_changed = True
+
         if not self.slug:
             # Generate slug with year/month/name format
             now = timezone.now()
@@ -160,8 +198,11 @@ class Deal(models.Model):
 
         super().save(*args, **kwargs)
 
-        # Ensure at least one ColorPalette entry exists (create default if none)
-        if not self.color_palette.exists():
+        # Auto-extract colors if image changed and auto_extract is enabled
+        if image_changed and self.auto_extract_palette:
+            self.extract_and_save_colors()
+        elif not self.color_palette.exists():
+            # Ensure at least one ColorPalette entry exists (create default if none)
             for palette_entry in DEFAULT_PALETTE:
                 self.color_palette.create(
                     background_color=palette_entry['background'],

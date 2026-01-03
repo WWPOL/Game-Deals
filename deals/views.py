@@ -155,7 +155,6 @@ def search_deal_images(request, deal_id=None):
     """Search for images for a deal and allow admin to select one"""
     from django.conf import settings
     from .services.image_search import GoogleCustomSearchProvider, download_image_from_url
-    from .services.color_extractor import extract_colors_from_url
 
     deal = None
     game_name = request.GET.get('name', '')
@@ -179,16 +178,8 @@ def search_deal_images(request, deal_id=None):
                     if selected_page_url:
                         deal.image_attribution = selected_page_url
 
+                    # Save deal (will auto-extract colors if auto_extract_palette is enabled)
                     deal.save()
-
-                    # Extract colors from the saved image
-                    palette_entries = extract_colors_from_url(deal.image.path)
-
-                    # Clear existing palette and create new entries
-                    deal.color_palette.all().delete()
-                    for entry in palette_entries:
-                        entry.deal = deal
-                        entry.save()
 
                     return redirect('admin:deals_deal_change', deal.id)
                 except Exception as e:

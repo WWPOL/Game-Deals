@@ -13,7 +13,6 @@ from django_object_actions import DjangoObjectActions
 from .models import Deal, PushSubscription, ColorPalette, NotificationChannel, NotificationLog, DiscordWebhookConfig
 from .forms import DealAdminForm
 from .services.image_search import GoogleCustomSearchProvider, download_image_from_url
-from .services.color_extractor import extract_colors_from_url
 from .admin_mixins import unfold_action
 from .widgets import ColorPickerWidget, ColorPalettePreviewWidget
 from .tasks import notify_deal
@@ -153,17 +152,14 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
     )
 
     def save_model(self, request, obj, form, change):
-        """Automatically find image on creation if not set, and re-extract colors when image changes if auto_extract is enabled"""
-        # Check if image URL has changed (for updates) and if status changed to published
-        image_changed = False
+        """Automatically find image on creation if not set"""
+        # Check if status changed to published
         was_published = False
         is_now_published = obj.status == Deal.Status.PUBLISHED
 
         if change and obj.pk:
             try:
                 original_obj = Deal.objects.get(pk=obj.pk)
-                if original_obj.image != obj.image and obj.image:
-                    image_changed = True
                 # Check if status changed from draft to published
                 if original_obj.status != Deal.Status.PUBLISHED and is_now_published:
                     was_published = True
@@ -195,55 +191,17 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
                         # Save attribution URL if available
                         if first_image.page_url:
                             obj.image_attribution = first_image.page_url
+
+                        messages.success(request, f'Automatically found and set image for "{obj.name}"')
                     except Exception as e:
                         messages.error(request, f'Error downloading image: {e}')
-                        super().save_model(request, obj, form, change)
-                        return
-
-                    # Only extract colors if auto_extract is enabled
-                    if obj.auto_extract_palette:
-                        try:
-                            palette_entries = extract_colors_from_url(obj.image.path)
-
-                            # Save Deal first to get pk for ColorPalette entries
-                            super().save_model(request, obj, form, change)
-
-                            # Create ColorPalette entries
-                            for entry in palette_entries:
-                                entry.deal = obj
-                                entry.save()
-
-                            messages.success(request, f'Automatically found image and extracted {len(palette_entries)} colors')
-                            return  # Don't call super() again
-                        except Exception as e:
-                            messages.error(request, f'Error extracting colors from image: {e}')
-                            # Continue to save the deal with the image, just without colors
-                    else:
-                        messages.success(request, f'Automatically found and set image for "{obj.name}"')
                 else:
                     messages.warning(request, f'No images found for "{obj.name}"')
 
             except Exception as e:
                 messages.error(request, f'Error searching for image: {e}')
-        elif image_changed and obj.auto_extract_palette:
-            # Image was changed and auto-extract is enabled - re-extract colors
-            try:
-                palette_entries = extract_colors_from_url(obj.image.path)
 
-                # Save Deal first
-                super().save_model(request, obj, form, change)
-
-                # Clear existing palette and create new entries
-                obj.color_palette.all().delete()
-                for entry in palette_entries:
-                    entry.deal = obj
-                    entry.save()
-
-                messages.success(request, f'Image changed - extracted {len(palette_entries)} colors')
-                return  # Don't call super() again
-            except Exception as e:
-                messages.error(request, f'Error extracting colors from new image: {e}')
-
+        # Save the deal (model's save() will handle color extraction if needed)
         super().save_model(request, obj, form, change)
 
         # Send notifications if deal was just published
@@ -262,23 +220,9 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
     @unfold_action(label="Re-extract Colors", short_description="Extract color palette from current image")
     def reextract_colors(self, request, obj):
         """Action to manually re-extract colors from current image"""
-        if obj and obj.image:
-            try:
-                palette_entries = extract_colors_from_url(obj.image.path)
-
-                # Clear existing palette
-                obj.color_palette.all().delete()
-
-                # Create new entries
-                for entry in palette_entries:
-                    entry.deal = obj
-                    entry.save()
-
-                self.message_user(request, f'Successfully re-extracted {len(palette_entries)} colors!')
-            except Exception as e:
-                self.message_user(request, f'Error extracting colors: {e}', level=messages.ERROR)
-        else:
-            self.message_user(request, 'No image to extract colors from.', level=messages.WARNING)
+        # Call bulk action with single-item queryset
+        queryset = Deal.objects.filter(pk=obj.pk)
+        self.reextract_colors_bulk(request, queryset)
 
         # Redirect back to the same change form
         return redirect('admin:deals_deal_change', object_id=obj.pk)
@@ -286,55 +230,28 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
     @unfold_action(label="Search for Images", short_description="Open image search page for this deal")
     def image_search(self, request, obj):
         """Action to search for images for this deal"""
-        if obj and obj.pk:
-            url = reverse('admin_search_images_with_id', args=[obj.pk])
-            return HttpResponseRedirect(url)
-        else:
-            self.message_user(request, 'Please save the deal first before searching for images.', level=messages.WARNING)
-            return None
+        # Call bulk action with single-item queryset
+        queryset = Deal.objects.filter(pk=obj.pk)
+        return self.image_search_bulk(request, queryset)
 
     @unfold_action(label="Publish Deal", short_description="Publish this deal and send notifications")
     def publish_deal(self, request, obj):
         """Action to publish the deal and send notifications"""
-        if not obj or not obj.pk:
-            self.message_user(request, 'Please save the deal first.', level=messages.WARNING)
-            return redirect('admin:deals_deal_change', object_id=obj.pk)
+        # Call bulk action with single-item queryset
+        queryset = Deal.objects.filter(pk=obj.pk)
+        self.publish_deals_bulk(request, queryset)
 
-        if obj.status == Deal.Status.PUBLISHED:
-            self.message_user(request, f'"{obj.name}" is already published.', level=messages.INFO)
-            return redirect('admin:deals_deal_change', object_id=obj.pk)
-
-        # Try to publish - this will run validation
-        obj.status = Deal.Status.PUBLISHED
-        try:
-            obj.full_clean()
-            obj.save()
-
-            # Send notifications
-            notify_deal.delay(obj.pk)
-
-            self.message_user(request, f'Successfully published "{obj.name}" and queued notifications')
-        except Exception as e:
-            self.message_user(request, f'Error publishing deal: {e}', level=messages.ERROR)
-
+        # Redirect back to the same change form
         return redirect('admin:deals_deal_change', object_id=obj.pk)
 
     @unfold_action(label="Unpublish Deal", short_description="Unpublish this deal")
     def unpublish_deal(self, request, obj):
         """Action to unpublish the deal"""
-        if not obj or not obj.pk:
-            self.message_user(request, 'Please save the deal first.', level=messages.WARNING)
-            return redirect('admin:deals_deal_change', object_id=obj.pk)
+        # Call bulk action with single-item queryset
+        queryset = Deal.objects.filter(pk=obj.pk)
+        self.unpublish_deals_bulk(request, queryset)
 
-        if obj.status == Deal.Status.DRAFT:
-            self.message_user(request, f'"{obj.name}" is already a draft.', level=messages.INFO)
-            return redirect('admin:deals_deal_change', object_id=obj.pk)
-
-        # Unpublish the deal
-        obj.status = Deal.Status.DRAFT
-        obj.save()
-
-        self.message_user(request, f'Successfully unpublished "{obj.name}"')
+        # Redirect back to the same change form
         return redirect('admin:deals_deal_change', object_id=obj.pk)
 
     # Add actions to the change form
@@ -379,14 +296,7 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
         for deal in queryset:
             if deal.image:
                 try:
-                    palette_entries = extract_colors_from_url(deal.image.path)
-
-                    # Clear and recreate palette
-                    deal.color_palette.all().delete()
-                    for entry in palette_entries:
-                        entry.deal = deal
-                        entry.save()
-
+                    num_colors = deal.extract_and_save_colors()
                     success_count += 1
                 except Exception as e:
                     error_count += 1
@@ -514,9 +424,9 @@ class NotificationChannelAdmin(DjangoObjectActions, ModelAdmin):
     @unfold_action(label="Send Notifications", short_description="Select deals to notify about")
     def send_notifications(self, request, obj):
         """Action to select deals to send notifications for"""
-        # Redirect to deal selection page with this channel's ID
-        url = reverse('admin_select_deals_to_notify_with_ids', args=[str(obj.id)])
-        return HttpResponseRedirect(url)
+        # Call bulk action with single-item queryset
+        queryset = NotificationChannel.objects.filter(pk=obj.pk)
+        return self.send_notifications_bulk(request, queryset)
 
     @admin.action(description='Send notifications for selected deals')
     def send_notifications_bulk(self, request, queryset):
