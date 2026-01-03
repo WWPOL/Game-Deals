@@ -288,8 +288,62 @@ All work from plan `/home/noah/.claude/plans/structured-stargazing-river.md` is 
   - Single source of truth for deal context handling
 
 ### Next Steps
-1. Current celery task view for admins (on the admin page make a little badge in the top bar which shows the number of currently running celery tasks that are a result of that admin user, make it refresh periodically and pop little "request.message" style messages when a task is done, this will let us move workflows like color pallete extraction into async tasks while still notifying the user when they are done, very similar to for example the Google Cloud Platform dashboard where they show running tasks)
-2. Channel message preview page (for each channel a deal would be sent to on a new page show a preview of the message for that channel, the preview template should be selected by the channel type)
+
+#### 1. Admin Celery Task Monitoring System
+**Goal**: Add real-time task monitoring badge in admin header similar to GCP dashboard, showing running tasks and notifying when complete.
+
+**Implementation Plan**:
+- ✅ **Phase 1: Backend Setup (COMPLETED)**
+  - ✅ Install and configure django-celery-results
+  - ✅ Use Django ORM as Celery result backend
+  - ✅ Run migrations to create TaskResult tables
+  - ✅ Verify tasks are being stored in database
+
+- **Phase 2: Task User Tracking**
+  - Add custom task decorator/base class to track which admin user initiated tasks
+  - Store user_id in task metadata (task.request.meta or task_kwargs)
+  - Filter TaskResult queries by user in API endpoint
+
+- **Phase 3: API Endpoint**
+  - Create `/admin/api/tasks/status/` endpoint (staff-only)
+  - Return JSON: `{running_count: N, recently_completed: [{task_id, name, result, date_done}, ...]}`
+  - Filter for current user's tasks only
+  - Mark tasks as "seen" to avoid re-notifying
+
+- **Phase 4: Admin UI Badge**
+  - Extend Unfold admin base template to add badge in top bar
+  - Show count of running tasks (e.g., "⏳ 3 tasks running")
+  - Badge should pulse/animate when tasks are active
+  - Click badge to expand dropdown with task details
+
+- **Phase 5: JavaScript Polling & Notifications**
+  - Add JS to poll `/admin/api/tasks/status/` every 3-5 seconds
+  - Update badge count in real-time
+  - When task completes, show Django-style message (success/error/info)
+  - Use Django's existing messages framework styling for consistency
+  - Auto-dismiss messages after 5 seconds
+
+- **Phase 6: Convert Existing Workflows to Async**
+  - Convert color palette extraction to async task
+  - Convert image search to async task
+  - Add task notifications for these operations
+  - Show progress/completion in admin interface
+
+**Technical Considerations**:
+- Use django_celery_results.models.TaskResult for querying
+- Store user context in task.request or via custom decorator
+- Consider using WebSockets later for true real-time updates (future enhancement)
+- Ensure proper permission checks (staff_member_required)
+- Handle edge cases: long-running tasks, failed tasks, task cleanup
+
+#### 2. Channel Message Preview Page
+**Goal**: Preview how deal notifications will appear for each channel type before sending.
+
+**Implementation Plan**:
+- Create preview page showing all channels a deal would be sent to
+- Each channel type renders using its specific template
+- Allow testing message formatting without actually sending
+- Useful for debugging Discord/Slack/etc. message formatting
 
 
 ### Wish List
