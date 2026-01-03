@@ -189,6 +189,20 @@ All work from plan `/home/noah/.claude/plans/structured-stargazing-river.md` is 
 - ✓ Removed custom checkbox styling from template
 - ✓ Deal selection now uses searchable dropdown with type-to-filter functionality
 
+### Reusable Template Components Complete ✓
+- ✓ Created `deals/templates/components/deal_card.html` - Full detail view component
+  - Includes all CSS, animations, and JavaScript for blob background
+  - Contains deal title with shimmer effect, DRAFT badge, image card, pricing, expiry
+  - Self-contained with `{% load deal_colors %}` tag
+  - Reduced detail.html from 430 to 60 lines
+- ✓ Created `deals/templates/components/deal_list_item.html` - Grid card component
+  - Home page grid item with image, pricing badge, title, expiry
+  - Self-contained with deal_variables and deal_scope
+  - Reduced inline HTML duplication in home.html
+- ✓ Updated templates to use components via `{% include %}`
+  - detail.html: `{% include 'components/deal_card.html' with deal=deal %}`
+  - home.html: `{% include 'components/deal_list_item.html' with deal=deal %}`
+
 ### Next Steps
 1. Web push notification implementation
 2. Subscription endpoints for web push
