@@ -105,8 +105,20 @@
     .deal-image-wrapper {
         position: relative;
         width: 100%;
-        padding-top: 56.25%; /* 16:9 aspect ratio */
+        padding-top: 133%; /* ~3:4 aspect ratio for mobile - more vertical space */
         background: rgba(0, 0, 0, 0.2);
+    }
+
+    @media (min-width: 640px) {
+        .deal-image-wrapper {
+            padding-top: 75%; /* 4:3 aspect ratio for tablets */
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .deal-image-wrapper {
+            padding-top: 56.25%; /* 16:9 aspect ratio for desktop */
+        }
     }
 
     .deal-image {
