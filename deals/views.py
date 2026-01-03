@@ -11,6 +11,7 @@ from django_select2 import forms as s2forms
 from .models import Deal, ColorPalette, NotificationChannel
 from .tasks import notify_deal
 from .admin_helpers import admin_render
+from .view_helpers import get_deal_pagination_context
 
 
 class DealFilterForm(forms.Form):
@@ -143,6 +144,9 @@ class HomeView(ListView):
 
         context['page_colors'] = all_colors
 
+        # Add pagination context for deal carousel navigation
+        context.update(get_deal_pagination_context(None, self.request.user))
+
         return context
 
 
@@ -159,6 +163,12 @@ class DealDetailView(DetailView):
         if self.request.user.is_staff:
             return Deal.objects.all().prefetch_related('color_palette')
         return Deal.objects.filter(status=Deal.Status.PUBLISHED).prefetch_related('color_palette')
+
+    def get_context_data(self, **kwargs):
+        """Add pagination context for navigating between active deals"""
+        context = super().get_context_data(**kwargs)
+        context.update(get_deal_pagination_context(self.object, self.request.user))
+        return context
 
 
 @admin.site.admin_view

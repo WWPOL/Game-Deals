@@ -14,12 +14,38 @@ DEFAULT_PALETTE = [
 ]
 
 
+class DealQuerySet(models.QuerySet):
+    """Custom queryset for Deal model"""
+
+    def active(self, user=None):
+        """
+        Get active (non-expired) deals.
+
+        Args:
+            user: Request user to determine permissions (optional)
+
+        Returns:
+            QuerySet of active deals ordered by newest first
+        """
+        now = timezone.now()
+        queryset = self.filter(expires__gt=now)
+
+        # Filter by status if user is not staff
+        if user and not user.is_staff:
+            queryset = queryset.filter(status='published')
+
+        return queryset.prefetch_related('color_palette').order_by('-created_at')
+
+
 class Deal(models.Model):
     """Game deal model"""
 
     class Status(models.TextChoices):
         DRAFT = 'draft', 'Draft'
         PUBLISHED = 'published', 'Published'
+
+    # Custom manager
+    objects = DealQuerySet.as_manager()
 
     name = models.CharField(max_length=255, help_text="Game title")
     status = models.CharField(

@@ -1,0 +1,45 @@
+{% comment %}
+Deal Pagination Component
+
+Displays a horizontal carousel-style navigation for active deals with:
+- Header showing total count of active deals
+- Large left/right navigation buttons
+- Can be used on both home page and deal detail pages
+
+Context variables:
+- active_deals_count: Total number of active deals
+- current_deal_position: Position of current deal (1-indexed, optional)
+- previous_deal: Previous deal object (optional)
+- next_deal: Next deal object (optional)
+{% endcomment %}
+
+{% if active_deals_count > 0 %}
+<div class="relative z-10 max-w-5xl mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="text-center mb-8">
+        <h2 class="text-4xl md:text-5xl font-bold mb-2">
+            {{ active_deals_count }} Active Deal{{ active_deals_count|pluralize }}
+        </h2>
+        {% if current_deal_position %}
+        <p class="text-lg opacity-80">
+            Viewing {{ current_deal_position }} of {{ active_deals_count }}
+        </p>
+        {% endif %}
+    </div>
+
+    <!-- Navigation Buttons -->
+    {% if previous_deal and next_deal %}
+    <div class="flex justify-center items-center gap-8 md:gap-12">
+        <a href="{{ previous_deal.get_absolute_url }}"
+           class="inline-flex items-center justify-center text-xl md:text-2xl font-semibold px-8 md:px-12 py-4 md:py-6 rounded-xl border-2 border-white/20 backdrop-blur-sm transition-all hover:scale-105 hover:shadow-2xl active:scale-100 min-w-[140px] md:min-w-[160px] deal-bg-primary deal-fg-primary deal-glow-shadow-sm deal-glow-shadow-sm-hover">
+            ← Previous
+        </a>
+
+        <a href="{{ next_deal.get_absolute_url }}"
+           class="inline-flex items-center justify-center text-xl md:text-2xl font-semibold px-8 md:px-12 py-4 md:py-6 rounded-xl border-2 border-white/20 backdrop-blur-sm transition-all hover:scale-105 hover:shadow-2xl active:scale-100 min-w-[140px] md:min-w-[160px] deal-bg-primary deal-fg-primary deal-glow-shadow-sm deal-glow-shadow-sm-hover">
+            Next →
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
