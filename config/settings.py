@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'tz_detect',  # Timezone detection
     'django_extensions',
     'django_select2',  # Select2 widgets for autocomplete
+    'django_celery_results',  # Celery result backend using Django ORM
 
     # Local apps
     'deals',
@@ -153,11 +154,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Celery Configuration
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
-CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = 'django-db'  # Use Django ORM for task results
+CELERY_CACHE_BACKEND = 'django-cache'  # Use Django cache for caching results
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
+CELERY_RESULT_EXTENDED = True  # Store additional task metadata
 
 # Google Custom Search API Configuration
 # Get your API key from: https://console.cloud.google.com/apis/credentials

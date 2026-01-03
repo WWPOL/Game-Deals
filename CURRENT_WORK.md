@@ -288,9 +288,9 @@ All work from plan `/home/noah/.claude/plans/structured-stargazing-river.md` is 
   - Single source of truth for deal context handling
 
 ### Next Steps
-1. Current celery task view for admins (on the admin page make a little badge in the top bar which shows the number of currently running celery tasks that are a result of that admin user, make it refresh periodically and pop little "request.message" style messages when a task is done, this will let us move workflows like color pallete extraction into async tasks while still notifying the user when they are done)
+1. Current celery task view for admins (on the admin page make a little badge in the top bar which shows the number of currently running celery tasks that are a result of that admin user, make it refresh periodically and pop little "request.message" style messages when a task is done, this will let us move workflows like color pallete extraction into async tasks while still notifying the user when they are done, very similar to for example the Google Cloud Platform dashboard where they show running tasks)
 2. Channel message preview page (for each channel a deal would be sent to on a new page show a preview of the message for that channel, the preview template should be selected by the channel type)
-3. active deals header doesn't show up on browse all page
+
 
 ### Wish List
 1. Web push notification implementation

@@ -32,7 +32,6 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/game_deals
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/0
-      CELERY_RESULT_BACKEND: redis://redis:6379/0
     restart: always
 
   celery:
@@ -48,7 +47,6 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/game_deals
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/0
-      CELERY_RESULT_BACKEND: redis://redis:6379/0
     restart: always
 
   celery-beat:
@@ -64,7 +62,6 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/game_deals
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/0
-      CELERY_RESULT_BACKEND: redis://redis:6379/0
     restart: always
 
 volumes:
