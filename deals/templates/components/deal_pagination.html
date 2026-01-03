@@ -14,32 +14,42 @@ Context variables:
 {% endcomment %}
 
 {% if active_deals_count > 0 %}
-<div class="relative z-10 max-w-5xl mx-auto px-4 py-6">
-    <!-- Header -->
-    <div class="text-center mb-8">
-        <h2 class="text-4xl md:text-5xl font-bold mb-2">
-            {{ active_deals_count }} Active Deal{{ active_deals_count|pluralize }}
-        </h2>
-        {% if current_deal_position %}
-        <p class="text-lg opacity-80">
-            Viewing {{ current_deal_position }} of {{ active_deals_count }}
-        </p>
-        {% endif %}
-    </div>
+<div class="relative z-10 w-full px-4 py-3">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header and Navigation Combined -->
+        <div class="flex items-center justify-between gap-4">
+            <!-- Left Button -->
+            {% if previous_deal %}
+            <a href="{{ previous_deal.get_absolute_url }}"
+               class="inline-flex items-center justify-center text-lg md:text-xl font-semibold px-6 md:px-8 py-3 md:py-4 rounded-lg border-2 border-white/20 backdrop-blur-sm transition-all hover:scale-105 hover:shadow-2xl active:scale-100 deal-bg-primary deal-fg-primary deal-glow-shadow-sm deal-glow-shadow-sm-hover">
+                ← Previous
+            </a>
+            {% else %}
+            <div class="w-24 md:w-32"></div>
+            {% endif %}
 
-    <!-- Navigation Buttons -->
-    {% if previous_deal and next_deal %}
-    <div class="flex justify-center items-center gap-8 md:gap-12">
-        <a href="{{ previous_deal.get_absolute_url }}"
-           class="inline-flex items-center justify-center text-xl md:text-2xl font-semibold px-8 md:px-12 py-4 md:py-6 rounded-xl border-2 border-white/20 backdrop-blur-sm transition-all hover:scale-105 hover:shadow-2xl active:scale-100 min-w-[140px] md:min-w-[160px] deal-bg-primary deal-fg-primary deal-glow-shadow-sm deal-glow-shadow-sm-hover">
-            ← Previous
-        </a>
+            <!-- Center Title -->
+            <div class="text-center flex-shrink-0">
+                <h2 class="text-xl md:text-2xl font-bold">
+                    {{ active_deals_count }} Active Deal{{ active_deals_count|pluralize }}
+                </h2>
+                {% if current_deal_position %}
+                <p class="text-sm opacity-70">
+                    {{ current_deal_position }} of {{ active_deals_count }}
+                </p>
+                {% endif %}
+            </div>
 
-        <a href="{{ next_deal.get_absolute_url }}"
-           class="inline-flex items-center justify-center text-xl md:text-2xl font-semibold px-8 md:px-12 py-4 md:py-6 rounded-xl border-2 border-white/20 backdrop-blur-sm transition-all hover:scale-105 hover:shadow-2xl active:scale-100 min-w-[140px] md:min-w-[160px] deal-bg-primary deal-fg-primary deal-glow-shadow-sm deal-glow-shadow-sm-hover">
-            Next →
-        </a>
+            <!-- Right Button -->
+            {% if next_deal %}
+            <a href="{{ next_deal.get_absolute_url }}"
+               class="inline-flex items-center justify-center text-lg md:text-xl font-semibold px-6 md:px-8 py-3 md:py-4 rounded-lg border-2 border-white/20 backdrop-blur-sm transition-all hover:scale-105 hover:shadow-2xl active:scale-100 deal-bg-primary deal-fg-primary deal-glow-shadow-sm deal-glow-shadow-sm-hover">
+                Next →
+            </a>
+            {% else %}
+            <div class="w-24 md:w-32"></div>
+            {% endif %}
+        </div>
     </div>
-    {% endif %}
 </div>
 {% endif %}
