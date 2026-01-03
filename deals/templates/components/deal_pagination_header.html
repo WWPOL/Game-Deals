@@ -6,10 +6,11 @@ Shows the count of active deals and current position.
 Context variables:
 - active_deals_count: Total number of active deals
 - current_deal_position: Position of current deal (1-indexed, optional)
+- deal: Deal object (optional, for styling with deal colors)
 {% endcomment %}
 
 {% if active_deals_count > 0 %}
-<div class="text-center">
+<div class="text-center deal-fg-primary">
     <h2 class="text-xl md:text-2xl font-bold">
         {{ active_deals_count }} Active Deal{{ active_deals_count|pluralize }}
     </h2>
