@@ -228,7 +228,7 @@
                     {% endif %}
                 </div>
                 <div class="expiry-marker deal-bg-primary deal-fg-primary deal-glow-shadow-md border-white-20">
-                    <span>⏱️</span>
+                    <span class="text-emoji">⏱️</span>
                     <span>
                         {% if deal.is_active %}
                         Expires {{ deal.expires|timeuntil }}
@@ -246,7 +246,7 @@
        target="_blank"
        rel="noopener noreferrer"
        class="deal-link-button hover-sheen deal-bg-primary deal-fg-primary deal-glow-shadow-lg deal-glow-shadow-lg-hover border-white-20">
-        <span>🔗</span>
+        <span class="text-emoji">🔗</span>
         <span>Deal Link</span>
     </a>
 

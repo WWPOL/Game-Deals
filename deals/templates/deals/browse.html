@@ -16,20 +16,20 @@
 <div class="min-h-screen relative deal-fg-primary">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold">Browse Deals</h1>
+        </div>
+
         <!-- Filter Section -->
         {% include 'components/deal_filter_ui.html' with current_search=current_search current_sort=current_sort current_price_gt=current_price_gt current_price_lt=current_price_lt current_status_filter=current_status_filter show_drafts=show_drafts user=user %}
 
-        <!-- Results Header -->
-        <div class="mb-6 text-center">
-            <h1 class="text-5xl font-bold mb-3">🎮
-                {% if current_search %}Search Results{% else %}{% if current_status_filter == 'expired' %}Expired Deals{% elif current_status_filter == 'all' %}All Deals{% else %}Active Deals{% endif %}{% endif %}
-            </h1>
-            <p class="">
-                {{ total_results }} deal{{ total_results|pluralize }} found
-                {% if page_obj.paginator.num_pages > 1 %}
-                (Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }})
-                {% endif %}
-            </p>
+        <!-- Results Count -->
+        <div class="mb-6 text-sm opacity-70">
+            {{ total_results }} deal{{ total_results|pluralize }} found
+            {% if page_obj.paginator.num_pages > 1 %}
+            (Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }})
+            {% endif %}
         </div>
 
         {% if deals %}
@@ -92,7 +92,7 @@
         {% endif %}
         {% else %}
         <div class="text-center py-20">
-            <div class="text-6xl mb-4">🔍</div>
+            <div class="text-6xl mb-4 text-emoji">🔍</div>
             <h3 class="text-2xl font-bold mb-2">No deals found</h3>
             <p class=" mb-6">
                 {% if current_search %}

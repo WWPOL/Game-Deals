@@ -46,7 +46,14 @@ class DealFilterMixin:
 
     def get_filter_form(self):
         """Get and validate filter form from GET parameters"""
-        form = DealFilterForm(self.request.GET)
+        # Copy GET params and set defaults for missing fields
+        data = self.request.GET.copy()
+        if 'status_filter' not in data:
+            data['status_filter'] = 'active'
+        if 'sort' not in data:
+            data['sort'] = 'newest'
+
+        form = DealFilterForm(data)
         form.is_valid()  # Populate cleaned_data even if invalid
         return form
 
@@ -73,14 +80,14 @@ class DealFilterMixin:
         # Price range filter
         price_gt = filters.get('price_gt')
         if price_gt is not None:
-            queryset = queryset.filter(price__gt=price_gt)
+            queryset = queryset.filter(price__gte=price_gt)
 
         price_lt = filters.get('price_lt')
         if price_lt is not None:
             queryset = queryset.filter(price__lt=price_lt)
 
         # Status filter (active/expired/all)
-        status_filter = filters.get('status_filter', 'active')
+        status_filter = filters.get('status_filter')
         now = timezone.now()
         if status_filter == 'active':
             queryset = queryset.filter(expires__gt=now)
@@ -88,7 +95,7 @@ class DealFilterMixin:
             queryset = queryset.filter(expires__lte=now)
 
         # Sort order
-        sort_by = filters.get('sort', 'newest')
+        sort_by = filters.get('sort')
         if sort_by == 'price_low':
             queryset = queryset.order_by('price', '-created_at')
         elif sort_by == 'price_high':
@@ -112,11 +119,29 @@ class DealFilterMixin:
         # Get cleaned filter values for template
         filters = form.cleaned_data if form.is_valid() else {}
         context['current_search'] = filters.get('search', '')
-        context['current_sort'] = filters.get('sort', 'newest')
+        context['current_sort'] = filters.get('sort')
         context['current_price_gt'] = filters.get('price_gt')
         context['current_price_lt'] = filters.get('price_lt')
-        context['current_status_filter'] = filters.get('status_filter', 'active')
+        context['current_status_filter'] = filters.get('status_filter')
         context['show_drafts'] = filters.get('show_drafts', False)
+
+        # Determine selected price range for template (avoids fragile decimal comparisons)
+        price_gt = filters.get('price_gt')
+        price_lt = filters.get('price_lt')
+        current_price_range = ''
+
+        if price_lt and float(price_lt) == 0.01 and not price_gt:
+            current_price_range = 'free'
+        elif price_gt == 0 and price_lt == 10:
+            current_price_range = 'under_10'
+        elif price_gt == 10 and price_lt == 20:
+            current_price_range = '10_to_20'
+        elif price_gt == 20 and price_lt == 30:
+            current_price_range = '20_to_30'
+        elif price_gt == 30 and not price_lt:
+            current_price_range = 'over_30'
+
+        context['current_price_range'] = current_price_range
 
         # Query string for pagination (preserve filters)
         query_params = self.request.GET.copy()

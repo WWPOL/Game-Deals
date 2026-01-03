@@ -64,6 +64,18 @@ Game-Deals is a Django-based web application that manages game deals, allowing u
 - `config/` - Django project configuration
 - Templates are located in `deals/templates/admin/deals/`
 
+### Template Development
+**CRITICAL DRY Principle**: When working with Django templates, always follow the DRY (Don't Repeat Yourself) principle:
+- If HTML code appears exactly the same or very similar in multiple places, extract it into a reusable component template
+- Component templates should accept parameters via template context to handle variations
+- Use `{% include 'components/name.html' with param1=value1 param2=value2 %}` to render components
+- Use Django template tags like `{% with %}` and `{% if %}` to conditionally render elements or switch tag types
+- Examples:
+  - Repeated card layouts → extract to `components/card.html`
+  - Similar navigation items → extract to `components/nav_items.html` with `mobile` parameter
+  - Duplicate badge markup → use `{% with tag=condition|yesno:"a,div" %}` to switch between tags
+- Component templates are located in `deals/templates/components/`
+
 ### Admin Customization
 The admin interface is heavily customized using Django's ModelAdmin with the Unfold theme. Custom functionality includes:
 - Automatic image finding when creating new deals
