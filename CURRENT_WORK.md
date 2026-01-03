@@ -175,6 +175,20 @@ All work from plan `/home/noah/.claude/plans/structured-stargazing-river.md` is 
 - ✓ Template shows TEST badge next to test channels
 - ✓ Deal status displayed in checkbox labels (e.g., "Game Name (Published)")
 
+### Select2 Searchable Deal Selection Complete ✓
+- ✓ Added django-select2~=8.2 package to requirements.txt
+- ✓ Added django_select2 to INSTALLED_APPS in settings.py
+- ✓ Added select2 URLs to urlpatterns (path('select2/', include('django_select2.urls')))
+- ✓ Replaced CheckboxSelectMultiple with Select2MultipleWidget in SelectDealsForm
+- ✓ Configured widget with data-placeholder and data-width attributes
+- ✓ Updated help text to clarify search and multi-select behavior
+- ✓ Fixed Select2 initialization issue:
+  - Root cause: Unfold's base_simple.html doesn't include jQuery
+  - Solution: Added jQuery to base_admin_page.html extrahead block
+  - jQuery now loads before form.media (Select2 scripts)
+- ✓ Removed custom checkbox styling from template
+- ✓ Deal selection now uses searchable dropdown with type-to-filter functionality
+
 ### Next Steps
 1. Web push notification implementation
 2. Subscription endpoints for web push

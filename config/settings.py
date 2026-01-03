@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'tz_detect',  # Timezone detection
     'django_extensions',
+    'django_select2',  # Select2 widgets for autocomplete
 
     # Local apps
     'deals',

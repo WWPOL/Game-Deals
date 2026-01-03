@@ -14,3 +14,4 @@ scikit-learn~=1.8.0
 django-object-actions~=5.0
 django-tz-detect~=0.5
 django-extensions~=4.1
+django-select2~=8.2

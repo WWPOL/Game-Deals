@@ -1,13 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView
 from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib import admin
 from django.utils.decorators import method_decorator
 from django.utils import timezone
 from django import forms
 from django.contrib import messages
 from urllib.parse import quote
+from django_select2 import forms as s2forms
 from .models import Deal, ColorPalette, NotificationChannel
 from .tasks import notify_deal
 from .admin_helpers import admin_render
@@ -232,9 +232,14 @@ class SelectDealsForm(forms.Form):
     """Form for selecting deals to send notifications for"""
     deals = DealMultipleChoiceField(
         queryset=Deal.objects.none(),  # Set dynamically in __init__
-        widget=forms.CheckboxSelectMultiple,
+        widget=s2forms.Select2MultipleWidget(
+            attrs={
+                'data-placeholder': 'Search and select deals...',
+                'data-width': '100%',
+            }
+        ),
         required=True,
-        help_text='Select one or more deals to send notifications for'
+        help_text='Type to search deals. Click to select multiple.'
     )
 
     def __init__(self, *args, channels=None, **kwargs):

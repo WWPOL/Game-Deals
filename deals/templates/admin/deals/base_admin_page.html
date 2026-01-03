@@ -7,3 +7,9 @@
 {% block branding %}
     {% include "unfold/helpers/site_branding.html" %}
 {% endblock %}
+
+{% block extrahead %}
+    {# Load jQuery for widgets that need it (like django-select2) #}
+    <script src="{% static 'admin/js/vendor/jquery/jquery.min.js' %}"></script>
+    {{ block.super }}
+{% endblock %}
