@@ -69,6 +69,24 @@ class NotificationLogInline(admin.TabularInline):
         return False
 
 
+class NotificationLogForChannelInline(admin.TabularInline):
+    """Notification log inline for NotificationChannel admin - shows deal instead of channel"""
+    model = NotificationLog
+    extra = 0
+    can_delete = False
+    show_change_link = False
+    verbose_name = "Notification Log"
+    verbose_name_plural = "Notification Logs"
+
+    fields = ['deal', 'status', 'status_message', 'sent_at']
+    readonly_fields = ['deal', 'status', 'status_message', 'sent_at']
+    ordering = ['-sent_at']
+
+    def has_add_permission(self, request, obj=None):
+        """Prevent manual creation of notification logs"""
+        return False
+
+
 @admin.register(Deal)
 class DealAdmin(DjangoObjectActions, ModelAdmin):
     form = DealAdminForm
@@ -371,7 +389,7 @@ class NotificationChannelAdmin(DjangoObjectActions, ModelAdmin):
     list_filter = ('type', 'active', 'auto_notify', 'is_test_channel')
     search_fields = ('name',)
     readonly_fields = ('created_at', 'updated_at')
-    inlines = [DiscordWebhookConfigInline]
+    inlines = [DiscordWebhookConfigInline, NotificationLogForChannelInline]
     actions = ['send_notifications_bulk']
 
     fieldsets = (
