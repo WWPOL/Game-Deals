@@ -106,6 +106,25 @@ class NotificationLogForChannelInline(admin.TabularInline):
         return False
 
 
+@admin.register(ColorPalette)
+class ColorPaletteAdmin(ModelAdmin):
+    list_display = ('deal', 'background_color', 'foreground_color', 'weight')
+    list_filter = ('deal',)
+    readonly_fields = ('created_at',)
+    fields = ('deal', 'background_color', 'foreground_color', 'weight', 'created_at')
+
+    def has_module_permission(self, request):
+        """Hide from admin index but allow access via direct links"""
+        return False
+
+    def get_readonly_fields(self, request, obj=None):
+        """Make all fields readonly when the parent deal is published"""
+        readonly = list(self.readonly_fields)
+        if obj and obj.deal and obj.deal.status == Deal.Status.PUBLISHED:
+            readonly.extend(['deal', 'background_color', 'foreground_color', 'weight'])
+        return readonly
+
+
 @admin.register(Deal)
 class DealAdmin(DjangoObjectActions, ModelAdmin):
     form = DealAdminForm
