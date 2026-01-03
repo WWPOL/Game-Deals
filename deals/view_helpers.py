@@ -17,6 +17,7 @@ def get_deal_pagination_context(current_deal=None, user=None):
         - current_deal_position: Position of current deal (1-indexed, None if not found)
         - previous_deal: Previous deal object (None if first or no active deals)
         - next_deal: Next deal object (None if last or no active deals)
+        - first_deal: First deal in active deals list (None if no active deals)
     """
     active_deals = list(Deal.objects.active(user))
 
@@ -25,10 +26,14 @@ def get_deal_pagination_context(current_deal=None, user=None):
         'current_deal_position': None,
         'previous_deal': None,
         'next_deal': None,
+        'first_deal': None,
     }
 
     if not active_deals:
         return context
+
+    # Set first deal for badge link
+    context['first_deal'] = active_deals[0]
 
     # If no current deal (home page), don't provide navigation
     if current_deal is None:
