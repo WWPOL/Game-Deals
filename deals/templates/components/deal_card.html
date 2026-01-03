@@ -1,0 +1,406 @@
+{# Reusable deal card component with animated background - pass a 'deal' object #}
+{% load deal_colors %}
+
+<style>
+    #animation-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        overflow: hidden;
+    }
+
+    #animation-container svg {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+    }
+
+    .blob-svg {
+        filter: blur(60px);
+        opacity: 0.8;
+    }
+
+    .deal-container {
+        position: relative;
+        min-height: 100vh;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem;
+        z-index: 1;
+    }
+
+    .header-section {
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+        font-size: 1rem;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        transition: all 0.2s;
+    }
+
+    .back-link:hover {
+        transform: translateY(-1px);
+    }
+
+    .deal-title {
+        position: relative;
+        font-size: 2.5rem;
+        font-weight: 900;
+        color: {{ deal.primary_foreground_color }};
+        margin: 0;
+        line-height: 1.2;
+        z-index: 10;
+        padding: 0.25rem;
+        flex: 1;
+    }
+
+    .deal-title::before {
+        content: attr(data-text);
+        position: absolute;
+        left: 0;
+        top: 0;
+        z-index: -1;
+        padding: 0.25rem;
+        -webkit-text-stroke-width: 3px;
+        -webkit-text-stroke-color: transparent;
+        background: linear-gradient(110deg, {{ deal.color_palette.all|palette_gradient_css }});
+        background-size: 300% 100%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        animation: shimmer 6s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+
+    @media (min-width: 768px) {
+        .deal-title {
+            font-size: 3.5rem;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .deal-title {
+            font-size: 4.5rem;
+        }
+    }
+
+    .image-card {
+        position: relative;
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(20px);
+        border-radius: 1rem;
+        overflow: hidden;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        margin-bottom: 1.5rem;
+        cursor: pointer;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .image-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 25px 70px rgba(0, 0, 0, 0.5);
+    }
+
+    .image-card a {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .deal-image-wrapper {
+        position: relative;
+        width: 100%;
+        padding-top: 56.25%; /* 16:9 aspect ratio */
+        background: rgba(0, 0, 0, 0.2);
+    }
+
+    .deal-image {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .image-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+        padding: 2rem 1.5rem 1.5rem;
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+
+    .price-marker {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.75rem 1.25rem;
+        border-radius: 0.75rem;
+        font-size: 1.5rem;
+        font-weight: 900;
+    }
+
+    .expiry-marker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        border-radius: 0.75rem;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .deal-link-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        width: 100%;
+        text-decoration: none;
+        font-size: 1.25rem;
+        font-weight: 700;
+        padding: 1rem 2rem;
+        border-radius: 0.75rem;
+        transition: all 0.3s;
+    }
+
+    .deal-link-button:hover {
+        transform: translateY(-2px);
+    }
+</style>
+
+<div id="animation-container" class="deal-gradient-bg">
+    <svg id="blob-svg" class="blob-svg" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
+    </svg>
+</div>
+
+<div class="deal-container">
+    <!-- Header with Title -->
+    <div class="header-section">
+        <h1 class="deal-title" data-text="{{ deal.name }}">{{ deal.name }}</h1>
+
+        {% if user.is_staff and deal.status == 'draft' %}
+        <span style="display: inline-block; background: #ca8a04; color: white; padding: 0.25rem 0.75rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: bold;">
+            DRAFT
+        </span>
+        {% endif %}
+    </div>
+
+    <!-- Clickable Image Card with Title, Price and Expiry Markers -->
+    <div class="image-card">
+        <a href="{{ deal.link }}" target="_blank" rel="noopener noreferrer">
+            <div class="deal-image-wrapper">
+                {% if deal.image %}
+                <img src="{{ deal.image.url }}" alt="{{ deal.name }}" class="deal-image">
+                {% endif %}
+            </div>
+            <div class="image-overlay">
+                <div class="price-marker deal-bg-primary deal-fg-primary deal-glow-shadow-md border-white-20">
+                    {% if deal.original_price %}
+                    <span style="text-decoration: line-through; opacity: 0.7; margin-right: 0.5rem; font-size: 0.9em;">${{ deal.original_price }}</span>
+                    {% endif %}
+                    {% if deal.price == 0 %}
+                    FREE
+                    {% else %}
+                    ${{ deal.price }}
+                    {% endif %}
+                </div>
+                <div class="expiry-marker deal-bg-primary deal-fg-primary deal-glow-shadow-md border-white-20">
+                    <span>⏱️</span>
+                    <span>
+                        {% if deal.is_active %}
+                        Expires {{ deal.expires|timeuntil }}
+                        {% else %}
+                        <span style="color: #f87171;">Expired</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Deal Link Button -->
+    <a href="{{ deal.link }}"
+       target="_blank"
+       rel="noopener noreferrer"
+       class="deal-link-button hover-sheen deal-bg-primary deal-fg-primary deal-glow-shadow-lg deal-glow-shadow-lg-hover border-white-20">
+        <span>🔗</span>
+        <span>Deal Link</span>
+    </a>
+
+    <!-- Image Attribution -->
+    {% if deal.image_attribution %}
+    <p style="margin-top: 1rem; text-align: center; font-size: 0.875rem; color: {{ deal.primary_foreground_color }}; opacity: 0.7;">
+        Image: {{ deal.image_attribution }}
+    </p>
+    {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script>
+    var paletteColors = [
+        {% for entry in deal.color_palette.all %}
+        {
+            background: "{{ entry.background_color }}",
+            foreground: "{{ entry.foreground_color }}",
+            weight: {{ entry.weight }}
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+    var container = document.getElementById('animation-container');
+    var svg = document.getElementById('blob-svg');
+
+    // Helper function to create irregular blob shape
+    function createBlobPath(cx, cy, size) {
+        var points = 8;
+        var path = 'M';
+        for (var i = 0; i <= points; i++) {
+            var angle = (i / points) * Math.PI * 2;
+            var randomRadius = size * (0.7 + Math.random() * 0.6);
+            var x = cx + Math.cos(angle) * randomRadius;
+            var y = cy + Math.sin(angle) * randomRadius;
+
+            if (i === 0) {
+                path += x + ',' + y;
+            } else {
+                var prevAngle = ((i - 1) / points) * Math.PI * 2;
+                var prevRadius = size * (0.7 + Math.random() * 0.6);
+                var cpx = cx + Math.cos(prevAngle + 0.3) * prevRadius;
+                var cpy = cy + Math.sin(prevAngle + 0.3) * prevRadius;
+                path += ' Q' + cpx + ',' + cpy + ' ' + x + ',' + y;
+            }
+        }
+        return path + 'Z';
+    }
+
+    // Create SVG blobs with weight-based sizing
+    var blobs = [];
+
+    paletteColors.forEach(function(colorEntry, index) {
+        // Use weight to determine blob size and count - more blobs for better coverage
+        var blobSize = 400 * (colorEntry.weight * 2.5);
+        var blobCount = Math.max(2, Math.ceil(5 * colorEntry.weight));
+
+        for (var i = 0; i < blobCount; i++) {
+            // Random position across canvas
+            var cx = Math.random() * 1000;
+            var cy = Math.random() * 1000;
+
+            var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('class', 'morphing-blob');
+            path.setAttribute('d', createBlobPath(cx, cy, blobSize));
+            path.setAttribute('fill', colorEntry.background);
+            svg.appendChild(path);
+            blobs.push({ element: path, baseCx: cx, baseCy: cy });
+        }
+    });
+
+    // Animate morphing blobs with slow, gentle movement
+    blobs.forEach(function(blob, index) {
+        var offsetX = anime.random(-60, 60);
+        var offsetY = anime.random(-60, 60);
+
+        blob.element.style.transformOrigin = 'center';
+
+        anime({
+            targets: blob.element,
+            translateX: [0, offsetX],
+            translateY: [0, offsetY],
+            easing: 'easeInOutQuad',
+            duration: 25000,
+            loop: true,
+            direction: 'alternate',
+            delay: index * 1500
+        });
+    });
+
+    // Add decorative squiggly lines
+    var numLines = 5;
+    for (var i = 0; i < numLines; i++) {
+        var line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        var startX = Math.random() * 1000;
+        var startY = Math.random() * 1000;
+        var linePath = 'M' + startX + ',' + startY;
+
+        for (var j = 0; j < 4; j++) {
+            var x = startX + (j + 1) * 80 + anime.random(-40, 40);
+            var y = startY + anime.random(-100, 100);
+            var cpx = startX + j * 80 + 40;
+            var cpy = startY + anime.random(-60, 60);
+            linePath += ' Q' + cpx + ',' + cpy + ' ' + x + ',' + y;
+            startX = x;
+            startY = y;
+        }
+
+        line.setAttribute('d', linePath);
+        line.setAttribute('stroke', paletteColors[i % paletteColors.length]);
+        line.setAttribute('stroke-width', anime.random(2, 5));
+        line.setAttribute('fill', 'none');
+        line.setAttribute('opacity', '0.4');
+        line.setAttribute('class', 'decorative-line');
+        svg.appendChild(line);
+
+        anime({
+            targets: line,
+            strokeDashoffset: [anime.setDashoffset, 0],
+            opacity: [0.2, 0.6],
+            duration: 10000,
+            easing: 'easeInOutSine',
+            loop: true,
+            direction: 'alternate',
+            delay: i * 1000
+        });
+    }
+
+    // Add geometric accent shapes
+    var numShapes = 8;
+    for (var i = 0; i < numShapes; i++) {
+        var shape = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        var x = Math.random() * 1000;
+        var y = Math.random() * 1000;
+        var size = anime.random(20, 60);
+
+        shape.setAttribute('x', x);
+        shape.setAttribute('y', y);
+        shape.setAttribute('width', size);
+        shape.setAttribute('height', size / 3);
+        shape.setAttribute('fill', paletteColors[i % paletteColors.length]);
+        shape.setAttribute('opacity', '0.3');
+        shape.setAttribute('rx', '5');
+        svg.appendChild(shape);
+
+        anime({
+            targets: shape,
+            rotate: anime.random(-45, 45),
+            translateX: function() { return anime.random(-150, 150); },
+            translateY: function() { return anime.random(-150, 150); },
+            opacity: [0.2, 0.5],
+            duration: 20000,
+            easing: 'easeInOutSine',
+            loop: true,
+            direction: 'alternate',
+            delay: i * 800
+        });
+    }
+</script>
