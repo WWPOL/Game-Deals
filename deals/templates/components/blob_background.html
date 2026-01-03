@@ -1,4 +1,4 @@
-{# Reusable blob background component - pass a 'deal' object or palette data #}
+{# Reusable blob background component - pass a list of color objects with background_color, foreground_color, and weight #}
 {% load deal_colors %}
 
 <style>
@@ -32,11 +32,11 @@
 <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
 <script>
     var paletteColors = [
-        {% for entry in deal.color_palette.all %}
+        {% for color in colors %}
         {
-            background: "{{ entry.background_color }}",
-            foreground: "{{ entry.foreground_color }}",
-            weight: {{ entry.weight }}
+            background: "{{ color.background_color }}",
+            foreground: "{{ color.foreground_color }}",
+            weight: {{ color.weight }}
         }{% if not forloop.last %},{% endif %}
         {% endfor %}
     ];
