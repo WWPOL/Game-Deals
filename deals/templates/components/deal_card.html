@@ -14,9 +14,18 @@
     .header-section {
         margin-bottom: 2rem;
         display: flex;
-        align-items: center;
-        gap: 1.5rem;
-        flex-wrap: wrap;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    @media (min-width: 768px) {
+        .header-section {
+            flex-direction: row;
+            align-items: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
     }
 
     .back-link {
