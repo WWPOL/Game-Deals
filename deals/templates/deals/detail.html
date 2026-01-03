@@ -21,41 +21,27 @@
 {% deal_variables deal %}
 <div class="{% deal_scope deal %}">
 
-<style>
-    .back-link-container {
-        position: relative;
-        z-index: 10;
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 1rem 1rem 0;
-    }
-
-    .back-link {
-        display: inline-flex;
-        align-items: center;
-        text-decoration: none;
-        font-size: 1rem;
-        padding: 0.5rem 1rem;
-        border-radius: 0.5rem;
-        transition: all 0.2s;
-    }
-
-    .back-link:hover {
-        transform: translateY(-1px);
-    }
-</style>
-
 <!-- Blob Background -->
 {% include 'components/blob_background.html' with colors=deal.color_palette.all %}
 
-<!-- Deal Pagination -->
-{% include 'components/deal_pagination.html' %}
+<!-- Navigation Buttons (fixed on sides) -->
+{% include 'components/deal_pagination_prev.html' %}
+{% include 'components/deal_pagination_next.html' %}
 
-<!-- Back Link -->
-<div class="back-link-container">
-    <a href="{% url 'deals:home' %}" class="back-link deal-bg-primary deal-fg-primary deal-glow-shadow-sm deal-glow-shadow-sm-hover border-white-20">
-        ← Back
-    </a>
+<!-- Header with Back Link -->
+<div class="relative z-10 max-w-7xl mx-auto px-4 py-3">
+    <div class="flex items-center justify-between gap-4">
+        <!-- Back Link -->
+        <a href="{% url 'deals:home' %}" class="inline-flex items-center text-base md:text-lg px-4 py-2 rounded-lg border-2 border-white/20 backdrop-blur-sm transition-all hover:scale-105 hover:shadow-xl deal-bg-primary deal-fg-primary deal-glow-shadow-sm deal-glow-shadow-sm-hover">
+            ← Back
+        </a>
+
+        <!-- Pagination Header -->
+        {% include 'components/deal_pagination_header.html' %}
+
+        <!-- Spacer for symmetry -->
+        <div class="w-20 md:w-24"></div>
+    </div>
 </div>
 
 <!-- Deal Card Component -->

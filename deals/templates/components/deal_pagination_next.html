@@ -1,0 +1,16 @@
+{% comment %}
+Deal Pagination Next Button Component
+
+Fixed next button on the right side of the page.
+
+Context variables:
+- next_deal: Next deal object (optional)
+{% endcomment %}
+
+{% if next_deal %}
+<a href="{{ next_deal.get_absolute_url }}"
+   class="fixed right-4 top-1/2 -translate-y-1/2 z-20 inline-flex flex-col items-center justify-center text-lg md:text-xl font-semibold px-3 md:px-4 py-3 md:py-4 rounded-lg border-2 border-white/20 backdrop-blur-sm transition-all hover:scale-110 hover:shadow-2xl active:scale-100 deal-bg-primary deal-fg-primary deal-glow-shadow-sm deal-glow-shadow-sm-hover group">
+    <span class="text-2xl md:text-3xl">→</span>
+    <span class="text-xs md:text-sm mt-1 opacity-70 group-hover:opacity-100">Next<br>Deal</span>
+</a>
+{% endif %}
