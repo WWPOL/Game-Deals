@@ -51,6 +51,24 @@ class ColorPaletteInline(admin.TabularInline):
 
     color_preview.short_description = 'Preview'
 
+    def has_add_permission(self, request, obj=None):
+        """Prevent adding colors when deal is published"""
+        if obj and obj.status == Deal.Status.PUBLISHED:
+            return False
+        return super().has_add_permission(request, obj)
+
+    def has_change_permission(self, request, obj=None):
+        """Prevent changing colors when deal is published"""
+        if obj and obj.status == Deal.Status.PUBLISHED:
+            return False
+        return super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        """Prevent deleting colors when deal is published"""
+        if obj and obj.status == Deal.Status.PUBLISHED:
+            return False
+        return super().has_delete_permission(request, obj)
+
 
 class NotificationLogInline(admin.TabularInline):
     model = NotificationLog
@@ -95,7 +113,7 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
     list_display = ('name', 'status', 'price', 'expires', 'is_active', 'created_at')
     list_filter = ('status', 'expires', 'created_at')
     search_fields = ('name',)
-    actions = ['publish_deals_bulk', 'reextract_colors_bulk', 'image_search_bulk']
+    actions = ['publish_deals_bulk', 'unpublish_deals_bulk', 'reextract_colors_bulk', 'image_search_bulk']
     fieldsets = (
         ('Basic Information', {
             'fields': ('name',)
@@ -282,14 +300,55 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
 
         return redirect('admin:deals_deal_change', object_id=obj.pk)
 
+    @unfold_action(label="Unpublish Deal", short_description="Unpublish this deal")
+    def unpublish_deal(self, request, obj):
+        """Action to unpublish the deal"""
+        if not obj or not obj.pk:
+            self.message_user(request, 'Please save the deal first.', level=messages.WARNING)
+            return redirect('admin:deals_deal_change', object_id=obj.pk)
+
+        if obj.status == Deal.Status.DRAFT:
+            self.message_user(request, f'"{obj.name}" is already a draft.', level=messages.INFO)
+            return redirect('admin:deals_deal_change', object_id=obj.pk)
+
+        # Unpublish the deal
+        obj.status = Deal.Status.DRAFT
+        obj.save()
+
+        self.message_user(request, f'Successfully unpublished "{obj.name}"')
+        return redirect('admin:deals_deal_change', object_id=obj.pk)
+
     # Add actions to the change form
-    change_actions = ('publish_deal', 'reextract_colors', 'image_search')
+    change_actions = ('publish_deal', 'reextract_colors', 'image_search', 'unpublish_deal')
+
+    def get_change_actions(self, request, object_id, form_url):
+        """Conditionally show actions based on object state"""
+        actions = super().get_change_actions(request, object_id, form_url)
+
+        # Get the object to check its status
+        try:
+            obj = self.model.objects.get(pk=object_id)
+            if obj.status == Deal.Status.PUBLISHED:
+                # Only show unpublish for published deals
+                actions = [action for action in actions if action not in ['publish_deal']]
+            else:
+                # Only show publish for draft deals
+                actions = [action for action in actions if action not in ['unpublish_deal']]
+        except self.model.DoesNotExist:
+            pass
+
+        return actions
 
     def get_readonly_fields(self, request, obj=None):
-        """Make slug readonly only when published"""
+        """Make all fields readonly when published"""
         readonly = ['created_at', 'updated_at']
         if obj and obj.status == Deal.Status.PUBLISHED:
-            readonly.append('slug')
+            # Make all fields readonly when published
+            readonly.extend([
+                'name', 'slug', 'original_price', 'price', 'expires',
+                'image', 'image_attribution', 'auto_extract_palette',
+                'link', 'status'
+            ])
         return readonly
 
     @admin.action(description='Re-extract colors from images')
@@ -363,6 +422,26 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
             self.message_user(request, f'{already_published} deal(s) already published', level=messages.INFO)
         if error_count:
             self.message_user(request, f'{error_count} deal(s) failed validation', level=messages.WARNING)
+
+    @admin.action(description='Unpublish deals')
+    def unpublish_deals_bulk(self, request, queryset):
+        """Bulk action to unpublish selected deals"""
+        unpublished_count = 0
+        already_draft = 0
+
+        for deal in queryset:
+            if deal.status == Deal.Status.DRAFT:
+                already_draft += 1
+                continue
+
+            deal.status = Deal.Status.DRAFT
+            deal.save()
+            unpublished_count += 1
+
+        if unpublished_count:
+            self.message_user(request, f'Unpublished {unpublished_count} deal(s)')
+        if already_draft:
+            self.message_user(request, f'{already_draft} deal(s) already in draft status', level=messages.INFO)
 
 
 
