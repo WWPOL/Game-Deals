@@ -12,21 +12,16 @@
 
 {% if first_active_deal %}
 <!-- Show featured active deal -->
-{% load deal_colors %}
-{% deal_variables first_active_deal %}
-<div class="{% deal_scope first_active_deal %}">
 
-    <!-- Blob Background -->
-    {% include 'components/blob_background.html' with colors=first_active_deal.color_palette.all %}
+<!-- Blob Background -->
+{% include 'components/blob_background.html' with colors=first_active_deal.color_palette.all %}
 
-    <!-- Navigation Buttons (fixed on sides) -->
-    {% include 'components/deal_pagination_prev.html' %}
-    {% include 'components/deal_pagination_next.html' %}
+<!-- Navigation Buttons (fixed on sides) -->
+{% include 'components/deal_pagination_prev.html' %}
+{% include 'components/deal_pagination_next.html' %}
 
-    <!-- Deal Card Component -->
-    {% include 'components/deal_card.html' with deal=first_active_deal %}
-
-</div>
+<!-- Deal Card Component -->
+{% include 'components/deal_card.html' with deal=first_active_deal %}
 
 {% else %}
 <!-- No active deals - show filter and expired deals list -->
@@ -273,8 +268,6 @@
         animateWave(wave, index);
     });
 </script>
-    </div>
-</div>
 {% endif %}
 
 {% endblock %}

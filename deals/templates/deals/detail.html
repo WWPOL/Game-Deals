@@ -1,26 +1,8 @@
 {% extends 'base.html' %}
-{% load deal_colors %}
 
 {% block title %}{{ deal.name }} - Olly G's Game Deals{% endblock %}
 
-{% block nav %}
-{% deal_variables deal %}
-  <div class="{% deal_scope deal %}">
-    {{ block.super }}
-  </div>
-{% endblock %}
-
-{% block footer %}
-  {% deal_variables deal %}
-  <div class="{% deal_scope deal %}">
-    {{ block.super }}
-  </div>
-{% endblock %}
-
 {% block content %}
-{% deal_variables deal %}
-<div class="{% deal_scope deal %}">
-
 <!-- Blob Background -->
 {% include 'components/blob_background.html' with colors=deal.color_palette.all %}
 
@@ -30,6 +12,4 @@
 
 <!-- Deal Card Component -->
 {% include 'components/deal_card.html' with deal=deal show_back_button=True %}
-
-</div>
 {% endblock %}

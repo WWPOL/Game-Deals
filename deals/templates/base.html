@@ -1,5 +1,6 @@
 {% load static %}
 {% load tz_detect %}
+{% load deal_colors %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,6 +21,13 @@
     </style>
 </head>
 <body class="min-h-screen">
+    {% if deal %}
+        {% deal_variables deal %}
+    {% elif first_active_deal %}
+        {% deal_variables first_active_deal %}
+    {% endif %}
+
+    <div class="{% if deal %}{% deal_scope deal %}{% elif first_active_deal %}{% deal_scope first_active_deal %}{% endif %}">
     {% block nav %}
     <nav class="shadow-sm fixed top-0 left-0 right-0 z-10 deal-fg-primary backdrop-blur">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -105,5 +113,6 @@
     </script>
 
     {% tz_detect %}
+    </div> <!-- Close deal scope wrapper -->
 </body>
 </html>
