@@ -202,6 +202,28 @@ All work from plan `/home/noah/.claude/plans/structured-stargazing-river.md` is 
 - ✓ Updated templates to use components via `{% include %}`
   - detail.html: `{% include 'components/deal_card.html' with deal=deal %}`
   - home.html: `{% include 'components/deal_list_item.html' with deal=deal %}`
+- ✓ Created background components:
+  - `deals/templates/components/blob_background.html` - Blob animation background with color palette
+  - `deals/templates/components/wave_background.html` - Wave animation for home page
+
+### Horizontal Carousel Pagination Complete ✓
+- ✓ Created `DealQuerySet` custom queryset with `active()` method
+  - Filters non-expired deals with permission awareness (staff vs public)
+  - Attached to Deal model via `objects` manager
+  - Reusable across views for consistent active deal filtering
+- ✓ Added `deals/view_helpers.py` module with pagination context helper
+  - `get_deal_pagination_context()` generates navigation context
+  - Returns active deal count, current position, previous/next deals
+  - Works for both detail pages (with current deal) and home page (without)
+- ✓ Created `deals/templates/components/deal_pagination.html` component
+  - Displays "X Active Deals" header with current position
+  - Large Previous/Next navigation buttons using Tailwind CSS
+  - Links to previous/next deal detail pages
+  - Carousel wraps around (last → first, first → last)
+- ✓ Integrated pagination into views:
+  - `DealDetailView`: Shows navigation between active deals
+  - `HomeView`: Shows first/last deal navigation for carousel entry
+  - Both views share same logic via helper function
 
 ### Next Steps
 1. Web push notification implementation
