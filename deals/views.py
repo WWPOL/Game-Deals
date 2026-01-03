@@ -132,6 +132,17 @@ class HomeView(ListView):
         # Total results count
         context['total_results'] = self.get_queryset().count()
 
+        # Collect color palette data for wave background
+        all_colors = []
+        for deal in context['deals']:
+            for color in deal.color_palette.all():
+                all_colors.append({
+                    'background_color': color.background_color,
+                    'weight': color.weight
+                })
+
+        context['page_colors'] = all_colors
+
         return context
 
 
