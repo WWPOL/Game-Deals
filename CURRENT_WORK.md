@@ -209,11 +209,12 @@ All work from plan `/home/noah/.claude/plans/structured-stargazing-river.md` is 
 ### Deal Navigation Pagination Complete ✓
 - ✓ Created `DealQuerySet` custom queryset with `active()` method
   - Filters non-expired deals with permission awareness (staff vs public)
+  - Always excludes drafts (even for admins) for consistent pagination
   - Attached to Deal model via `objects` manager
   - Reusable across views for consistent active deal filtering
 - ✓ Added `deals/view_helpers.py` module with pagination context helper
   - `get_deal_pagination_context()` generates navigation context
-  - Returns active deal count, current position, previous/next deals
+  - Returns active deal count, current position, previous/next deals, first deal
   - Linear navigation (no wrapping at boundaries)
 - ✓ Refactored pagination into modular components:
   - `deal_pagination_header.html`: Pill-shaped badge with count/position
@@ -221,6 +222,7 @@ All work from plan `/home/noah/.claude/plans/structured-stargazing-river.md` is 
     - Deal color background with border and glow effects
     - Compact two-line layout fits in navigation bar
     - Centered in site header between brand and subscribe button
+    - Clickable badge links to first active deal
   - `deal_pagination_prev.html`: Fixed previous button (left side, vertical middle)
   - `deal_pagination_next.html`: Fixed next button (right side, vertical middle)
   - Navigation buttons labeled "Previous Deal" / "Next Deal" for clarity
@@ -232,6 +234,35 @@ All work from plan `/home/noah/.claude/plans/structured-stargazing-river.md` is 
 - ✓ Integrated pagination into views:
   - `DealDetailView`: Shows linear navigation between active deals
   - Both views share same logic via helper function
+
+### Home Page & Browse Page Redesign Complete ✓
+- ✓ Transformed home page into dual-mode experience:
+  - **Featured Mode**: Shows when active deals exist
+    - Displays first active deal with full detail view (deal_card component)
+    - Includes prev/next navigation buttons for carousel experience
+    - Uses blob background based on deal's color palette
+  - **Browse Mode**: Shows when no active deals exist
+    - Friendly "No Active Deals Right Now" message with emoji
+    - Filter UI for browsing expired deals
+    - Deal grid with pagination controls
+- ✓ Created dedicated browse page at `/browse/`:
+  - Always shows filterable deal grid (no featured mode)
+  - Full filtering and pagination controls
+  - Wave background animation using all visible deals' color palettes
+  - Added "Browse All" link to site header navigation
+- ✓ Created reusable filter component:
+  - `deals/templates/components/deal_filter_ui.html` - Extracted filter form
+  - Search, sort, price range, status filters
+  - Staff-only draft toggle
+  - Shared between home.html and browse.html
+- ✓ Created `DealFilterMixin` for shared view logic:
+  - Contains `get_filter_form()` - Form validation from GET parameters
+  - Contains `get_queryset()` - All filtering logic (search, price, status, sorting)
+  - Contains `add_filter_context()` - Shared context data for templates
+  - Both `HomeView` and `BrowseView` inherit from mixin
+  - Eliminates code duplication between views
+  - HomeView adds featured deal and pagination context
+  - BrowseView uses only shared filter context
 
 ### Next Steps
 1. Web push notification implementation
