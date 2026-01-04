@@ -287,56 +287,113 @@ All work from plan `/home/noah/.claude/plans/structured-stargazing-river.md` is 
   - Removed redundant template code from home.html and detail.html
   - Single source of truth for deal context handling
 
-### Next Steps
-
-#### 1. Admin Celery Task Monitoring System
+### Admin Celery Task Monitoring System - IN PROGRESS ⚠️
 **Goal**: Add real-time task monitoring badge in admin header similar to GCP dashboard, showing running tasks and notifying when complete.
 
-**Implementation Plan**:
-- ✅ **Phase 1: Backend Setup (COMPLETED)**
-  - ✅ Install and configure django-celery-results
-  - ✅ Use Django ORM as Celery result backend
-  - ✅ Run migrations to create TaskResult tables
-  - ✅ Verify tasks are being stored in database
+**Phases 1-3 Completed** ✅:
+- ✅ **Phase 1: Backend Setup**
+  - Installed and configured django-celery-results
+  - Configured Django ORM as Celery result backend (CELERY_RESULT_BACKEND = 'django-db')
+  - Set CELERY_RESULT_EXTENDED = True for additional metadata
+  - Ran migrations to create TaskResult tables
 
-- **Phase 2: Task User Tracking**
-  - Add custom task decorator/base class to track which admin user initiated tasks
-  - Store user_id in task metadata (task.request.meta or task_kwargs)
-  - Filter TaskResult queries by user in API endpoint
+- ✅ **Phase 2: Task User Tracking**
+  - Created `common` Django app for shared utilities (per user request to separate from deals-specific code)
+  - Created `UserTask` model to track which user initiated each Celery task
+    - Fields: user (FK), task_id (unique), task_name, seen (for notifications), initiated_at
+    - Properties: task_result, status, is_running, is_completed
+    - No ForeignKey to TaskResult (doesn't exist for PENDING tasks)
+    - Queries TaskResult dynamically via task_id
+  - Created `CurrentUserMiddleware` to store current user in thread-local storage
+    - Automatically captures user from request context
+    - Stores in `_thread_locals.user` for access in task decorator
+  - Created `UserTrackedTask` base class that automatically:
+    - Captures current user from thread-local storage via get_current_user()
+    - Creates UserTask record when task is initiated
+    - No need for callers to pass user_id manually (per user request)
+  - Created `@user_tracked_task()` decorator for easy task creation
+  - Updated existing tasks (notify_deal, send_discord_webhook) to use decorator
+  - Added djangorestframework~=3.15 to requirements.txt
 
-- **Phase 3: API Endpoint**
-  - Create `/admin/api/tasks/status/` endpoint (staff-only)
-  - Return JSON: `{running_count: N, recently_completed: [{task_id, name, result, date_done}, ...]}`
-  - Filter for current user's tasks only
-  - Mark tasks as "seen" to avoid re-notifying
+- ✅ **Phase 3: API Endpoint**
+  - Created Django REST Framework API endpoint at `/admin/api/tasks/status/`
+  - GET: Returns running_count and recently_completed tasks for current user
+  - POST: Marks tasks as seen to avoid re-notifying
+  - Created serializers (UserTaskSerializer, TaskStatusResponseSerializer)
+  - Efficiently queries UserTask model (no JSON parsing needed)
+  - Staff-only permission (IsAdminUser)
+  - URL configured in common/urls.py, included in config/urls.py under /admin/
 
-- **Phase 4: Admin UI Badge**
-  - Extend Unfold admin base template to add badge in top bar
-  - Show count of running tasks (e.g., "⏳ 3 tasks running")
-  - Badge should pulse/animate when tasks are active
-  - Click badge to expand dropdown with task details
+**Phase 4 & 5: Admin UI - BLOCKED** ⚠️:
+- **Current Status**: Template rendering issue preventing UI from displaying
+- **Files Created**:
+  - `templates/admin/base.html` - Override of Unfold's admin base template
+  - Injected task monitor badge into `userlinks` block
+  - Added JavaScript polling in `extrahead` block
+  - JavaScript wrapped in DOMContentLoaded event listener
 
-- **Phase 5: JavaScript Polling & Notifications**
-  - Add JS to poll `/admin/api/tasks/status/` every 3-5 seconds
-  - Update badge count in real-time
-  - When task completes, show Django-style message (success/error/info)
-  - Use Django's existing messages framework styling for consistency
-  - Auto-dismiss messages after 5 seconds
+**Debugging Journey** (extensive troubleshooting required):
+1. **Initial Attempt**: Extended `unfold/layouts/base.html` - FAILED
+   - Template didn't support the blocks we needed
 
-- **Phase 6: Convert Existing Workflows to Async**
-  - Convert color palette extraction to async task
-  - Convert image search to async task
-  - Add task notifications for these operations
-  - Show progress/completion in admin interface
+2. **Template Override Strategy**: Created `common/templates/admin/base_site.html`
+   - Added TEMPLATES DIRS = [BASE_DIR / 'templates'] to settings.py
+   - Verified template was being loaded from our override (django shell confirmed)
+   - FAILED: base_site.html isn't used by admin pages
 
-**Technical Considerations**:
-- Use django_celery_results.models.TaskResult for querying
-- Store user context in task.request or via custom decorator
-- Consider using WebSockets later for true real-time updates (future enhancement)
-- Ensure proper permission checks (staff_member_required)
-- Handle edge cases: long-running tasks, failed tasks, task cleanup
+3. **Discovery**: admin/index.html extends admin/base.html directly, NOT base_site.html
+   - Renamed template to templates/admin/base.html
+   - Template now loads successfully (confirmed via django shell)
+   - task-monitor div appears in rendered HTML
 
-#### 2. Channel Message Preview Page
+4. **JavaScript Error**: "taskMonitor is null"
+   - Cause: Script running before DOM loaded (in extrahead block = <head>)
+   - Fix: Wrapped entire script in DOMContentLoaded event listener
+   - Added null checks with error logging
+
+5. **Current Issue**: "Task monitor elements not found in DOM"
+   - JavaScript executes successfully (DOMContentLoaded fires)
+   - getElementById returns null for both task-monitor and task-count
+   - Django shell confirms task-monitor IS in the HTML
+   - **Root cause**: userlinks block override not rendering in the correct location
+   - The div exists somewhere in HTML but not in the header where userlinks should be
+
+**Current Blocker Details**:
+- Template: `templates/admin/base.html`
+- Block being overridden: `{% block userlinks %}`
+- Expected location: Admin header (alongside user menu)
+- Actual result: Elements not accessible via getElementById
+- Hypothesis: Unfold's template structure may capture/render userlinks block differently than expected
+
+**Architecture Implemented**:
+- `common` app structure:
+  - `models.py`: UserTask model
+  - `middleware.py`: CurrentUserMiddleware + get_current_user()
+  - `celery_utils.py`: UserTrackedTask + @user_tracked_task decorator
+  - `serializers.py`: DRF serializers for API
+  - `views.py`: TaskStatusAPIView (GET/POST for task status)
+  - `urls.py`: API routes (namespace: 'common')
+- Project-level templates directory: `templates/` (searched before app templates)
+- All tasks automatically tracked via decorator
+- No manual user_id passing required
+- Database-driven queries (UserTask) instead of JSON parsing
+
+**Next Steps to Resolve**:
+1. Investigate how Unfold renders the userlinks block in admin/base.html
+2. Check if we need to override a different template file
+3. Consider alternative injection points (header block, footer, or use Alpine.js hooks)
+4. May need to inspect Unfold's header.html helper template structure
+5. Alternative: Inject via footer block or use JavaScript to append to DOM after load
+
+**Remaining Work (Phase 6)**:
+- Convert color palette extraction to async task
+- Convert image search to async task
+- Add task notifications for these operations
+- Show progress/completion in admin interface
+
+### Next Steps
+
+#### 1. Channel Message Preview Page
 **Goal**: Preview how deal notifications will appear for each channel type before sending.
 
 **Implementation Plan**:
@@ -345,6 +402,12 @@ All work from plan `/home/noah/.claude/plans/structured-stargazing-river.md` is 
 - Allow testing message formatting without actually sending
 - Useful for debugging Discord/Slack/etc. message formatting
 
+#### 2. Split notifications into separate module
+**Goal**: The notification channel and notification log models are related to deals, but seem to be in their own domain not as related to deals (even though they do send notifications for deals)
+
+**Implementation Plan**:
+- Create new notifications app
+- Move noficiation models and logic into new module
 
 ### Wish List
 1. Web push notification implementation

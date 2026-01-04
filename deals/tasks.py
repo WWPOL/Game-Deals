@@ -2,21 +2,23 @@
 Celery tasks for the deals app.
 """
 
-from celery import shared_task
 from django.conf import settings
 from django.db import transaction
 import logging
 
+from common.celery_utils import user_tracked_task
 from deals.models import Deal, NotificationChannel, NotificationLog
 from deals.services.discord_notifier import send_discord_notification, DiscordNotificationError
 
 logger = logging.getLogger(__name__)
 
 
-@shared_task
+@user_tracked_task()
 def send_discord_webhook(deal_id: int, channel_id: int) -> dict:
     """
     Send Discord webhook notification for a deal to a specific channel.
+
+    Automatically tracks which user initiated the task via thread-local storage.
 
     Args:
         deal_id: ID of the Deal to send notification for
@@ -81,10 +83,12 @@ def send_discord_webhook(deal_id: int, channel_id: int) -> dict:
         return {"success": False, "error": error_msg, "log_id": log.id}
 
 
-@shared_task
+@user_tracked_task()
 def notify_deal(deal_id: int, channel_ids: list[int] = None, force: bool = False) -> dict:
     """
     Send notifications for a deal to specified channels (or all auto-notify channels).
+
+    Automatically tracks which user initiated the task via thread-local storage.
 
     Args:
         deal_id: ID of the Deal to send notifications for

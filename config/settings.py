@@ -48,8 +48,10 @@ INSTALLED_APPS = [
     'django_extensions',
     'django_select2',  # Select2 widgets for autocomplete
     'django_celery_results',  # Celery result backend using Django ORM
+    'rest_framework',  # Django REST Framework for API endpoints
 
     # Local apps
+    'common',
     'deals',
 ]
 
@@ -61,6 +63,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'common.middleware.CurrentUserMiddleware',  # Store current user in thread-local storage
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -70,7 +73,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],  # Project-level templates override app templates
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

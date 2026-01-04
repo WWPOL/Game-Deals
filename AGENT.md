@@ -1,5 +1,13 @@
 # Game-Deals Project
 
+## ⚠️ CRITICAL CODE RULES - READ FIRST ⚠️
+
+**PYTHON IMPORT RULE - NEVER VIOLATE THIS:**
+- **NEVER import modules inside functions or methods**
+- **ALL imports must be at the top of the file (module level)**
+- This applies even for circular import concerns - refactor the code instead
+- If you find yourself about to write `from X import Y` inside a function, STOP and refactor
+
 ## Project Overview
 
 Game-Deals is a Django-based web application that manages game deals, allowing users to track and display current game promotions. The application features an admin interface for managing deals, including functionality to automatically find game images, extract color palettes from images, and search for additional images.

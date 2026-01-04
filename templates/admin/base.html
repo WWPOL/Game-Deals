@@ -1,0 +1,167 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+
+{% block userlinks %}
+    {# Task monitoring badge in header #}
+    <div id="task-monitor" class="hidden mr-4">
+        <div class="bg-blue-500 text-white px-3 py-1.5 rounded-lg shadow-md flex items-center gap-2 text-sm">
+            <div class="animate-spin">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+            <span id="task-monitor-text"><span id="task-count">0</span> tasks</span>
+        </div>
+    </div>
+
+    {{ block.super }}
+{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+
+    <style>
+        .task-notification {
+            position: fixed;
+            top: 5rem;
+            right: 1rem;
+            z-index: 9999;
+            max-width: 400px;
+        }
+    </style>
+
+    <script>
+        // Task monitoring system
+        document.addEventListener('DOMContentLoaded', function() {
+            const POLL_INTERVAL = 3000; // 3 seconds
+            const taskMonitor = document.getElementById('task-monitor');
+            const taskCountEl = document.getElementById('task-count');
+
+            if (!taskMonitor || !taskCountEl) {
+                console.error('Task monitor elements not found in DOM');
+                return;
+            }
+
+            let pollTimeout;
+
+            async function checkTaskStatus() {
+                try {
+                    const response = await fetch('{% url "common:task_status_api" %}', {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        credentials: 'same-origin'
+                    });
+
+                    if (!response.ok) {
+                        console.error('Task status API error:', response.status);
+                        return;
+                    }
+
+                    const data = await response.json();
+                    console.log('Task status:', data);
+
+                    // Update running task count
+                    if (data.running_count > 0) {
+                        taskCountEl.textContent = data.running_count;
+                        taskMonitor.classList.remove('hidden');
+                    } else {
+                        taskMonitor.classList.add('hidden');
+                    }
+
+                    // Show notifications for completed tasks
+                    if (data.recently_completed && data.recently_completed.length > 0) {
+                        showCompletedNotifications(data.recently_completed);
+
+                        // Mark tasks as seen
+                        const taskIds = data.recently_completed.map(t => t.task_id);
+                        await markTasksAsSeen(taskIds);
+                    }
+
+                } catch (error) {
+                    console.error('Error checking task status:', error);
+                } finally {
+                    // Schedule next poll
+                    pollTimeout = setTimeout(checkTaskStatus, POLL_INTERVAL);
+                }
+            }
+
+            async function markTasksAsSeen(taskIds) {
+                try {
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+                    await fetch('{% url "common:task_status_api" %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ task_ids: taskIds })
+                    });
+                } catch (error) {
+                    console.error('Error marking tasks as seen:', error);
+                }
+            }
+
+            function showCompletedNotifications(tasks) {
+                tasks.forEach(task => {
+                    const isSuccess = task.status === 'SUCCESS';
+                    const message = getTaskMessage(task);
+
+                    showNotification(message, isSuccess ? 'success' : 'error');
+                });
+            }
+
+            function getTaskMessage(task) {
+                // Extract task name (remove module path)
+                const taskName = task.task_name.split('.').pop();
+
+                if (task.status === 'SUCCESS') {
+                    // Try to extract message from result
+                    if (task.result && typeof task.result === 'object' && task.result.message) {
+                        return task.result.message;
+                    }
+                    return `Task ${taskName} completed successfully`;
+                } else {
+                    // Try to extract error from result
+                    if (task.result && typeof task.result === 'object' && task.result.error) {
+                        return `Task ${taskName} failed: ${task.result.error}`;
+                    }
+                    return `Task ${taskName} failed`;
+                }
+            }
+
+            function showNotification(message, type = 'info') {
+                // Create notification element
+                const notification = document.createElement('div');
+                notification.className = `task-notification px-4 py-3 rounded-lg shadow-lg text-white transition-opacity duration-500 ${
+                    type === 'success' ? 'bg-green-500' :
+                    type === 'error' ? 'bg-red-500' :
+                    'bg-blue-500'
+                }`;
+                notification.textContent = message;
+
+                document.body.appendChild(notification);
+
+                // Auto-dismiss after 5 seconds
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                    setTimeout(() => notification.remove(), 500);
+                }, 5000);
+            }
+
+            // Start polling when page loads
+            console.log('Starting task monitor');
+            checkTaskStatus();
+
+            // Clean up on page unload
+            window.addEventListener('beforeunload', () => {
+                if (pollTimeout) {
+                    clearTimeout(pollTimeout);
+                }
+            });
+        });
+    </script>
+{% endblock %}
