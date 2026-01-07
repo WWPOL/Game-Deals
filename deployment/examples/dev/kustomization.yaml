@@ -1,0 +1,33 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Reference the base from this repo (for local testing)
+# In another repo, use the Git URL format:
+# resources:
+# - https://github.com/WWPOL/Game-Deals.git//k8s/base?ref=master
+
+resources:
+- ../../base
+
+namespace: game-deals-dev
+
+# Override image tags for specific branch/commit
+images:
+- name: ghcr.io/wwpol/game-deals
+  newTag: django-abc1234
+
+# Override replicas
+replicas:
+- name: django
+  count: 2
+- name: celery
+  count: 3
+
+# Generate secrets from env files
+secretGenerator:
+- name: postgres-secret
+  envs:
+  - postgres.env
+- name: django-secret
+  envs:
+  - django.env
