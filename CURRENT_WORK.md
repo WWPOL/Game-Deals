@@ -393,6 +393,9 @@ All work from plan `/home/noah/.claude/plans/structured-stargazing-river.md` is 
 
 ### Next Steps
 
+#### 0. Support cloud storage for images
+**Goal**: Use an object storage system to store images using a django integration and digital ocean spaces.
+
 #### 1. Channel Message Preview Page
 **Goal**: Preview how deal notifications will appear for each channel type before sending.
 
