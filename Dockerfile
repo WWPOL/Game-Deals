@@ -24,9 +24,6 @@ COPY requirements.txt ./
 # Install Python dependencies as root (production requirements only)
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Make the entrypoint script executable
-RUN chmod +x /app/docker-entrypoint.sh
-
 # Change ownership of app directory
 RUN chown -R appuser:appuser /app
 
@@ -41,4 +38,4 @@ RUN python manage.py collectstatic --noinput || true
 
 EXPOSE 8000
 
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+ENTRYPOINT ["/app/scripts/docker-entrypoint.sh"]
