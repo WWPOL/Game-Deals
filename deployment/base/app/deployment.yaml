@@ -19,6 +19,11 @@ spec:
           value: redis://redis:6379/0
         - name: CELERY_BROKER_URL
           value: redis://redis:6379/0
+        - name: TEMP_DOWNLOAD_DIR
+          value: /tmp/game-deals
+        volumeMounts:
+        - name: temp-downloads
+          mountPath: /tmp/game-deals
         resources:
           requests:
             memory: "256Mi"
@@ -26,3 +31,7 @@ spec:
           limits:
             memory: "512Mi"
             cpu: "500m"
+      volumes:
+      - name: temp-downloads
+        emptyDir:
+          sizeLimit: 256Mi

@@ -146,15 +146,17 @@ class Deal(models.Model):
         """
         Extract colors from image and replace existing palette.
 
+        Works with both local filesystem and cloud storage (S3).
+
         Returns:
             int: Number of colors extracted
         """
-        from .services.color_extractor import extract_colors_from_url
+        from .services.color_extractor import extract_colors_from_django_file
 
         if not self.image:
             return 0
 
-        palette_entries = extract_colors_from_url(self.image.path)
+        palette_entries = extract_colors_from_django_file(self.image)
 
         # Clear existing palette and create new entries
         self.color_palette.all().delete()

@@ -150,6 +150,60 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Storage Configuration
+# Use S3-compatible storage for production, local filesystem for development
+USE_S3 = os.environ.get('USE_S3_STORAGE', 'false').lower() == 'true'
+
+if USE_S3:
+    # S3-compatible storage (AWS S3, Digital Ocean Spaces, MinIO, etc.)
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+            "OPTIONS": {
+                "access_key": os.environ.get('S3_ACCESS_KEY'),
+                "secret_key": os.environ.get('S3_SECRET_KEY'),
+                "bucket_name": os.environ.get('S3_BUCKET_NAME'),
+                "region_name": os.environ.get('S3_REGION'),
+                "endpoint_url": os.environ.get('S3_ENDPOINT_URL'),  # Required for non-AWS providers
+                "custom_domain": os.environ.get('S3_CUSTOM_DOMAIN'),  # Optional CDN domain
+                "object_parameters": {
+                    "CacheControl": "max-age=86400",  # 1 day cache
+                },
+                "file_overwrite": False,  # Don't overwrite existing files
+                "default_acl": "public-read",  # Make uploaded files publicly readable
+            }
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+
+    # Override MEDIA_URL to point to S3-compatible storage
+    if os.environ.get('S3_CUSTOM_DOMAIN'):
+        MEDIA_URL = f"https://{os.environ.get('S3_CUSTOM_DOMAIN')}/"
+    elif os.environ.get('S3_ENDPOINT_URL'):
+        # For custom endpoints (DO Spaces, MinIO, etc.)
+        MEDIA_URL = f"{os.environ.get('S3_ENDPOINT_URL')}/{os.environ.get('S3_BUCKET_NAME')}/"
+    else:
+        # AWS S3 default
+        bucket = os.environ.get('S3_BUCKET_NAME')
+        region = os.environ.get('S3_REGION')
+        MEDIA_URL = f"https://{bucket}.s3.{region}.amazonaws.com/"
+else:
+    # Local filesystem storage (development)
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+
+# Temporary directory for image downloads (used by color extraction)
+# In production, this should be ephemeral storage (emptyDir in Kubernetes)
+TEMP_DOWNLOAD_DIR = os.environ.get('TEMP_DOWNLOAD_DIR', '/tmp/game-deals')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 

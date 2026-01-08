@@ -1,9 +1,14 @@
 """Extract dominant colors from images"""
 import logging
+import os
+import tempfile
+from contextlib import contextmanager
 from typing import Tuple, List
 from PIL import Image
 import numpy as np
 from sklearn.cluster import KMeans
+import requests
+from django.conf import settings
 
 from deals.models import ColorPalette
 
@@ -140,6 +145,164 @@ def find_foreground_color(palette: List[Tuple[int, int, int]], background_color:
     black_contrast = get_contrast_ratio(primary_lum, black_lum)
 
     return "#ffffff" if white_contrast > black_contrast else "#000000"
+
+
+@contextmanager
+def get_image_file_from_django_file(django_file):
+    """
+    Get a file-like object from a Django File (ImageField).
+
+    Handles both local filesystem and cloud storage (S3).
+    Downloads cloud images to temporary disk storage (not memory).
+    Ensures proper cleanup of resources in all cases.
+
+    Args:
+        django_file: Django FieldFile instance (e.g., deal.image)
+
+    Yields:
+        File-like object (opened file handle)
+    """
+    if hasattr(django_file, 'path'):
+        # Local filesystem - open file and yield handle
+        with open(django_file.path, 'rb') as f:
+            yield f
+    else:
+        # Cloud storage - download to temporary file on disk
+        logger.info(f"Downloading image from cloud storage: {django_file.url}")
+        temp_file_path = None
+        temp_file = None
+        try:
+            # Get temp directory from settings
+            temp_dir = getattr(settings, 'TEMP_DOWNLOAD_DIR', '/tmp/game-deals')
+            os.makedirs(temp_dir, exist_ok=True)
+
+            # Create temporary file
+            temp_file = tempfile.NamedTemporaryFile(
+                mode='w+b',
+                dir=temp_dir,
+                delete=False,
+                suffix='.tmp'
+            )
+            temp_file_path = temp_file.name
+
+            # Download to temp file
+            response = requests.get(django_file.url, timeout=10, stream=True)
+            response.raise_for_status()
+
+            # Write chunks to disk to avoid loading entire file in memory
+            for chunk in response.iter_content(chunk_size=8192):
+                temp_file.write(chunk)
+            temp_file.close()
+
+            # Open and yield the temp file
+            with open(temp_file_path, 'rb') as f:
+                yield f
+
+        except requests.RequestException as e:
+            logger.error(f"Failed to download image from {django_file.url}: {e}")
+            raise Exception(f"Failed to download image: {e}")
+        finally:
+            # Clean up temporary file
+            if temp_file is not None and not temp_file.closed:
+                temp_file.close()
+            if temp_file_path and os.path.exists(temp_file_path):
+                try:
+                    os.unlink(temp_file_path)
+                except OSError as e:
+                    logger.warning(f"Failed to delete temporary file {temp_file_path}: {e}")
+
+
+def extract_colors_from_image(image_file, max_colors: int = 6, min_colors: int = 2) -> List[ColorPalette]:
+    """
+    Extract weighted color palette from a file-like object.
+
+    Core color extraction logic that works with any file-like object.
+
+    Args:
+        image_file: File-like object (opened file, BytesIO, etc.)
+        max_colors: Maximum number of colors to extract (default 6)
+        min_colors: Minimum number of colors to extract (default 2)
+
+    Returns:
+        List of unsaved ColorPalette model instances sorted by weight descending
+
+    Raises:
+        Exception: If color extraction fails (invalid image, etc.)
+    """
+    # Load and process image
+    img = Image.open(image_file)
+    img = img.convert('RGB')
+    img.thumbnail((200, 200))
+
+    # Convert to numpy array
+    img_array = np.array(img)
+    pixels = img_array.reshape(-1, 3)
+
+    # Use k-means clustering with more clusters to get color candidates
+    n_clusters = max(12, max_colors * 2)
+    kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
+    kmeans.fit(pixels)
+
+    # Get colors and their proportions
+    colors = kmeans.cluster_centers_.astype(int)
+    labels = kmeans.labels_
+    counts = np.bincount(labels)
+
+    # Select diverse colors with adaptive threshold
+    diverse_indices = select_diverse_colors(colors, counts, max_colors, min_colors, min_distance=100)
+
+    # Calculate normalized weights (sum to 1.0)
+    total_pixels = sum(counts[idx] for idx in diverse_indices)
+    weights = [counts[idx] / total_pixels for idx in diverse_indices]
+
+    # Build palette RGB list for foreground color finding
+    palette_rgb = [tuple(colors[idx]) for idx in diverse_indices]
+
+    # Create ColorPalette instances (unsaved)
+    palette_entries = []
+    for idx, weight in zip(diverse_indices, weights):
+        bg_rgb = tuple(colors[idx])
+        bg_hex = rgb_to_hex(bg_rgb)
+
+        # Find best contrasting foreground color
+        fg_hex = find_foreground_color(palette_rgb, bg_rgb)
+
+        palette_entries.append(ColorPalette(
+            background_color=bg_hex,
+            foreground_color=fg_hex,
+            weight=weight
+        ))
+
+    # Sort by weight descending (most prominent first)
+    palette_entries.sort(key=lambda e: e.weight, reverse=True)
+
+    logger.info(f"Extracted {len(palette_entries)} diverse colors")
+    for i, entry in enumerate(palette_entries):
+        logger.debug(f"  {i+1}. {entry.background_color} (fg: {entry.foreground_color}): {entry.weight:.1%}")
+
+    return palette_entries
+
+
+def extract_colors_from_django_file(django_file, max_colors: int = 6, min_colors: int = 2) -> List[ColorPalette]:
+    """
+    Extract weighted color palette from a Django File (ImageField).
+
+    Convenience function that combines get_image_file_from_django_file
+    and extract_colors_from_image.
+
+    Args:
+        django_file: Django FieldFile instance (e.g., deal.image)
+        max_colors: Maximum number of colors to extract (default 6)
+        min_colors: Minimum number of colors to extract (default 2)
+
+    Returns:
+        List of unsaved ColorPalette model instances sorted by weight descending
+
+    Raises:
+        Exception: If color extraction fails
+    """
+    with get_image_file_from_django_file(django_file) as image_file:
+        return extract_colors_from_image(image_file, max_colors, min_colors)
 
 
 def extract_colors_from_url(image_path: str, max_colors: int = 6, min_colors: int = 2) -> List[ColorPalette]:

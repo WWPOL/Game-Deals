@@ -391,10 +391,30 @@ All work from plan `/home/noah/.claude/plans/structured-stargazing-river.md` is 
 - Add task notifications for these operations
 - Show progress/completion in admin interface
 
-### Next Steps
+### S3-Compatible Cloud Storage Complete ✓
+- ✓ Added django-storages and boto3 dependencies
+- ✓ Configured S3-compatible storage backend in settings.py
+  - Supports AWS S3, Digital Ocean Spaces, MinIO, Wasabi, and other S3-compatible providers
+  - Environment variable toggle: `USE_S3_STORAGE` (local dev: false, production: true)
+  - Configurable via `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_BUCKET_NAME`, `S3_REGION`, `S3_ENDPOINT_URL`
+  - Optional CDN support via `S3_CUSTOM_DOMAIN`
+- ✓ Refactored color extraction service with clean separation of concerns
+  - Created `extract_colors_from_image(image_file)` - Core extraction logic accepting file-like objects
+  - Created `get_image_file_from_django_file(django_file)` - Context manager for cloud/local file access
+  - Created `extract_colors_from_django_file(django_file)` - Convenience function combining both
+  - Downloads cloud images to temporary disk storage (not memory) with automatic cleanup
+  - Streams downloads in chunks (8KB) to avoid loading entire files in memory
+- ✓ Updated Deal model to use new `extract_colors_from_django_file()` function
+- ✓ Configured ephemeral storage for Kubernetes deployments
+  - Added `TEMP_DOWNLOAD_DIR` environment variable (default: `/tmp/game-deals`)
+  - Configured 256Mi emptyDir volume in `deployment/base/app/deployment.yaml`
+  - Automatic cleanup on pod restart
+  - Shared across django and celery deployments
+- ✓ Updated `.env.example` with S3 configuration documentation
+- ✓ Only new uploads go to S3 (existing local images remain unchanged)
+- ✓ Backward compatible with local filesystem storage for development
 
-#### 0. Support cloud storage for images
-**Goal**: Use an object storage system to store images using a django integration and digital ocean spaces.
+### Next Steps
 
 #### 1. Channel Message Preview Page
 **Goal**: Preview how deal notifications will appear for each channel type before sending.
