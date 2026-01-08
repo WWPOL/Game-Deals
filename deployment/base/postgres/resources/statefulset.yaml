@@ -28,7 +28,7 @@ spec:
               key: POSTGRES_PASSWORD
         volumeMounts:
         - name: postgres-data
-          mountPath: /var/lib/postgresql/18/docker
+          mountPath: /var/lib/postgresql/18
         resources:
           requests:
             memory: "256Mi"
