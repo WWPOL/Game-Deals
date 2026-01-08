@@ -25,9 +25,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-default-key-change-this-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG").lower() == 'true'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+  host.strip()
+  for host in os.environ.get("ALLOWED_HOSTS", "").split(",")
+  if host.strip()
+]
 
 # Site URL for building absolute URLs (e.g., in Discord embeds)
 SITE_URL = os.environ.get('SITE_URL', 'http://localhost:8000')

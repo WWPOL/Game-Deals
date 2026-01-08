@@ -8,6 +8,7 @@ public/
 
 .env.*
 .env
+!.env.example
 
 .venv/
 *.pyc

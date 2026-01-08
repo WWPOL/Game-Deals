@@ -60,6 +60,8 @@ POSTGRES_PASSWORD=your-password-here
 ### django.env
 ```
 DATABASE_URL=postgresql://postgres:password@postgres:5432/game_deals
+SECRET_KEY=a-more-secure-key-here
+ALLOWED_HOSTS=host.com,another-host.com
 ```
 
 ## Local Testing
