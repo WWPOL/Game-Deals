@@ -414,7 +414,35 @@ All work from plan `/home/noah/.claude/plans/structured-stargazing-river.md` is 
 - ✓ Only new uploads go to S3 (existing local images remain unchanged)
 - ✓ Backward compatible with local filesystem storage for development
 
+### Firebase to Django Migration Tool Complete ✓
+- ✓ Created Django management command at `deals/management/commands/migrate_firebase.py`
+- ✓ Features:
+  - Pydantic validation with custom type for Firebase timestamp parsing
+  - Uses `BeforeValidator` and `Annotated` types for automatic timestamp conversion
+  - Handles multiple Firebase timestamp formats (Firestore objects, ISO strings, Unix timestamps)
+  - Type-safe field mapping using `MappedDealData` dataclass
+  - Progress tracking with `[x/total] (xx.x%)` format in logs
+  - Python logging module for all output (not stdout)
+  - Automatic slug generation in `year/month/name` format
+  - Downloads images from Firebase URLs to Django storage (S3 or local)
+  - Automatic color palette extraction from downloaded images
+  - Dry-run mode for previewing migration without saving
+  - Error handling with detailed logging
+- ✓ Field Mapping:
+  - Firebase `is_free` → Django `price=0`
+  - Firebase image URL → Downloaded to `Deal.image` field
+  - Original Firebase URL → Stored in `Deal.image_attribution`
+  - All migrated deals → `status='published'`
+  - Auto-generates unique slugs with collision detection
+- ✓ Usage:
+  - Dry run: `python manage.py migrate_firebase export.json --dry-run`
+  - Full migration: `python manage.py migrate_firebase export.json`
+  - Automatically triggers color extraction for each deal
+  - Final summary shows total/migrated/errors counts
+
 ### Next Steps
+
+#### 0. Migration tool to migrate deals from old firebase format
 
 #### 1. Channel Message Preview Page
 **Goal**: Preview how deal notifications will appear for each channel type before sending.
