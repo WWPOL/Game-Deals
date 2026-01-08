@@ -442,7 +442,8 @@ All work from plan `/home/noah/.claude/plans/structured-stargazing-river.md` is 
 
 ### Next Steps
 
-#### 0. Migration tool to migrate deals from old firebase format
+#### 0. Single Sign On
+**Goal**: configure OIDC login for google
 
 #### 1. Channel Message Preview Page
 **Goal**: Preview how deal notifications will appear for each channel type before sending.
