@@ -3,10 +3,12 @@ kind: Kustomization
 
 resources:
 - ../app
-- service.yaml
+- resources/service.yaml
 
 patches:
-- path: deployment.yaml
+- path: patches/deployment.yaml
+
+nameSuffix: -django
 
 labels:
 - includeSelectors: true

@@ -5,7 +5,9 @@ resources:
 - ../app
 
 patches:
-- path: deployment.yaml
+- path: patches/deployment.yaml
+
+nameSuffix: -celery
 
 labels:
 - includeSelectors: true
