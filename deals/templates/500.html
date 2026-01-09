@@ -3,56 +3,5 @@
 {% block title %}Server Error - Olly G's Game Deals{% endblock %}
 
 {% block content %}
-{% include 'components/wave_background.html' with colors=error_colors %}
-
-<div class="min-h-screen flex items-center justify-center px-4 relative z-10">
-    <div class="max-w-2xl w-full text-center">
-        <!-- Animated 500 -->
-        <div class="mb-8">
-            <h1 class="text-9xl font-black text-white drop-shadow-lg">
-                500
-            </h1>
-        </div>
-
-        <!-- Error Message -->
-        <div class="mb-8">
-            <h2 class="text-3xl font-bold text-white mb-4 drop-shadow-md">
-                Server Error
-            </h2>
-            <p class="text-lg text-white/90 mb-2 drop-shadow">
-                Something went wrong on our end.
-            </p>
-            <p class="text-md text-white/80 drop-shadow">
-                Our team has been notified and we're working on fixing it!
-            </p>
-        </div>
-
-        <!-- Game Controller Icon -->
-        <div class="mb-10 text-6xl drop-shadow-lg">
-            🎮
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <button onclick="window.history.back()"
-                    class="inline-flex items-center gap-2 bg-white/10 backdrop-blur text-white px-8 py-3 rounded-lg font-semibold border-2 border-white/30 hover:bg-white/20 transition-all shadow-sm">
-                <span>←</span>
-                <span>Go Back</span>
-            </button>
-
-            <a href="{% url 'deals:home' %}"
-              class="inline-flex items-center gap-2 bg-white text-gray-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg">
-                <span>Browse Game Deals</span>
-                <span>→</span>
-            </a>
-        </div>
-
-        <!-- Fun Message -->
-        <div class="mt-12 p-6 bg-white/10 backdrop-blur rounded-lg shadow-sm border border-white/20">
-            <p class="text-white/90 text-sm">
-                <span class="font-semibold text-white">Pro Tip:</span> Try refreshing the page in a few moments, or check back later for great deals!
-            </p>
-        </div>
-    </div>
-</div>
+{% include 'components/error_page.html' with error_code="500" error_title="Server Error" error_message="Something went wrong on our end." error_submessage="Our team has been notified and we're working on fixing it!" pro_tip="Try refreshing the page in a few moments, or check back later for great deals!" %}
 {% endblock %}
