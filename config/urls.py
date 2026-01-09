@@ -28,6 +28,7 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += [
         path('test-404/', config_views.handler404, {'exception': Exception('Test 404')}, name='test_404'),
+        path('test-500/', config_views.handler500, name='test_500'),
     ]
     # Serve media files in development
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

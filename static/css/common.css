@@ -1,3 +1,10 @@
+/* Global body background - ensures all pages have dark background by default */
+body {
+    background: #0a0a0a;
+    margin: 0;
+    padding: 0;
+}
+
 /* Hover sheen effect - requires position: relative and overflow: hidden on parent */
 .hover-sheen {
     position: relative;
