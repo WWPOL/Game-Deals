@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+import sys
 from pathlib import Path
 import dj_database_url
 
@@ -18,23 +19,50 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+# Helper to detect if running collectstatic command
+def is_collectstatic() -> bool:
+    """Check if the collectstatic management command is currently running."""
+    return sys.argv[1:2] == ["collectstatic"]
+
+
+# Helper to get environment variables with collectstatic-aware defaults
+def get_env(name: str, default: str | None = None) -> str | None:
+    """
+    Get environment variable with special handling for collectstatic.
+
+    During collectstatic, if no default is provided, returns empty string
+    instead of raising KeyError. This allows the build to proceed without
+    requiring runtime-only credentials.
+
+    Args:
+        name: Environment variable name
+        default: Default value if not found (None means required at runtime)
+
+    Returns:
+        The environment variable value, default, or empty string during collectstatic
+    """
+    if is_collectstatic() and default is None:
+        return os.environ.get(name, '')
+    return os.environ.get(name, default)
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-default-key-change-this-in-production')
+SECRET_KEY = get_env('SECRET_KEY', 'django-insecure-default-key-change-this-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DEBUG", "").lower() == 'true'
+DEBUG = get_env("DEBUG", "").lower() == 'true'
 
 ALLOWED_HOSTS = [
   host.strip()
-  for host in os.environ.get("ALLOWED_HOSTS", "").split(",")
+  for host in get_env("ALLOWED_HOSTS", "").split(",")
   if host.strip()
 ]
 
 # Site URL for building absolute URLs (e.g., in Discord embeds)
-SITE_URL = os.environ.get('SITE_URL', 'http://localhost:8000')
+SITE_URL = get_env('SITE_URL', 'http://localhost:8000')
 
 
 # Application definition
@@ -156,20 +184,27 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Storage Configuration
 # Use S3-compatible storage for production, local filesystem for development
-USE_S3 = os.environ.get('USE_S3_STORAGE', 'false').lower() == 'true'
+USE_S3 = get_env('USE_S3_STORAGE', 'false').lower() == 'true'
 
 if USE_S3:
+    S3_ACCESS_KEY = get_env('S3_ACCESS_KEY')
+    S3_SECRET_KEY = get_env('S3_SECRET_KEY')
+    S3_BUCKET_NAME = get_env('S3_BUCKET_NAME')
+    S3_REGION = get_env('S3_REGION')
+    S3_ENDPOINT_URL = get_env('S3_ENDPOINT_URL')
+    S3_CUSTOM_DOMAIN = get_env('S3_CUSTOM_DOMAIN')
+
     # S3-compatible storage (AWS S3, Digital Ocean Spaces, MinIO, etc.)
     STORAGES = {
         "default": {
             "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
             "OPTIONS": {
-                "access_key": os.environ.get('S3_ACCESS_KEY'),
-                "secret_key": os.environ.get('S3_SECRET_KEY'),
-                "bucket_name": os.environ.get('S3_BUCKET_NAME'),
-                "region_name": os.environ.get('S3_REGION'),
-                "endpoint_url": os.environ.get('S3_ENDPOINT_URL'),  # Required for non-AWS providers
-                "custom_domain": os.environ.get('S3_CUSTOM_DOMAIN'),  # Optional CDN domain
+                "access_key": S3_ACCESS_KEY,
+                "secret_key": S3_SECRET_KEY,
+                "bucket_name": S3_BUCKET_NAME,
+                "region_name": S3_REGION,
+                "endpoint_url": S3_ENDPOINT_URL,  # Required for non-AWS providers
+                "custom_domain": S3_CUSTOM_DOMAIN,  # Optional CDN domain
                 "object_parameters": {
                     "CacheControl": "max-age=86400",  # 1 day cache
                 },
@@ -183,16 +218,14 @@ if USE_S3:
     }
 
     # Override MEDIA_URL to point to S3-compatible storage
-    if os.environ.get('S3_CUSTOM_DOMAIN'):
-        MEDIA_URL = f"https://{os.environ.get('S3_CUSTOM_DOMAIN')}/"
-    elif os.environ.get('S3_ENDPOINT_URL'):
+    if S3_CUSTOM_DOMAIN:
+        MEDIA_URL = f"https://{S3_CUSTOM_DOMAIN}/"
+    elif S3_ENDPOINT_URL:
         # For custom endpoints (DO Spaces, MinIO, etc.)
-        MEDIA_URL = f"{os.environ.get('S3_ENDPOINT_URL')}/{os.environ.get('S3_BUCKET_NAME')}/"
+        MEDIA_URL = f"{S3_ENDPOINT_URL}/{S3_BUCKET_NAME}/"
     else:
         # AWS S3 default
-        bucket = os.environ.get('S3_BUCKET_NAME')
-        region = os.environ.get('S3_REGION')
-        MEDIA_URL = f"https://{bucket}.s3.{region}.amazonaws.com/"
+        MEDIA_URL = f"https://{S3_BUCKET_NAME}.s3.{S3_REGION}.amazonaws.com/"
 else:
     # Local filesystem storage (development)
     STORAGES = {
@@ -206,7 +239,7 @@ else:
 
 # Temporary directory for image downloads (used by color extraction)
 # In production, this should be ephemeral storage (emptyDir in Kubernetes)
-TEMP_DOWNLOAD_DIR = os.environ.get('TEMP_DOWNLOAD_DIR', '/tmp/game-deals')
+TEMP_DOWNLOAD_DIR = get_env('TEMP_DOWNLOAD_DIR', '/tmp/game-deals')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -214,7 +247,7 @@ TEMP_DOWNLOAD_DIR = os.environ.get('TEMP_DOWNLOAD_DIR', '/tmp/game-deals')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Celery Configuration
-CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_BROKER_URL = get_env('CELERY_BROKER_URL', 'redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = 'django-db'  # Use Django ORM for task results
 CELERY_CACHE_BACKEND = 'django-cache'  # Use Django cache for caching results
 CELERY_ACCEPT_CONTENT = ['json']
@@ -226,8 +259,8 @@ CELERY_RESULT_EXTENDED = True  # Store additional task metadata
 # Google Custom Search API Configuration
 # Get your API key from: https://console.cloud.google.com/apis/credentials
 # Create a Custom Search Engine at: https://programmablesearchengine.google.com/
-GOOGLE_API_KEY = os.environ['GOOGLE_API_KEY']
-GOOGLE_SEARCH_ENGINE_ID = os.environ['GOOGLE_SEARCH_ENGINE_ID']
+GOOGLE_API_KEY = get_env('GOOGLE_API_KEY')
+GOOGLE_SEARCH_ENGINE_ID = get_env('GOOGLE_SEARCH_ENGINE_ID')
 
 # Admin Branding
 UNFOLD = {
