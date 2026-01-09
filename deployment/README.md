@@ -44,12 +44,17 @@ secretGenerator:
 - name: postgres-secret
   envs:
   - postgres.env
-- name: django-secret
+- name: app-secret
   envs:
-  - django.env
+  - app-secret.env
+
+configMapGenerator:
+- name: app-config
+  envs:
+  - app-config.env
 ```
 
-## Secrets Format
+## Secrets and Config Format
 
 ### postgres.env
 ```
@@ -57,11 +62,34 @@ POSTGRES_USER=postgres
 POSTGRES_PASSWORD=your-password-here
 ```
 
-### django.env
+### app-secret.env
+Contains sensitive application secrets (passwords, API keys, etc.):
 ```
-DATABASE_URL=postgresql://postgres:password@postgres:5432/game_deals
 SECRET_KEY=a-more-secure-key-here
-ALLOWED_HOSTS=host.com,another-host.com
+DATABASE_URL=postgresql://postgres:password@postgres:5432/game_deals
+GOOGLE_API_KEY=your-google-api-key-here
+
+# Optional: S3-compatible storage credentials (if using S3)
+# S3_ACCESS_KEY=your-access-key
+# S3_SECRET_KEY=your-secret-key
+```
+
+### app-config.env
+Contains non-sensitive application configuration:
+```
+DEBUG=false
+ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
+SITE_URL=https://yourdomain.com
+REDIS_URL=redis://redis:6379/0
+CELERY_BROKER_URL=redis://redis:6379/0
+GOOGLE_SEARCH_ENGINE_ID=your-search-engine-id
+
+# Optional: S3-compatible storage config (if using S3)
+# USE_S3_STORAGE=true
+# S3_BUCKET_NAME=your-bucket-name
+# S3_REGION=us-east-1
+# S3_ENDPOINT_URL=https://your-endpoint.com
+# S3_CUSTOM_DOMAIN=cdn.yourdomain.com
 ```
 
 ## Local Testing

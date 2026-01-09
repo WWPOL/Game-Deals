@@ -10,17 +10,13 @@ spec:
       - name: app
         image: ghcr.io/wwpol/game-deals:latest
         env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: django-secret
-              key: DATABASE_URL
-        - name: REDIS_URL
-          value: redis://redis:6379/0
-        - name: CELERY_BROKER_URL
-          value: redis://redis:6379/0
         - name: TEMP_DOWNLOAD_DIR
           value: /tmp/game-deals
+        envFrom:
+        - secretRef:
+            name: app-secret
+        - configMapRef:
+            name: app-config
         volumeMounts:
         - name: temp-downloads
           mountPath: /tmp/game-deals
