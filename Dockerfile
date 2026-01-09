@@ -33,8 +33,8 @@ USER appuser
 # Copy application code
 COPY --chown=appuser:appuser . .
 
-# Collect static files (if needed)
-RUN python manage.py collectstatic --noinput || true
+# Collect static files (after code is copied)
+RUN python manage.py collectstatic --noinput
 
 EXPOSE 8000
 
