@@ -57,6 +57,12 @@ ALLOWED_HOSTS = [
   if host.strip()
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+  origin.strip()
+  for origin in get_env("CSRF_TRUSTED_ORIGINS", "").split(",")
+  if origin.strip()
+]
+
 # Silence system checks for intentional configurations
 SILENCED_SYSTEM_CHECKS = [
     'account.W001',  # ACCOUNT_LOGIN_METHODS vs ACCOUNT_SIGNUP_FIELDS mismatch (valid: signup disabled, login enabled)
