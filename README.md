@@ -45,7 +45,9 @@ A Django app with Celery for background tasks.
    cp .env.example .env
    ```
 
-2. **Configure Google Custom Search API:**
+2. **Configure Google APIs:**
+
+   **Google Custom Search API** (for image search):
    - Get your API key from: https://console.cloud.google.com/apis/credentials
    - Create a Custom Search Engine at: https://programmablesearchengine.google.com/
      - Enable "Image search"
@@ -54,6 +56,19 @@ A Django app with Celery for background tasks.
      ```
      GOOGLE_API_KEY=your_api_key_here
      GOOGLE_SEARCH_ENGINE_ID=your_search_engine_id_here
+     ```
+
+   **Google OAuth** (for Sign In with Google):
+   - Go to https://console.cloud.google.com/apis/credentials
+   - Create OAuth 2.0 Client ID (or use existing credentials)
+     - Application type: Web application
+     - Add authorized redirect URIs:
+       - `http://localhost:8000/accounts/google/login/callback/` (development)
+       - `https://yourdomain.com/accounts/google/login/callback/` (production)
+   - Add the credentials to `.env`:
+     ```
+     GOOGLE_OAUTH_CLIENT_ID=your_client_id_here.apps.googleusercontent.com
+     GOOGLE_OAUTH_SECRET=your_client_secret_here
      ```
 
 3. **Build and start containers:**
