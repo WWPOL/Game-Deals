@@ -8,7 +8,7 @@ from django.shortcuts import redirect
 from django.contrib import messages
 from django.conf import settings
 from django.http import HttpResponseRedirect
-from unfold.admin import ModelAdmin
+from unfold.admin import ModelAdmin, TabularInline, StackedInline
 from django_object_actions import DjangoObjectActions
 from .models import Deal, ColorPalette, NotificationChannel, NotificationLog, DiscordWebhookConfig
 from .forms import DealAdminForm
@@ -18,7 +18,7 @@ from .widgets import ColorPickerWidget, ColorPalettePreviewWidget
 from .tasks import notify_deal
 
 
-class ColorPaletteInline(admin.TabularInline):
+class ColorPaletteInline(TabularInline):
     model = ColorPalette
     extra = 0
     min_num = 0  # Don't auto-create empty rows
@@ -69,7 +69,7 @@ class ColorPaletteInline(admin.TabularInline):
         return super().has_delete_permission(request, obj)
 
 
-class NotificationLogInline(admin.TabularInline):
+class NotificationLogInline(TabularInline):
     model = NotificationLog
     extra = 0
     can_delete = False
@@ -86,7 +86,7 @@ class NotificationLogInline(admin.TabularInline):
         return False
 
 
-class NotificationLogForChannelInline(admin.TabularInline):
+class NotificationLogForChannelInline(TabularInline):
     """Notification log inline for NotificationChannel admin - shows deal instead of channel"""
     model = NotificationLog
     extra = 0
@@ -374,7 +374,7 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
 
 
 
-class DiscordWebhookConfigInline(admin.StackedInline):
+class DiscordWebhookConfigInline(StackedInline):
     model = DiscordWebhookConfig
     extra = 0
     min_num = 1  # Require at least one for discord_webhook type
