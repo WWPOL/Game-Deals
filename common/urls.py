@@ -3,7 +3,7 @@ URL configuration for common app.
 """
 from django.urls import path
 
-from .views import TaskStatusAPIView
+from tasks.views import TaskStatusAPIView
 
 app_name = 'common'
 

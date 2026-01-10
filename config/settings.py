@@ -97,6 +97,7 @@ INSTALLED_APPS = [
     # Local apps
     'common',
     'deals',
+    'tasks',
 ]
 
 MIDDLEWARE = [
@@ -109,7 +110,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'allauth.account.middleware.AccountMiddleware',  # Required by django-allauth
-    'common.middleware.CurrentUserMiddleware',  # Store current user in thread-local storage
+    'tasks.middleware.CurrentUserMiddleware',  # Store current user in thread-local storage
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]

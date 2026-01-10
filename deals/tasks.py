@@ -6,7 +6,7 @@ from django.conf import settings
 from django.db import transaction
 import logging
 
-from common.celery_utils import user_tracked_task
+from tasks.celery_utils import user_tracked_task
 from deals.models import Deal, NotificationChannel, NotificationLog
 from deals.services.discord_notifier import send_discord_notification, DiscordNotificationError
 from deals.services.image_search import GoogleCustomSearchProvider, download_image_from_url

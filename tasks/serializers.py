@@ -4,7 +4,7 @@ Serializers for common app API endpoints.
 from rest_framework import serializers
 from django_celery_results.models import TaskResult
 
-from .models import UserTask
+from tasks.models import UserTask
 
 
 class UserTaskSerializer(serializers.ModelSerializer):
@@ -20,6 +20,7 @@ class UserTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserTask
         fields = [
+            'id',
             'task_id',
             'task_name',
             'status',

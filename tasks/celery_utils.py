@@ -5,8 +5,8 @@ from celery import shared_task, Task
 from functools import wraps
 import logging
 
-from .middleware import get_current_user
-from .models import UserTask
+from tasks.middleware import get_current_user
+from tasks.models import UserTask
 
 logger = logging.getLogger(__name__)
 

@@ -198,14 +198,15 @@
                     html += runningTasks.map(task => {
                         const taskName = task.task_name.split('.').pop();
                         const timeAgo = getTimeAgo(task.initiated_at);
+                        const adminUrl = `/admin/tasks/usertask/${task.id}/change/`;
                         return `
-                            <div class="task-item py-2 px-2 rounded hover:bg-gray-700 transition-colors">
+                            <a href="${adminUrl}" class="task-item py-2 px-2 rounded hover:bg-gray-700 transition-colors block">
                                 <div class="flex items-center gap-2">
                                     <div class="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
                                     <div class="text-sm font-medium">${taskName}</div>
                                 </div>
                                 <div class="text-xs text-gray-400 mt-0.5 ml-5">${timeAgo}</div>
-                            </div>
+                            </a>
                         `;
                     }).join('');
                     html += '</div>';
@@ -221,15 +222,16 @@
                         const isSuccess = task.status === 'SUCCESS';
                         const statusColor = isSuccess ? 'text-green-400' : 'text-red-400';
                         const statusIcon = isSuccess ? '✓' : '✗';
+                        const adminUrl = `/admin/tasks/usertask/${task.id}/change/`;
 
                         return `
-                            <div class="task-item py-2 px-2 rounded hover:bg-gray-700 transition-colors">
+                            <a href="${adminUrl}" class="task-item py-2 px-2 rounded hover:bg-gray-700 transition-colors block">
                                 <div class="flex items-center gap-2">
                                     <div class="${statusColor} text-xs font-bold">${statusIcon}</div>
                                     <div class="text-sm font-medium">${taskName}</div>
                                 </div>
                                 <div class="text-xs text-gray-400 mt-0.5 ml-5">${timeAgo}</div>
-                            </div>
+                            </a>
                         `;
                     }).join('');
                     html += '</div>';

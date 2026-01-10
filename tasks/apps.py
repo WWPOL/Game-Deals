@@ -1,6 +1,7 @@
 from django.apps import AppConfig
 
 
-class CommonConfig(AppConfig):
+class TasksConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'common'
+    name = 'tasks'
+    verbose_name = 'Background Tasks'
