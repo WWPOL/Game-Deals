@@ -3,10 +3,10 @@
 {% load i18n socialaccount %}
 
 {% block login_before %}
-    <a href="{% provider_login_url 'google' %}"
-       class="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:bg-primary-600 dark:hover:bg-primary-700 transition-colors shadow-sm">
-        {% trans "Sign in with Google" %}
-    </a>
+    <div class="flex justify-center mb-6">
+        {% provider_login_url 'google' as google_login %}
+        {% include 'components/google_signin_button.html' with login_url=google_login %}
+    </div>
 
     <div class="relative flex items-center justify-center my-6">
         <div class="flex-grow border-t border-gray-300 dark:border-gray-600"></div>

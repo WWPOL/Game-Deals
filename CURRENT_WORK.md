@@ -502,6 +502,11 @@ Every time I open the webpage my computer fan spins up (this never happens on an
 
 It is also a super simple background, just a few blobs moving around or a few waves moving. Not anything fancy, not even 3d.
 
+#### 4. Fix migrate script
+**Goal**: Successfully migrate old deals to new site
+
+Right now the download cmd fails w an error.
+
 ### Wish List
 1. Web push notification implementation
 2. Subscription endpoints for web push
