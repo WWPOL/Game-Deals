@@ -1,0 +1,25 @@
+{% extends 'unfold/layouts/unauthenticated.html' %}
+
+{% load i18n static unfold %}
+
+{% block extrastyle %}
+    {{ block.super }}
+{% endblock %}
+
+{% block title %}
+    {% block head_title %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+    {% block body %}
+        {% if messages %}
+            {% include "unfold/helpers/messages.html" %}
+        {% endif %}
+
+        {% block allauth_content %}
+        {% endblock allauth_content %}
+    {% endblock body %}
+{% endblock %}
+
+{% block extra_body %}
+{% endblock extra_body %}
