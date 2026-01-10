@@ -32,6 +32,21 @@
         .task-item:last-child {
             border-bottom: none;
         }
+
+        @keyframes badge-pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.5);
+                opacity: 0.5;
+            }
+        }
+
+        .badge-loading {
+            animation: badge-pulse 0.8s ease-in-out infinite;
+        }
     </style>
 
     <script>
@@ -81,7 +96,7 @@
                     if (data.running_count > 0) {
                         // Tasks running - blue badge with pulsing indicator
                         taskMonitorBadge.className = 'bg-blue-500 text-white px-3 py-1.5 rounded-lg shadow-md flex items-center gap-2 text-sm transition-colors duration-300 cursor-pointer hover:opacity-90';
-                        taskMonitorIndicator.className = 'w-2 h-2 bg-white rounded-full animate-pulse';
+                        taskMonitorIndicator.className = 'w-2 h-2 bg-white rounded-full badge-loading';
                     } else {
                         // No tasks - gray badge with static indicator
                         taskMonitorBadge.className = 'bg-gray-400 text-white px-3 py-1.5 rounded-lg shadow-md flex items-center gap-2 text-sm transition-colors duration-300 cursor-pointer hover:opacity-90';
