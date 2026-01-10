@@ -1,4 +1,4 @@
-{# Reusable wave background component - pass a list of color objects with background_color and weight #}
+{# Optimized wave background component - pass a list of color objects with background_color and weight #}
 {% load deal_colors %}
 
 <style>
@@ -16,152 +16,144 @@
         position: absolute;
         width: 100%;
         height: 100%;
-    }
-
-    .wave-svg {
+        /* Use CSS filter instead of SVG filter for better performance */
         filter: blur(20px);
         opacity: 0.8;
     }
 
+    /* Optimized wave animation using CSS transforms - GPU accelerated */
     .wave-path {
-        transform-origin: center;
+        will-change: transform;
+        transform: translateZ(0); /* Force GPU layer */
+    }
+
+    /* CSS animations for horizontal wave movement */
+    @keyframes wave-slide-right {
+        from { transform: translateX(-100px); }
+        to { transform: translateX(100px); }
+    }
+
+    @keyframes wave-slide-left {
+        from { transform: translateX(100px); }
+        to { transform: translateX(-100px); }
+    }
+
+    @keyframes wave-vertical-1 {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-30px); }
+    }
+
+    @keyframes wave-vertical-2 {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(30px); }
+    }
+
+    /* Reduced motion support for accessibility */
+    @media (prefers-reduced-motion: reduce) {
+        .wave-animation-container svg {
+            filter: blur(15px);
+        }
+        .wave-path {
+            animation: none !important;
+        }
     }
 </style>
 
 <div class="wave-animation-container">
-    <svg class="wave-svg" viewBox="-100 0 1200 1000" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+    <svg viewBox="-100 0 1200 1000" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
     </svg>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
 <script>
-    // Collect all background colors from the provided color list
-    var allColors = [
-        {% for color in colors %}
-        {
-            background: "{{ color.background_color }}",
-            weight: {{ color.weight }}
-        }{% if not forloop.last %},{% endif %}
-        {% endfor %}
-    ];
-
-    // If no colors found, use default darker purplish palette
-    if (allColors.length === 0) {
-        var defaultColors = [
-            '#1a0f2e', // Dark purple
-            '#2d1b4e', // Deep purple
-            '#1e1b3c', // Dark blue-purple
-            '#251640', // Dark violet
-            '#1c1333', // Very dark purple
-            '#2a1f3d', // Dark plum
+    (function() {
+        // Collect all background colors from the provided color list
+        var allColors = [
+            {% for color in colors %}
+            {
+                background: "{{ color.background_color }}",
+                weight: {{ color.weight }}
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
         ];
 
-        allColors = defaultColors.map(function(color) {
-            return {
-                background: color,
-                weight: 1
-            };
+        // If no colors found, use default darker purplish palette
+        if (allColors.length === 0) {
+            var defaultColors = [
+                '#1a0f2e', '#2d1b4e', '#1e1b3c', '#251640', '#1c1333', '#2a1f3d'
+            ];
+
+            allColors = defaultColors.map(function(color) {
+                return { background: color, weight: 1 };
+            });
+        }
+
+        // Remove duplicates and combine weights
+        var colorMap = {};
+        allColors.forEach(function(color) {
+            if (colorMap[color.background]) {
+                colorMap[color.background] += color.weight;
+            } else {
+                colorMap[color.background] = color.weight;
+            }
         });
-    }
 
-    // Remove duplicates and combine weights
-    var colorMap = {};
-    allColors.forEach(function(color) {
-        if (colorMap[color.background]) {
-            colorMap[color.background] += color.weight;
-        } else {
-            colorMap[color.background] = color.weight;
-        }
-    });
-
-    // Convert back to array
-    var uniqueColors = Object.keys(colorMap).map(function(bg) {
-        return { background: bg, weight: colorMap[bg] };
-    });
-
-    // Normalize weights
-    var totalWeight = uniqueColors.reduce(function(sum, c) { return sum + c.weight; }, 0);
-    uniqueColors.forEach(function(c) { c.weight = c.weight / totalWeight; });
-
-    var svg = document.querySelector('.wave-svg');
-
-    // Helper function to create wave path
-    function createWavePath(yPosition, amplitude, frequency, phase) {
-        var path = 'M -200,' + yPosition;
-
-        for (var x = -200; x <= 1200; x += 10) {
-            var y = yPosition + Math.sin((x + phase) * frequency) * amplitude;
-            path += ' L ' + x + ',' + y;
-        }
-
-        // Close the path at the bottom
-        path += ' L 1200,1200 L -200,1200 Z';
-        return path;
-    }
-
-    // Create SVG waves
-    var waves = [];
-    var waveCount = Math.min(uniqueColors.length * 3, 20); // Create multiple waves per color
-
-    for (var i = 0; i < waveCount; i++) {
-        var colorIndex = i % uniqueColors.length;
-        var colorEntry = uniqueColors[colorIndex];
-
-        // Distribute waves across the viewport
-        var yPosition = (i / waveCount) * 1200 - 100;
-        var amplitude = 40 + Math.random() * 60;
-        var frequency = 0.003 + Math.random() * 0.005;
-        var phase = Math.random() * 1000;
-
-        var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('class', 'wave-path');
-        path.setAttribute('d', createWavePath(yPosition, amplitude, frequency, phase));
-        path.setAttribute('fill', colorEntry.background);
-        path.setAttribute('opacity', 0.3 + Math.random() * 0.4);
-        svg.appendChild(path);
-
-        waves.push({
-            element: path,
-            yPosition: yPosition,
-            amplitude: amplitude,
-            frequency: frequency,
-            phase: phase
+        // Convert back to array
+        var uniqueColors = Object.keys(colorMap).map(function(bg) {
+            return { background: bg, weight: colorMap[bg] };
         });
-    }
 
-    // Animate waves with smooth continuous animation
-    function animateWave(wave, index) {
-        var direction = index % 2 === 0 ? 1 : -1;
-        var phaseSpeed = 15000 + Math.random() * 20000;
-        var verticalSpeed = 25000 + Math.random() * 15000;
+        // Normalize weights
+        var totalWeight = uniqueColors.reduce(function(sum, c) { return sum + c.weight; }, 0);
+        uniqueColors.forEach(function(c) { c.weight = c.weight / totalWeight; });
 
-        var baseYPosition = wave.yPosition;
-        var startTime = Date.now() + (index * 500); // Stagger start times
+        var svg = document.querySelector('.wave-animation-container svg');
 
-        function updateWave() {
-            var elapsed = Date.now() - startTime;
+        // Pre-generate static wave path - no more recalculation needed!
+        function createWavePath(yPosition, amplitude, frequency, phase) {
+            var path = 'M -200,' + yPosition;
 
-            // Continuous phase animation (horizontal flow)
-            wave.phase = wave.phase + (direction * 0.5);
+            for (var x = -200; x <= 1200; x += 10) {
+                var y = yPosition + Math.sin((x + phase) * frequency) * amplitude;
+                path += ' L ' + x + ',' + y;
+            }
 
-            // Smooth vertical oscillation using sine wave
-            var verticalOffset = Math.sin(elapsed / verticalSpeed * Math.PI * 2) * 50 * direction;
-            wave.yPosition = baseYPosition + verticalOffset;
-
-            wave.element.setAttribute('d', createWavePath(
-                wave.yPosition,
-                wave.amplitude,
-                wave.frequency,
-                wave.phase
-            ));
-
-            requestAnimationFrame(updateWave);
+            // Close the path at the bottom
+            path += ' L 1200,1200 L -200,1200 Z';
+            return path;
         }
 
-        updateWave();
-    }
+        // Reduced wave count: 6-8 waves instead of up to 20
+        var waveCount = Math.min(uniqueColors.length * 2, 8);
 
-    waves.forEach(function(wave, index) {
-        animateWave(wave, index);
-    });
+        for (var i = 0; i < waveCount; i++) {
+            var colorIndex = i % uniqueColors.length;
+            var colorEntry = uniqueColors[colorIndex];
+
+            // Distribute waves across the viewport
+            var yPosition = (i / waveCount) * 1200 - 100;
+            var amplitude = 40 + Math.random() * 60;
+            var frequency = 0.004 + Math.random() * 0.004;
+            var phase = Math.random() * 1000;
+
+            var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('class', 'wave-path');
+            // Path is generated ONCE and never changed - much better performance!
+            path.setAttribute('d', createWavePath(yPosition, amplitude, frequency, phase));
+            path.setAttribute('fill', colorEntry.background);
+            path.setAttribute('opacity', 0.3 + Math.random() * 0.4);
+
+            // Use CSS animations instead of requestAnimationFrame - GPU accelerated!
+            var direction = i % 2 === 0 ? 'wave-slide-right' : 'wave-slide-left';
+            var verticalAnim = i % 3 === 0 ? 'wave-vertical-1' : 'wave-vertical-2';
+            var duration = 25 + Math.random() * 20; // 25-45 seconds
+            var verticalDuration = 15 + Math.random() * 10; // 15-25 seconds
+            var delay = i * 2; // Stagger start times
+
+            path.style.animation =
+                direction + ' ' + duration + 's linear ' + delay + 's infinite alternate, ' +
+                verticalAnim + ' ' + verticalDuration + 's ease-in-out ' + (delay * 0.5) + 's infinite';
+
+            svg.appendChild(path);
+        }
+    })();
 </script>
