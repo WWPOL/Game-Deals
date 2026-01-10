@@ -9,6 +9,7 @@ import logging
 from common.celery_utils import user_tracked_task
 from deals.models import Deal, NotificationChannel, NotificationLog
 from deals.services.discord_notifier import send_discord_notification, DiscordNotificationError
+from deals.services.image_search import GoogleCustomSearchProvider, download_image_from_url
 
 logger = logging.getLogger(__name__)
 
@@ -139,3 +140,107 @@ def notify_deal(deal_id: int, channel_ids: list[int] = None, force: bool = False
         "task_ids": task_ids,
         "channel_count": len(task_ids)
     }
+
+
+@user_tracked_task()
+def search_and_download_image(deal_id: int, search_query: str = None) -> dict:
+    """
+    Search for and download an image for a deal.
+
+    Automatically tracks which user initiated the task via thread-local storage.
+
+    Args:
+        deal_id: ID of the Deal to find image for
+        search_query: Optional custom search query (defaults to "{deal_name} game cover art")
+
+    Returns:
+        dict: Status information about the image search and download
+    """
+    try:
+        deal = Deal.objects.get(pk=deal_id)
+    except Deal.DoesNotExist:
+        error_msg = f"Deal with ID {deal_id} not found"
+        logger.error(error_msg)
+        return {"success": False, "error": error_msg}
+
+    # Build search query
+    if not search_query:
+        search_query = f"{deal.name} game cover art"
+
+    try:
+        provider = GoogleCustomSearchProvider(
+            api_key=settings.GOOGLE_API_KEY,
+            search_engine_id=settings.GOOGLE_SEARCH_ENGINE_ID
+        )
+
+        image_results = provider.search(search_query, limit=1)
+
+        if not image_results:
+            msg = f"No images found for query: {search_query}"
+            logger.warning(msg)
+            return {"success": False, "error": msg}
+
+        first_image = image_results[0]
+        first_image_url = first_image.url
+
+        # Download the image
+        try:
+            image_content, image_filename = download_image_from_url(first_image_url)
+            deal.image.save(image_filename, image_content, save=False)
+
+            # Save attribution URL if available
+            if first_image.page_url:
+                deal.image_attribution = first_image.page_url
+
+            deal.save()
+
+            msg = f'Found and set image for "{deal.name}"'
+            logger.info(msg)
+            return {"success": True, "message": msg, "image_url": first_image_url}
+
+        except Exception as e:
+            error_msg = f"Error downloading image: {str(e)}"
+            logger.error(error_msg)
+            return {"success": False, "error": error_msg}
+
+    except Exception as e:
+        error_msg = f"Error searching for image: {str(e)}"
+        logger.exception(error_msg)
+        return {"success": False, "error": error_msg}
+
+
+@user_tracked_task()
+def extract_colors_from_deal_image(deal_id: int) -> dict:
+    """
+    Extract color palette from a deal's image.
+
+    Automatically tracks which user initiated the task via thread-local storage.
+
+    Args:
+        deal_id: ID of the Deal to extract colors for
+
+    Returns:
+        dict: Status information about the color extraction
+    """
+    try:
+        deal = Deal.objects.get(pk=deal_id)
+    except Deal.DoesNotExist:
+        error_msg = f"Deal with ID {deal_id} not found"
+        logger.error(error_msg)
+        return {"success": False, "error": error_msg}
+
+    if not deal.image:
+        error_msg = f"Deal '{deal.name}' has no image to extract colors from"
+        logger.warning(error_msg)
+        return {"success": False, "error": error_msg}
+
+    try:
+        num_colors = deal.extract_and_save_colors()
+        msg = f"Extracted {num_colors} colors from image for '{deal.name}'"
+        logger.info(msg)
+        return {"success": True, "message": msg, "num_colors": num_colors}
+
+    except Exception as e:
+        error_msg = f"Error extracting colors for '{deal.name}': {str(e)}"
+        logger.exception(error_msg)
+        return {"success": False, "error": error_msg}

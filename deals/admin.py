@@ -6,16 +6,14 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.shortcuts import redirect
 from django.contrib import messages
-from django.conf import settings
 from django.http import HttpResponseRedirect
 from unfold.admin import ModelAdmin, TabularInline, StackedInline
 from django_object_actions import DjangoObjectActions
 from .models import Deal, ColorPalette, NotificationChannel, NotificationLog, DiscordWebhookConfig
 from .forms import DealAdminForm
-from .services.image_search import GoogleCustomSearchProvider, download_image_from_url
 from .admin_mixins import unfold_action
-from .widgets import ColorPickerWidget, ColorPalettePreviewWidget
-from .tasks import notify_deal
+from .widgets import ColorPalettePreviewWidget
+from .tasks import notify_deal, search_and_download_image, extract_colors_from_deal_image
 
 
 class ColorPaletteInline(TabularInline):
@@ -169,40 +167,13 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
             # New deal being created as published
             was_published = True
 
-        if not change and obj.name and not obj.image:
-            # This is a new deal - auto-find first image
-            try:
-                provider = GoogleCustomSearchProvider(
-                    api_key=settings.GOOGLE_API_KEY,
-                    search_engine_id=settings.GOOGLE_SEARCH_ENGINE_ID
-                )
-
-                search_query = f"{obj.name} game cover art"
-                image_results = provider.search(search_query, limit=1)
-
-                if image_results:
-                    first_image = image_results[0]
-                    first_image_url = first_image.url
-
-                    # Download the image
-                    try:
-                        image_content, image_filename = download_image_from_url(first_image_url)
-                        obj.image.save(image_filename, image_content, save=False)
-                        # Save attribution URL if available
-                        if first_image.page_url:
-                            obj.image_attribution = first_image.page_url
-
-                        messages.success(request, f'Automatically found and set image for "{obj.name}"')
-                    except Exception as e:
-                        messages.error(request, f'Error downloading image: {e}')
-                else:
-                    messages.warning(request, f'No images found for "{obj.name}"')
-
-            except Exception as e:
-                messages.error(request, f'Error searching for image: {e}')
-
-        # Save the deal (model's save() will handle color extraction if needed)
+        # Save the deal first (model's save() will handle color extraction if needed)
         super().save_model(request, obj, form, change)
+
+        # Queue image search task for new deals without images
+        if not change and obj.name and not obj.image:
+            search_and_download_image.delay(obj.pk)
+            messages.info(request, f'Image search queued for "{obj.name}" - check task monitor for progress')
 
         # Send notifications if deal was just published
         if was_published:
@@ -290,24 +261,20 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
     @admin.action(description='Re-extract colors from images')
     def reextract_colors_bulk(self, request, queryset):
         """Bulk action to manually re-extract colors from selected deals"""
-        success_count = 0
-        error_count = 0
+        queued_count = 0
+        skipped_count = 0
 
         for deal in queryset:
             if deal.image:
-                try:
-                    num_colors = deal.extract_and_save_colors()
-                    success_count += 1
-                except Exception as e:
-                    error_count += 1
-                    self.message_user(request, f'Error extracting colors for "{deal.name}": {e}', level=messages.ERROR)
+                extract_colors_from_deal_image.delay(deal.pk)
+                queued_count += 1
             else:
-                error_count += 1
+                skipped_count += 1
 
-        if success_count:
-            self.message_user(request, f'Successfully re-extracted colors for {success_count} deal(s)')
-        if error_count:
-            self.message_user(request, f'{error_count} deal(s) skipped (no image or error)', level=messages.WARNING)
+        if queued_count:
+            self.message_user(request, f'Queued color extraction for {queued_count} deal(s) - check task monitor for progress')
+        if skipped_count:
+            self.message_user(request, f'{skipped_count} deal(s) skipped (no image)', level=messages.WARNING)
 
     @admin.action(description='Search for images')
     def image_search_bulk(self, request, queryset):
