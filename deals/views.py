@@ -78,7 +78,9 @@ class DealFilterMixin:
         # Copy GET params and set defaults for missing fields
         data = self.request.GET.copy()
         if 'status_filter' not in data:
-            data['status_filter'] = 'active'
+            # Default to 'all' if there are no active deals, otherwise 'active'
+            has_active_deals = Deal.objects.filter(expires__gt=timezone.now()).exists()
+            data['status_filter'] = 'active' if has_active_deals else 'all'
         if 'sort' not in data:
             data['sort'] = 'newest'
 
