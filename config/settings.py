@@ -64,6 +64,11 @@ ALLOWED_HOSTS = [
 # Site URL for building absolute URLs (e.g., in Discord embeds)
 SITE_URL = get_env('SITE_URL', 'http://localhost:8000')
 
+# Silence system checks for intentional configurations
+SILENCED_SYSTEM_CHECKS = [
+    'account.W001',  # ACCOUNT_LOGIN_METHODS vs ACCOUNT_SIGNUP_FIELDS mismatch (valid: signup disabled, login enabled)
+]
+
 
 # Application definition
 
