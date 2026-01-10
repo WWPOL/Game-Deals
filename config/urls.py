@@ -19,6 +19,7 @@ urlpatterns = [
     path('admin/', include('common.urls')),  # Common app admin API endpoints
     path('select2/', include('django_select2.urls')),  # Select2 autocomplete
     path('admin/', admin.site.urls),
+    path('accounts/', include('allauth.urls')),  # Django-allauth authentication URLs
     path('i18n/', include('django.conf.urls.i18n')),  # Language switching
     path('tz_detect/', include('tz_detect.urls')),
     path('', include('deals.urls')),

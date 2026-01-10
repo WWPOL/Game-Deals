@@ -77,11 +77,18 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'whitenoise.runserver_nostatic',  # WhiteNoise static file serving (before staticfiles)
     'django.contrib.staticfiles',
+    'django.contrib.sites',  # Required by allauth
     'tz_detect',  # Timezone detection
     'django_extensions',
     'django_select2',  # Select2 widgets for autocomplete
     'django_celery_results',  # Celery result backend using Django ORM
     'rest_framework',  # Django REST Framework for API endpoints
+
+    # Django-allauth for OAuth/OIDC authentication
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
 
     # Local apps
     'common',
@@ -97,6 +104,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'allauth.account.middleware.AccountMiddleware',  # Required by django-allauth
     'common.middleware.CurrentUserMiddleware',  # Store current user in thread-local storage
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -131,6 +139,15 @@ DATABASES = {
         conn_max_age=600
     )
 }
+
+# Site ID (required by django.contrib.sites for allauth)
+SITE_ID = 1
+
+# Authentication Backends
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',  # Default Django auth
+    'allauth.account.auth_backends.AuthenticationBackend',  # Allauth backend
+]
 
 
 # Logging Configuration
@@ -289,4 +306,48 @@ UNFOLD = {
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,
     "SHOW_LANGUAGES": True,  # Enable language selector in admin
+}
+
+# Authentication URLs
+LOGIN_REDIRECT_URL = '/admin/'  # Redirect to admin after login
+LOGOUT_REDIRECT_URL = '/'
+LOGIN_URL = '/accounts/login/'
+
+# Django-allauth Configuration
+# Admin-only site: Manually create users with email, then they log in via Google OAuth
+ACCOUNT_LOGIN_METHODS = {'email'}  # Match users by email (not username)
+ACCOUNT_SIGNUP_FIELDS = ['email']  # Only email field for signup (no username)
+ACCOUNT_EMAIL_VERIFICATION = 'none'  # No email sending capability
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https' if not DEBUG else 'http'
+
+# Disable automatic signup - users must be manually created first
+ACCOUNT_ADAPTER = 'config.adapters.NoSignupAccountAdapter'
+SOCIALACCOUNT_ADAPTER = 'config.adapters.NoSignupSocialAccountAdapter'
+
+# Social account settings
+SOCIALACCOUNT_AUTO_SIGNUP = False  # Do not create accounts automatically
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = True  # Match by email
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True  # Auto-connect Google account to existing user by email
+SOCIALACCOUNT_QUERY_EMAIL = True  # Request email from Google
+
+# Google OAuth Configuration
+# Get credentials from: https://console.cloud.google.com/apis/credentials
+# Create OAuth 2.0 Client ID with authorized redirect URIs:
+# - http://localhost:8000/accounts/google/login/callback/ (development)
+# - https://yourdomain.com/accounts/google/login/callback/ (production)
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        },
+        'APP': {
+            'client_id': get_env('GOOGLE_OAUTH_CLIENT_ID', ''),
+            'secret': get_env('GOOGLE_OAUTH_SECRET', ''),
+            'key': ''
+        }
+    }
 }

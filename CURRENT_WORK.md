@@ -440,10 +440,44 @@ All work from plan `/home/noah/.claude/plans/structured-stargazing-river.md` is 
   - Automatically triggers color extraction for each deal
   - Final summary shows total/migrated/errors counts
 
-### Next Steps
+### Google OAuth Single Sign-On Complete ✓
+- ✓ Installed django-allauth~=65.4 for OAuth/OIDC authentication
+- ✓ Configured django-allauth in settings.py
+  - Added allauth apps to INSTALLED_APPS (allauth, allauth.account, allauth.socialaccount, allauth.socialaccount.providers.google)
+  - Added django.contrib.sites with SITE_ID = 1
+  - Added authentication backends (Django ModelBackend + allauth AuthenticationBackend)
+  - Added allauth.account.middleware.AccountMiddleware to MIDDLEWARE
+  - Configured login/logout redirect URLs (LOGIN_REDIRECT_URL=/admin/, LOGOUT_REDIRECT_URL=/)
+- ✓ Configured admin-only authentication workflow
+  - Email-based login (ACCOUNT_LOGIN_METHODS = {'email'})
+  - No email verification (ACCOUNT_EMAIL_VERIFICATION = 'none')
+  - Disabled automatic signup via custom adapters (NoSignupAccountAdapter, NoSignupSocialAccountAdapter)
+  - Auto-connects Google accounts to existing users by matching email (pre_social_login in adapter)
+  - Users must be manually created by admin before they can log in with Google
+- ✓ Created custom adapters in config/adapters.py
+  - NoSignupAccountAdapter prevents regular signup forms
+  - NoSignupSocialAccountAdapter prevents auto-signup via OAuth
+  - Automatically connects social accounts to existing users by email match
+- ✓ Added allauth URLs to config/urls.py at /accounts/
+- ✓ Google OAuth provider configuration in settings.py
+  - Client ID and secret from environment variables (GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_SECRET)
+  - Requests profile and email scopes
+- ✓ Created custom admin login template at templates/admin/login.html
+  - Extends unfold/login.html to maintain Unfold theme styling
+  - Adds "Sign in with Google" button with Google logo
+  - Uses allauth's provider_login_url template tag
+  - Displays divider with "or" text between username/password and Google login
+  - Styled with Tailwind CSS matching Unfold's design
+- ✓ Updated navigation templates
+  - Added Sign In link for unauthenticated users in nav_items.html
+  - Shows "Go to Console" for authenticated users
+  - Added login/logout link in footer (base.html)
+- ✓ Ran migrations for allauth database tables (account, socialaccount, sites apps)
+- ✓ Updated .env.example with Google OAuth configuration documentation
+  - Instructions for getting credentials from Google Cloud Console
+  - Required authorized redirect URIs for development and production
 
-#### 0. Single Sign On
-**Goal**: configure OIDC login for google
+### Next Steps
 
 #### 1. Channel Message Preview Page
 **Goal**: Preview how deal notifications will appear for each channel type before sending.
@@ -460,6 +494,13 @@ All work from plan `/home/noah/.claude/plans/structured-stargazing-river.md` is 
 **Implementation Plan**:
 - Create new notifications app
 - Move noficiation models and logic into new module
+
+#### 3. Optimize background graphics
+**Goal**: Reduce intensity of compute needed to display background
+
+Every time I open the webpage my computer fan spins up (this never happens on any other website). This is from the animated graphics of the backgrounds. 
+
+It is also a super simple background, just a few blobs moving around or a few waves moving. Not anything fancy, not even 3d.
 
 ### Wish List
 1. Web push notification implementation
