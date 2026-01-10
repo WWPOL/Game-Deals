@@ -287,109 +287,86 @@ All work from plan `/home/noah/.claude/plans/structured-stargazing-river.md` is 
   - Removed redundant template code from home.html and detail.html
   - Single source of truth for deal context handling
 
-### Admin Celery Task Monitoring System - IN PROGRESS ⚠️
-**Goal**: Add real-time task monitoring badge in admin header similar to GCP dashboard, showing running tasks and notifying when complete.
-
-**Phases 1-3 Completed** ✅:
-- ✅ **Phase 1: Backend Setup**
+### Admin Celery Task Monitoring System Complete ✓
+- ✓ **Backend Setup**:
   - Installed and configured django-celery-results
   - Configured Django ORM as Celery result backend (CELERY_RESULT_BACKEND = 'django-db')
   - Set CELERY_RESULT_EXTENDED = True for additional metadata
   - Ran migrations to create TaskResult tables
 
-- ✅ **Phase 2: Task User Tracking**
-  - Created `common` Django app for shared utilities (per user request to separate from deals-specific code)
+- ✓ **Task User Tracking**:
+  - Created `common` Django app for shared utilities
   - Created `UserTask` model to track which user initiated each Celery task
     - Fields: user (FK), task_id (unique), task_name, seen (for notifications), initiated_at
     - Properties: task_result, status, is_running, is_completed
-    - No ForeignKey to TaskResult (doesn't exist for PENDING tasks)
     - Queries TaskResult dynamically via task_id
   - Created `CurrentUserMiddleware` to store current user in thread-local storage
-    - Automatically captures user from request context
-    - Stores in `_thread_locals.user` for access in task decorator
-  - Created `UserTrackedTask` base class that automatically:
-    - Captures current user from thread-local storage via get_current_user()
-    - Creates UserTask record when task is initiated
-    - No need for callers to pass user_id manually (per user request)
+  - Created `UserTrackedTask` base class with automatic user capture
   - Created `@user_tracked_task()` decorator for easy task creation
   - Updated existing tasks (notify_deal, send_discord_webhook) to use decorator
   - Added djangorestframework~=3.15 to requirements.txt
 
-- ✅ **Phase 3: API Endpoint**
+- ✓ **API Endpoint**:
   - Created Django REST Framework API endpoint at `/admin/api/tasks/status/`
-  - GET: Returns running_count and recently_completed tasks for current user
+  - GET: Returns running_count, running_tasks, and recently_completed tasks for current user
   - POST: Marks tasks as seen to avoid re-notifying
   - Created serializers (UserTaskSerializer, TaskStatusResponseSerializer)
-  - Efficiently queries UserTask model (no JSON parsing needed)
   - Staff-only permission (IsAdminUser)
-  - URL configured in common/urls.py, included in config/urls.py under /admin/
+  - Returns two sets of completed tasks:
+    - `recently_completed`: Last 5 minutes, unseen (for toast notifications)
+    - `recently_completed_all`: Last 15 minutes, up to 5 tasks (for popover display)
 
-**Phase 4 & 5: Admin UI - BLOCKED** ⚠️:
-- **Current Status**: Template rendering issue preventing UI from displaying
-- **Files Created**:
-  - `templates/admin/base.html` - Override of Unfold's admin base template
-  - Injected task monitor badge into `userlinks` block
-  - Added JavaScript polling in `extrahead` block
-  - JavaScript wrapped in DOMContentLoaded event listener
+- ✓ **Admin UI Implementation**:
+  - Fixed admin inline classes to inherit from Unfold's TabularInline/StackedInline
+  - Created `templates/unfold/helpers/header.html` override to inject task monitor into admin header
+  - Task monitor badge always visible in admin navigation bar
+  - Badge appearance changes based on status:
+    - Gray badge with static indicator when no tasks running
+    - Blue badge with pulsing indicator when tasks are active
+  - Click badge to toggle popover menu
+  - JavaScript polls API every 3 seconds for status updates
 
-**Debugging Journey** (extensive troubleshooting required):
-1. **Initial Attempt**: Extended `unfold/layouts/base.html` - FAILED
-   - Template didn't support the blocks we needed
+- ✓ **Task Popover Menu**:
+  - Shows comprehensive view of background tasks
+  - **RUNNING section** (blue header):
+    - Lists all currently running tasks
+    - Shows task name (e.g., "extract_colors_from_deal_image")
+    - Displays time ago (e.g., "30s ago", "2m ago")
+    - Blue pulsing dot indicator
+  - **COMPLETED section** (green header):
+    - Shows last 5 completed tasks within 15 minutes
+    - Green ✓ for successful tasks
+    - Red ✗ for failed tasks
+    - Shows task name and time ago
+  - Hover effects on task items
+  - Closes when clicking outside
+  - Dark background (#1f2937) with border and shadow for visibility
 
-2. **Template Override Strategy**: Created `common/templates/admin/base_site.html`
-   - Added TEMPLATES DIRS = [BASE_DIR / 'templates'] to settings.py
-   - Verified template was being loaded from our override (django shell confirmed)
-   - FAILED: base_site.html isn't used by admin pages
+- ✓ **Toast Notifications**:
+  - Appear in top-right corner when tasks complete
+  - Green for success, red for failure
+  - Show task-specific messages from task return values
+  - Auto-dismiss after 5 seconds
+  - Tasks marked as "seen" to avoid re-notifying
 
-3. **Discovery**: admin/index.html extends admin/base.html directly, NOT base_site.html
-   - Renamed template to templates/admin/base.html
-   - Template now loads successfully (confirmed via django shell)
-   - task-monitor div appears in rendered HTML
+- ✓ **Async Task Conversion**:
+  - Created `search_and_download_image` task in `deals/tasks.py`
+    - Searches Google Custom Search API for game cover art
+    - Downloads image and saves to Deal.image field
+    - Sets attribution URL from search results
+    - Returns success/error status with descriptive messages
+  - Created `extract_colors_from_deal_image` task in `deals/tasks.py`
+    - Extracts color palette from deal's image
+    - Creates ColorPalette instances with weights
+    - Returns number of colors extracted
+  - Both tasks use `@user_tracked_task()` decorator for automatic tracking
 
-4. **JavaScript Error**: "taskMonitor is null"
-   - Cause: Script running before DOM loaded (in extrahead block = <head>)
-   - Fix: Wrapped entire script in DOMContentLoaded event listener
-   - Added null checks with error logging
-
-5. **Current Issue**: "Task monitor elements not found in DOM"
-   - JavaScript executes successfully (DOMContentLoaded fires)
-   - getElementById returns null for both task-monitor and task-count
-   - Django shell confirms task-monitor IS in the HTML
-   - **Root cause**: userlinks block override not rendering in the correct location
-   - The div exists somewhere in HTML but not in the header where userlinks should be
-
-**Current Blocker Details**:
-- Template: `templates/admin/base.html`
-- Block being overridden: `{% block userlinks %}`
-- Expected location: Admin header (alongside user menu)
-- Actual result: Elements not accessible via getElementById
-- Hypothesis: Unfold's template structure may capture/render userlinks block differently than expected
-
-**Architecture Implemented**:
-- `common` app structure:
-  - `models.py`: UserTask model
-  - `middleware.py`: CurrentUserMiddleware + get_current_user()
-  - `celery_utils.py`: UserTrackedTask + @user_tracked_task decorator
-  - `serializers.py`: DRF serializers for API
-  - `views.py`: TaskStatusAPIView (GET/POST for task status)
-  - `urls.py`: API routes (namespace: 'common')
-- Project-level templates directory: `templates/` (searched before app templates)
-- All tasks automatically tracked via decorator
-- No manual user_id passing required
-- Database-driven queries (UserTask) instead of JSON parsing
-
-**Next Steps to Resolve**:
-1. Investigate how Unfold renders the userlinks block in admin/base.html
-2. Check if we need to override a different template file
-3. Consider alternative injection points (header block, footer, or use Alpine.js hooks)
-4. May need to inspect Unfold's header.html helper template structure
-5. Alternative: Inject via footer block or use JavaScript to append to DOM after load
-
-**Remaining Work (Phase 6)**:
-- Convert color palette extraction to async task
-- Convert image search to async task
-- Add task notifications for these operations
-- Show progress/completion in admin interface
+- ✓ **Admin Integration**:
+  - New deals without images automatically trigger `search_and_download_image.delay()`
+  - "Re-extract Colors" bulk action now uses `extract_colors_from_deal_image.delay()`
+  - Admin messages updated to say "check task monitor for progress"
+  - Removed synchronous image search/download from save_model
+  - All long-running operations now run in background via Celery
 
 ### S3-Compatible Cloud Storage Complete ✓
 - ✓ Added django-storages and boto3 dependencies
@@ -478,9 +455,6 @@ All work from plan `/home/noah/.claude/plans/structured-stargazing-river.md` is 
   - Required authorized redirect URIs for development and production
 
 ### Next Steps
-
-#### 0. Make the task monitoring ui actually work
-**Goal**: We made a custom task monitoring feature but it doesn't show up on the admin dashboard, make it work
 
 #### 1. Channel Message Preview Page
 **Goal**: Preview how deal notifications will appear for each channel type before sending.

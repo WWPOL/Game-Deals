@@ -50,23 +50,33 @@ class TaskStatusAPIView(APIView):
         # Get running tasks
         running_tasks = [task for task in user_tasks if task.is_running]
 
-        # Get recently completed tasks (completed in last 5 minutes, not yet seen)
+        # Get recently completed tasks for notifications (last 5 minutes, not yet seen)
         five_minutes_ago = timezone.now() - timedelta(minutes=5)
-        recently_completed = [
+        recently_completed_unseen = [
             task for task in user_tasks
             if task.is_completed
             and task.initiated_at >= five_minutes_ago
             and not task.seen
         ]
 
+        # Get recently completed tasks for popover (last 15 minutes, up to 5 tasks)
+        fifteen_minutes_ago = timezone.now() - timedelta(minutes=15)
+        recently_completed_all = [
+            task for task in user_tasks
+            if task.is_completed
+            and task.initiated_at >= fifteen_minutes_ago
+        ][:5]  # Limit to 5 most recent
+
         # Serialize the data
         running_serializer = UserTaskSerializer(running_tasks, many=True)
-        completed_serializer = UserTaskSerializer(recently_completed, many=True)
+        completed_unseen_serializer = UserTaskSerializer(recently_completed_unseen, many=True)
+        completed_all_serializer = UserTaskSerializer(recently_completed_all, many=True)
 
         return Response({
             'running_count': len(running_tasks),
             'running_tasks': running_serializer.data,
-            'recently_completed': completed_serializer.data,
+            'recently_completed': completed_unseen_serializer.data,  # For notifications
+            'recently_completed_all': completed_all_serializer.data,  # For popover
         })
 
     def post(self, request):

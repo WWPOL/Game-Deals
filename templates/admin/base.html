@@ -52,6 +52,7 @@
             const POLL_INTERVAL = 3000; // 3 seconds
             let pollTimeout;
             let runningTasks = [];
+            let completedTasks = [];
 
             async function checkTaskStatus() {
                 try {
@@ -70,8 +71,9 @@
                     const data = await response.json();
                     console.log('Task status:', data);
 
-                    // Store running tasks
+                    // Store running and completed tasks
                     runningTasks = data.running_tasks || [];
+                    completedTasks = data.recently_completed_all || [];
 
                     // Update running task count and appearance
                     taskCountEl.textContent = data.running_count;
@@ -172,23 +174,58 @@
             }
 
             function updateTaskList() {
-                if (runningTasks.length === 0) {
-                    taskList.innerHTML = '<div class="text-gray-400 text-xs py-2">No active tasks</div>';
-                    return;
+                let html = '';
+
+                // Running tasks section
+                if (runningTasks.length > 0) {
+                    html += '<div class="mb-3">';
+                    html += '<div class="text-xs text-blue-400 font-semibold mb-1">RUNNING</div>';
+                    html += runningTasks.map(task => {
+                        const taskName = task.task_name.split('.').pop();
+                        const timeAgo = getTimeAgo(task.initiated_at);
+                        return `
+                            <div class="task-item py-2 px-2 rounded hover:bg-gray-700 transition-colors">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
+                                    <div class="text-sm font-medium">${taskName}</div>
+                                </div>
+                                <div class="text-xs text-gray-400 mt-0.5 ml-5">${timeAgo}</div>
+                            </div>
+                        `;
+                    }).join('');
+                    html += '</div>';
                 }
 
-                taskList.innerHTML = runningTasks.map(task => {
-                    // Extract just the function name from the full task name
-                    const taskName = task.task_name.split('.').pop();
-                    const timeAgo = getTimeAgo(task.initiated_at);
+                // Completed tasks section
+                if (completedTasks.length > 0) {
+                    html += '<div>';
+                    html += '<div class="text-xs text-green-400 font-semibold mb-1">COMPLETED</div>';
+                    html += completedTasks.map(task => {
+                        const taskName = task.task_name.split('.').pop();
+                        const timeAgo = getTimeAgo(task.initiated_at);
+                        const isSuccess = task.status === 'SUCCESS';
+                        const statusColor = isSuccess ? 'text-green-400' : 'text-red-400';
+                        const statusIcon = isSuccess ? '✓' : '✗';
 
-                    return `
-                        <div class="task-item py-2 px-2 rounded hover:bg-gray-700 transition-colors">
-                            <div class="text-sm font-medium">${taskName}</div>
-                            <div class="text-xs text-gray-400 mt-0.5">${timeAgo}</div>
-                        </div>
-                    `;
-                }).join('');
+                        return `
+                            <div class="task-item py-2 px-2 rounded hover:bg-gray-700 transition-colors">
+                                <div class="flex items-center gap-2">
+                                    <div class="${statusColor} text-xs font-bold">${statusIcon}</div>
+                                    <div class="text-sm font-medium">${taskName}</div>
+                                </div>
+                                <div class="text-xs text-gray-400 mt-0.5 ml-5">${timeAgo}</div>
+                            </div>
+                        `;
+                    }).join('');
+                    html += '</div>';
+                }
+
+                // Empty state
+                if (runningTasks.length === 0 && completedTasks.length === 0) {
+                    html = '<div class="text-gray-400 text-xs py-2">No recent tasks</div>';
+                }
+
+                taskList.innerHTML = html;
             }
 
             function getTimeAgo(isoString) {
