@@ -126,7 +126,7 @@ EXAMPLES:
             logger.info(f"Found {count} deals")
 
         except Exception as e:
-            logger.error(f"Failed to read from Firestore: {e}")
+            logger.error(f"Failed to read from Firestore: {e}", exc_info=e)
             return
 
         # Write to JSON file
