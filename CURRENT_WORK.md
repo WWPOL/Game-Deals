@@ -479,6 +479,16 @@ Every time I open the webpage my computer fan spins up (this never happens on an
 
 It is also a super simple background, just a few blobs moving around or a few waves moving. Not anything fancy, not even 3d.
 
+progress:
+
+Findings from claude researching:
+
+- Too many animated elements (20-40+ SVG elements)
+- Expensive SVG blur filter (60px blur on every frame)
+- Unnecessary decorative elements (lines and shapes)
+
+in commit bb84120 changes were made to try and simplify
+
 #### 4. Fix migrate script
 **Goal**: Successfully migrate old deals to new site
 
