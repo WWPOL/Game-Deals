@@ -17,44 +17,13 @@
     <script>
         // Task monitoring system
         document.addEventListener('DOMContentLoaded', function() {
-            // Create the task monitor element and inject it into the header
-            const taskMonitor = document.createElement('div');
-            taskMonitor.id = 'task-monitor';
-            taskMonitor.className = 'hidden';
-            taskMonitor.innerHTML = `
-                <div class="bg-blue-500 text-white px-3 py-1.5 rounded-lg shadow-md flex items-center gap-2 text-sm">
-                    <div class="animate-spin">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                    </div>
-                    <span id="task-monitor-text"><span id="task-count">0</span> tasks</span>
-                </div>
-            `;
-
-            // Try to find the user menu container and insert the task monitor before it
-            // In Unfold, the user menu is typically in the top right
-            const headerContainer = document.querySelector('header') || document.querySelector('.fixed.top-0');
-            const userMenu = document.querySelector('.relative.ml-4') || document.querySelector('.unfold-user-menu');
-
-            if (headerContainer) {
-                // Insert the task monitor in the header
-                if (userMenu) {
-                    // Insert before the user menu
-                    userMenu.parentNode.insertBefore(taskMonitor, userMenu);
-                } else {
-                    // If no user menu found, append to header
-                    headerContainer.appendChild(taskMonitor);
-                }
-            } else {
-                // As fallback, add to body
-                document.body.appendChild(taskMonitor);
-            }
-
+            const taskMonitor = document.getElementById('task-monitor');
+            const taskMonitorBadge = document.getElementById('task-monitor-badge');
+            const taskMonitorIndicator = document.getElementById('task-monitor-indicator');
             const taskCountEl = document.getElementById('task-count');
-            if (!taskCountEl) {
-                console.error('Task count element not found in DOM');
+
+            if (!taskMonitor || !taskMonitorBadge || !taskMonitorIndicator || !taskCountEl) {
+                console.error('Task monitor elements not found in DOM');
                 return;
             }
 
@@ -78,12 +47,17 @@
                     const data = await response.json();
                     console.log('Task status:', data);
 
-                    // Update running task count
+                    // Update running task count and appearance
+                    taskCountEl.textContent = data.running_count;
+
                     if (data.running_count > 0) {
-                        taskCountEl.textContent = data.running_count;
-                        taskMonitor.classList.remove('hidden');
+                        // Tasks running - blue badge with pulsing indicator
+                        taskMonitorBadge.className = 'bg-blue-500 text-white px-3 py-1.5 rounded-lg shadow-md flex items-center gap-2 text-sm transition-colors duration-300';
+                        taskMonitorIndicator.className = 'w-2 h-2 bg-white rounded-full animate-pulse';
                     } else {
-                        taskMonitor.classList.add('hidden');
+                        // No tasks - gray badge with static indicator
+                        taskMonitorBadge.className = 'bg-gray-400 text-white px-3 py-1.5 rounded-lg shadow-md flex items-center gap-2 text-sm transition-colors duration-300';
+                        taskMonitorIndicator.className = 'w-2 h-2 bg-white rounded-full';
                     }
 
                     // Show notifications for completed tasks
