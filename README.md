@@ -40,53 +40,59 @@ A Django app with Celery for background tasks.
 
 ## Setup
 
-1. **Copy environment template:**
-   ```shell
-   cp .env.example .env
+1. Set environment variables
+  - Make a copy of [[.env.example]] named `.env`
+  - Follow instructions in [Configuration](#configuration) to obtain values
+2. Build and start containers
+  - Build the base image for the development Docker container (you must rebuild this any time you change Python dependencies):
+    ```bash
+    ./scripts/build-images.sh
+    ```
+  - Start containers:
+    ```bash
+    docker compose up -d
+    ```
+3. Complete [First Time Setup](#first-time-setup)
+
+The app will then be accessible at http://localhost:8000
+
+# Operations
+## Configuration
+Environment variables are used for configuration.
+
+- **Google Custom Search API** (for image search):
+  - Get your API key from: https://console.cloud.google.com/apis/credentials
+  - Create a Custom Search Engine at: https://programmablesearchengine.google.com/
+    - Enable "Image search"
+    - Set "Sites to search" to `*` (entire web)
+  - Set env vars with values from dashboard:
+    - `GOOGLE_API_KEY`
+    - `GOOGLE_SEARCH_ENGINE_ID`
+- **Google OAuth** (for Sign In with Google):
+  - Go to https://console.cloud.google.com/apis/credentials
+  - Create OAuth 2.0 Client ID (or use existing credentials)
+    - Application type: Web application
+    - Add authorized redirect URIs:
+      - `http://localhost:8000/accounts/google/login/callback/` (development)
+      - `https://yourdomain.com/accounts/google/login/callback/` (production)
+  - Set env vars with values from dashboard:
+    - `GOOGLE_OAUTH_CLIENT_ID`
+    - `GOOGLE_OAUTH_SECRET`
+
+## First Time Setup
+Some actions must be completed once to finish setting up the site:
+
+> Note: For local development you can run `manage.py` in the Docker dev container using `./scripts/manage.sh`
+
+1. Run migrations:
+   ```bash
+   ./manage.py migrate
    ```
-
-2. **Configure Google APIs:**
-
-   **Google Custom Search API** (for image search):
-   - Get your API key from: https://console.cloud.google.com/apis/credentials
-   - Create a Custom Search Engine at: https://programmablesearchengine.google.com/
-     - Enable "Image search"
-     - Set "Sites to search" to `*` (entire web)
-   - Add both values to `.env`:
-     ```
-     GOOGLE_API_KEY=your_api_key_here
-     GOOGLE_SEARCH_ENGINE_ID=your_search_engine_id_here
-     ```
-
-   **Google OAuth** (for Sign In with Google):
-   - Go to https://console.cloud.google.com/apis/credentials
-   - Create OAuth 2.0 Client ID (or use existing credentials)
-     - Application type: Web application
-     - Add authorized redirect URIs:
-       - `http://localhost:8000/accounts/google/login/callback/` (development)
-       - `https://yourdomain.com/accounts/google/login/callback/` (production)
-   - Add the credentials to `.env`:
-     ```
-     GOOGLE_OAUTH_CLIENT_ID=your_client_id_here.apps.googleusercontent.com
-     GOOGLE_OAUTH_SECRET=your_client_secret_here
-     ```
-
-3. **Build and start containers:**
-   ```shell
-   bash scripts/build-images.sh
-   docker compose up -d
+2. Create an initial admin user:
+   ```bash
+   ./manage.py createsuperuser
    ```
-
-4. **Run migrations:**
-   ```shell
-   docker compose exec web python manage.py migrate
+3. Update the site domain:
+   ```bash
+   ./manage.py update_site_domain
    ```
-
-5. **Create a superuser:**
-   ```shell
-   docker compose exec web python manage.py createsuperuser
-   ```
-
-6. **Access the app:**
-   - Website: http://localhost:8000
-   - Admin: http://localhost:8000/admin

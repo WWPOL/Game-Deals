@@ -92,33 +92,6 @@ GOOGLE_SEARCH_ENGINE_ID=your-search-engine-id
 # S3_CUSTOM_DOMAIN=cdn.yourdomain.com
 ```
 
-## Local Testing
-
-Build and test the manifests locally:
-
-```bash
-# From this repo
-cd k8s/examples/dev
-kustomize build .
-
-# Or apply directly
-kubectl apply -k k8s/examples/dev
-```
-
-## First Deployment Setup
-
-After deploying for the first time, you need to run migrations and create a superuser:
-
-```bash
-# Run database migrations
-kubectl exec -it deployment/django -n <namespace> -- python manage.py migrate
-
-# Create superuser
-kubectl exec -it deployment/django -n <namespace> -- python manage.py createsuperuser
-```
-
-These commands only need to be run once after initial deployment. Future deployments will automatically apply migrations if configured in your deployment workflow.
-
 ## Components
 
 - **Postgres**: StatefulSet with 1Gi PVC

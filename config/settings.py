@@ -45,12 +45,8 @@ def get_env(name: str, default: str | None = None) -> str | None:
         return os.environ.get(name, '')
     return os.environ.get(name, default)
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = get_env('SECRET_KEY', 'django-insecure-default-key-change-this-in-production')
+SECRET_KEY = get_env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = get_env("DEBUG", "").lower() == 'true'
@@ -60,9 +56,6 @@ ALLOWED_HOSTS = [
   for host in get_env("ALLOWED_HOSTS", "").split(",")
   if host.strip()
 ]
-
-# Site URL for building absolute URLs (e.g., in Discord embeds)
-SITE_URL = get_env('SITE_URL', 'http://localhost:8000')
 
 # Silence system checks for intentional configurations
 SILENCED_SYSTEM_CHECKS = [
@@ -147,6 +140,9 @@ DATABASES = {
 
 # Site ID (required by django.contrib.sites for allauth)
 SITE_ID = 1
+
+# Site URL for building absolute URLs (e.g., in Discord embeds)
+SITE_URL = get_env('SITE_URL', 'http://localhost:8000')
 
 # Authentication Backends
 AUTHENTICATION_BACKENDS = [
