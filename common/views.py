@@ -5,6 +5,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
 from django.utils import timezone
+from django.contrib import messages
+from django.contrib.auth import logout as auth_logout
+from django.shortcuts import redirect
+from django.conf import settings
 from datetime import timedelta
 
 from .models import UserTask
@@ -75,3 +79,19 @@ class TaskStatusAPIView(APIView):
             ).update(seen=True)
 
         return Response({'success': True})
+
+
+def logout_view(request):
+    """
+    Custom logout view that clears messages before logging out.
+    This prevents admin success messages from appearing on the login page.
+    """
+    # Clear all messages from the session
+    storage = messages.get_messages(request)
+    storage.used = True
+
+    # Log out the user
+    auth_logout(request)
+
+    # Redirect to the login page
+    return redirect(settings.LOGIN_URL)
