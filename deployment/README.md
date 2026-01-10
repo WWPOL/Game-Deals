@@ -79,6 +79,7 @@ Contains non-sensitive application configuration:
 ```
 DEBUG=false
 ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
+CSRF_TRUSTED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
 SITE_URL=https://yourdomain.com
 REDIS_URL=redis://redis:6379/0
 CELERY_BROKER_URL=redis://redis:6379/0
