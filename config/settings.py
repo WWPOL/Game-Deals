@@ -309,16 +309,16 @@ UNFOLD = {
 }
 
 # Authentication URLs
-LOGIN_REDIRECT_URL = '/admin/'  # Redirect to admin after login
+LOGIN_REDIRECT_URL = '/admin/'
 LOGOUT_REDIRECT_URL = '/'
-LOGIN_URL = '/accounts/login/'
+LOGIN_URL = '/admin/login/'
 
 # Django-allauth Configuration
 # Admin-only site: Manually create users with email, then they log in via Google OAuth
-ACCOUNT_LOGIN_METHODS = {'email'}  # Match users by email (not username)
-ACCOUNT_SIGNUP_FIELDS = ['email']  # Only email field for signup (no username)
+ACCOUNT_LOGIN_METHODS = ['email']  # Match users by email (not username)
 ACCOUNT_EMAIL_VERIFICATION = 'none'  # No email sending capability
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https' if not DEBUG else 'http'
+ACCOUNT_SIGNUP_ENABLED = False
 
 # Disable automatic signup - users must be manually created first
 ACCOUNT_ADAPTER = 'config.adapters.NoSignupAccountAdapter'
