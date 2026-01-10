@@ -429,26 +429,3 @@ class NotificationLog(models.Model):
 
     def __str__(self):
         return f"{self.deal.name} → {self.channel.name} ({self.get_status_display()})"
-
-
-class PushSubscription(models.Model):
-    """Web push notification subscription"""
-    endpoint = models.URLField(unique=True, max_length=500)
-    auth = models.CharField(max_length=255, help_text="Auth key for push")
-    p256dh = models.CharField(max_length=255, help_text="P256dh key for push")
-    channel = models.CharField(
-        max_length=50,
-        default='main',
-        db_index=True,
-        help_text="Notification channel (main, test, etc.)"
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['-created_at']
-        indexes = [
-            models.Index(fields=['channel', '-created_at']),
-        ]
-
-    def __str__(self):
-        return f"Subscription ({self.channel}) - {self.endpoint[:50]}..."

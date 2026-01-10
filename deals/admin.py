@@ -10,7 +10,7 @@ from django.conf import settings
 from django.http import HttpResponseRedirect
 from unfold.admin import ModelAdmin
 from django_object_actions import DjangoObjectActions
-from .models import Deal, PushSubscription, ColorPalette, NotificationChannel, NotificationLog, DiscordWebhookConfig
+from .models import Deal, ColorPalette, NotificationChannel, NotificationLog, DiscordWebhookConfig
 from .forms import DealAdminForm
 from .services.image_search import GoogleCustomSearchProvider, download_image_from_url
 from .admin_mixins import unfold_action
@@ -456,13 +456,3 @@ class NotificationLogAdmin(ModelAdmin):
         return False
 
 
-@admin.register(PushSubscription)
-class PushSubscriptionAdmin(ModelAdmin):
-    list_display = ('endpoint_preview', 'channel', 'created_at')
-    list_filter = ('channel', 'created_at')
-    search_fields = ('endpoint',)
-    readonly_fields = ('created_at',)
-
-    def endpoint_preview(self, obj):
-        return f"{obj.endpoint[:50]}..." if len(obj.endpoint) > 50 else obj.endpoint
-    endpoint_preview.short_description = 'Endpoint'
