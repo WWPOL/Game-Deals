@@ -8,8 +8,7 @@
         {% if deal.image %}
         <img src="{{ deal.image.url }}"
              alt="{{ deal.name }}"
-             class="w-full h-full object-cover"
-             onerror="this.src='https://via.placeholder.com/400x225?text={{ deal.name|urlencode }}'">
+             class="w-full h-full object-cover">
         {% endif %}
         <div class="absolute top-3 right-3 price-badge px-3 py-1 rounded-lg backdrop-blur-sm deal-bg-primary deal-fg-primary deal-glow-sm">
             {% if deal.original_price %}
