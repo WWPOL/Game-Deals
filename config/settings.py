@@ -329,6 +329,7 @@ SOCIALACCOUNT_AUTO_SIGNUP = False  # Do not create accounts automatically
 SOCIALACCOUNT_EMAIL_AUTHENTICATION = True  # Match by email
 SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True  # Auto-connect Google account to existing user by email
 SOCIALACCOUNT_QUERY_EMAIL = True  # Request email from Google
+SOCIALACCOUNT_LOGIN_ON_GET = True  # Skip intermediate confirmation page and redirect directly to OAuth provider
 
 # Google OAuth Configuration
 # Get credentials from: https://console.cloud.google.com/apis/credentials
