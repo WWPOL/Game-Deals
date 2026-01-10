@@ -479,6 +479,9 @@ All work from plan `/home/noah/.claude/plans/structured-stargazing-river.md` is 
 
 ### Next Steps
 
+#### 0. Make the task monitoring ui actually work
+**Goal**: We made a custom task monitoring feature but it doesn't show up on the admin dashboard, make it work
+
 #### 1. Channel Message Preview Page
 **Goal**: Preview how deal notifications will appear for each channel type before sending.
 
