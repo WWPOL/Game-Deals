@@ -47,8 +47,8 @@ class TaskStatusAPIView(APIView):
         # Get all tasks for this user
         user_tasks = UserTask.objects.filter(user=user).order_by('-initiated_at')
 
-        # Count running tasks
-        running_count = sum(1 for task in user_tasks if task.is_running)
+        # Get running tasks
+        running_tasks = [task for task in user_tasks if task.is_running]
 
         # Get recently completed tasks (completed in last 5 minutes, not yet seen)
         five_minutes_ago = timezone.now() - timedelta(minutes=5)
@@ -60,10 +60,12 @@ class TaskStatusAPIView(APIView):
         ]
 
         # Serialize the data
+        running_serializer = UserTaskSerializer(running_tasks, many=True)
         completed_serializer = UserTaskSerializer(recently_completed, many=True)
 
         return Response({
-            'running_count': running_count,
+            'running_count': len(running_tasks),
+            'running_tasks': running_serializer.data,
             'recently_completed': completed_serializer.data,
         })
 

@@ -12,6 +12,24 @@
             z-index: 9999;
             max-width: 400px;
         }
+
+        #task-popover {
+            position: absolute;
+            top: calc(100% + 0.5rem);
+            right: 0;
+            min-width: 300px;
+            max-width: 400px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .task-item {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .task-item:last-child {
+            border-bottom: none;
+        }
     </style>
 
     <script>
@@ -21,14 +39,17 @@
             const taskMonitorBadge = document.getElementById('task-monitor-badge');
             const taskMonitorIndicator = document.getElementById('task-monitor-indicator');
             const taskCountEl = document.getElementById('task-count');
+            const taskPopover = document.getElementById('task-popover');
+            const taskList = document.getElementById('task-list');
 
-            if (!taskMonitor || !taskMonitorBadge || !taskMonitorIndicator || !taskCountEl) {
+            if (!taskMonitor || !taskMonitorBadge || !taskMonitorIndicator || !taskCountEl || !taskPopover || !taskList) {
                 console.error('Task monitor elements not found in DOM');
                 return;
             }
 
             const POLL_INTERVAL = 3000; // 3 seconds
             let pollTimeout;
+            let runningTasks = [];
 
             async function checkTaskStatus() {
                 try {
@@ -47,18 +68,24 @@
                     const data = await response.json();
                     console.log('Task status:', data);
 
+                    // Store running tasks
+                    runningTasks = data.running_tasks || [];
+
                     // Update running task count and appearance
                     taskCountEl.textContent = data.running_count;
 
                     if (data.running_count > 0) {
                         // Tasks running - blue badge with pulsing indicator
-                        taskMonitorBadge.className = 'bg-blue-500 text-white px-3 py-1.5 rounded-lg shadow-md flex items-center gap-2 text-sm transition-colors duration-300';
+                        taskMonitorBadge.className = 'bg-blue-500 text-white px-3 py-1.5 rounded-lg shadow-md flex items-center gap-2 text-sm transition-colors duration-300 cursor-pointer hover:opacity-90';
                         taskMonitorIndicator.className = 'w-2 h-2 bg-white rounded-full animate-pulse';
                     } else {
                         // No tasks - gray badge with static indicator
-                        taskMonitorBadge.className = 'bg-gray-400 text-white px-3 py-1.5 rounded-lg shadow-md flex items-center gap-2 text-sm transition-colors duration-300';
+                        taskMonitorBadge.className = 'bg-gray-400 text-white px-3 py-1.5 rounded-lg shadow-md flex items-center gap-2 text-sm transition-colors duration-300 cursor-pointer hover:opacity-90';
                         taskMonitorIndicator.className = 'w-2 h-2 bg-white rounded-full';
                     }
+
+                    // Update task list in popover
+                    updateTaskList();
 
                     // Show notifications for completed tasks
                     if (data.recently_completed && data.recently_completed.length > 0) {
@@ -141,6 +168,50 @@
                     setTimeout(() => notification.remove(), 500);
                 }, 5000);
             }
+
+            function updateTaskList() {
+                if (runningTasks.length === 0) {
+                    taskList.innerHTML = '<div class="text-gray-400 text-xs py-2">No active tasks</div>';
+                    return;
+                }
+
+                taskList.innerHTML = runningTasks.map(task => {
+                    // Extract just the function name from the full task name
+                    const taskName = task.task_name.split('.').pop();
+                    const timeAgo = getTimeAgo(task.initiated_at);
+
+                    return `
+                        <div class="task-item py-2 px-2 rounded hover:bg-gray-700 transition-colors">
+                            <div class="text-sm font-medium">${taskName}</div>
+                            <div class="text-xs text-gray-400 mt-0.5">${timeAgo}</div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            function getTimeAgo(isoString) {
+                const date = new Date(isoString);
+                const seconds = Math.floor((new Date() - date) / 1000);
+
+                if (seconds < 60) return `${seconds}s ago`;
+                const minutes = Math.floor(seconds / 60);
+                if (minutes < 60) return `${minutes}m ago`;
+                const hours = Math.floor(minutes / 60);
+                return `${hours}h ago`;
+            }
+
+            // Toggle popover on badge click
+            taskMonitorBadge.addEventListener('click', (e) => {
+                e.stopPropagation();
+                taskPopover.classList.toggle('hidden');
+            });
+
+            // Close popover when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!taskMonitor.contains(e.target)) {
+                    taskPopover.classList.add('hidden');
+                }
+            });
 
             // Start polling when page loads
             console.log('Starting task monitor');
