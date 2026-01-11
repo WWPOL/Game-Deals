@@ -49,15 +49,44 @@ def parse_firebase_timestamp(value: Any) -> Optional[datetime]:
     return None
 
 
+def parse_price(value: Any) -> Optional[float]:
+    """Parse price value to float
+
+    Handles multiple formats:
+    - Empty string: "" -> None
+    - String: "19.99" -> 19.99
+    - Number: 19.99 or 19 -> 19.99
+    """
+    # Treat empty/falsy values as None (except 0)
+    if not value and value != 0:
+        return None
+
+    # Already a number
+    if isinstance(value, (int, float)):
+        return float(value)
+
+    # String
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            return None
+
+    return None
+
+
 # Custom Pydantic type for Firebase timestamps
 FirebaseTimestamp = Annotated[Optional[datetime], BeforeValidator(parse_firebase_timestamp)]
+
+# Custom Pydantic type for price values
+FirebasePrice = Annotated[Optional[float], BeforeValidator(parse_price)]
 
 
 class FirebaseDeal(BaseModel):
     """Firebase Firestore deal document structure"""
     id: str = Field(default='', description="Document ID from Firestore")
     name: str
-    price: Optional[Decimal] = None
+    price: FirebasePrice = None
     is_free: bool = False
     expires: FirebaseTimestamp
     image: str  # URL to image
@@ -73,7 +102,7 @@ class MappedDealData:
     name: str
     status: str
     slug: str
-    price: Decimal
+    price: float
     expires: Optional[datetime]
     link: str
     image_attribution: str
