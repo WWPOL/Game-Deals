@@ -456,6 +456,12 @@ All work from plan `/home/noah/.claude/plans/structured-stargazing-river.md` is 
 
 ### Next Steps
 
+#### 1. Figure out why migrated deals don't have images after I run the image search task
+I imported all the deals and ran the auto-search image task on them. I had to keep running the task a few rounds (I would filter for deals without images, then I would use the bulk action to auto search images, but then it would only find images for half of them, rinse and repeat). However the filter may be broken or something, bc now there are still ton's of deals without images on the frontend (even though the filter only shows 5).
+
+#### 2. See if migrate script can extract creation time
+It would be nice if the creation time of the deal from the old site could also be reflected in the new database rows (idk if the old site recorded this).
+
 #### 1. Channel Message Preview Page
 **Goal**: Preview how deal notifications will appear for each channel type before sending.
 
@@ -471,23 +477,6 @@ All work from plan `/home/noah/.claude/plans/structured-stargazing-river.md` is 
 **Implementation Plan**:
 - Create new notifications app
 - Move noficiation models and logic into new module
-
-#### 3. Optimize background graphics
-**Goal**: Reduce intensity of compute needed to display background
-
-Every time I open the webpage my computer fan spins up (this never happens on any other website). This is from the animated graphics of the backgrounds. 
-
-It is also a super simple background, just a few blobs moving around or a few waves moving. Not anything fancy, not even 3d.
-
-progress:
-
-Findings from claude researching:
-
-- Too many animated elements (20-40+ SVG elements)
-- Expensive SVG blur filter (60px blur on every frame)
-- Unnecessary decorative elements (lines and shapes)
-
-in commit bb84120 changes were made to try and simplify
 
 #### 4. Fix migrate script
 **Goal**: Successfully migrate old deals to new site
