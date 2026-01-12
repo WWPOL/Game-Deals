@@ -9,6 +9,33 @@ from tasks.models import UserTask
 from deals.admin_mixins import unfold_action
 
 
+class TaskStatusFilter(admin.SimpleListFilter):
+    """Custom filter for task status since it's a property, not a DB field."""
+    title = 'status'
+    parameter_name = 'status'
+
+    def lookups(self, request, model_admin):
+        """Return list of status options."""
+        return (
+            ('PENDING', 'Pending'),
+            ('STARTED', 'Started'),
+            ('SUCCESS', 'Success'),
+            ('FAILURE', 'Failure'),
+            ('REVOKED', 'Revoked'),
+        )
+
+    def queryset(self, request, queryset):
+        """Filter the queryset based on selected status."""
+        if self.value():
+            # Get all UserTask IDs that have matching status
+            task_ids = []
+            for user_task in queryset:
+                if user_task.status == self.value():
+                    task_ids.append(user_task.pk)
+            return queryset.filter(pk__in=task_ids)
+        return queryset
+
+
 @admin.register(UserTask)
 class UserTaskAdmin(DjangoObjectActions, ModelAdmin):
     """Admin for UserTask."""
@@ -21,6 +48,7 @@ class UserTaskAdmin(DjangoObjectActions, ModelAdmin):
     list_filter = (
         "user",
         "task_name",
+        TaskStatusFilter,
     )
     fields = (
         "user",
