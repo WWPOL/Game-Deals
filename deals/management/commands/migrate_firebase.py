@@ -102,10 +102,11 @@ class MappedDealData:
     status: str
     slug: str
     price: Decimal
-    expires: Optional[datetime]
+    expires: datetime
     link: str
     image_attribution: str
     auto_extract_palette: bool
+    created_at: datetime
 
 
 class Command(BaseCommand):
@@ -226,7 +227,7 @@ EXAMPLES:
                 deal.save()
 
                 # Set created_at after bc it automatically sets to now when created (cannot be overriden)
-                deal.created_at = mapped_data.expires - timedelta(weeks=1)
+                deal.created_at = mapped_data.created_at
                 deal.save()
 
                 logger.info(f"{progress_str} ✓ Migrated: {deal.name}")
@@ -296,7 +297,7 @@ EXAMPLES:
             price = Decimal('0')
 
         # Generate slug from name and created_at
-        created_at = firebase_deal.created_at or datetime.now()
+        created_at = firebase_deal.created_at or firebase_deal.expires - timedelta(weeks=1)
         slug = self.generate_slug(firebase_deal.name, created_at)
 
         return MappedDealData(
@@ -308,6 +309,7 @@ EXAMPLES:
             link=firebase_deal.link,
             image_attribution=firebase_deal.image,  # Store original URL
             auto_extract_palette=True,
+            created_at=created_at,
         )
 
     def generate_slug(self, name: str, created_at: datetime) -> str:
