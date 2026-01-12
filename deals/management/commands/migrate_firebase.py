@@ -156,7 +156,6 @@ WHAT THIS COMMAND DOES:
 NOTE: This command only creates database records. To download images and extract
 colors, run these commands after migration:
     $ python manage.py queue_download_images
-    $ python manage.py queue_extract_colors
 
 EXAMPLES:
 
