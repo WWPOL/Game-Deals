@@ -3,6 +3,61 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.utils import timezone
 from django.utils.text import slugify
+from PIL import Image
+
+
+# Web browser supported image formats
+# Based on MDN: https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Formats/Image_types
+SUPPORTED_IMAGE_FORMATS = ['JPEG', 'PNG', 'GIF', 'WEBP', 'AVIF', 'SVG']
+
+
+def validate_image(image_field):
+    """
+    Validate that an uploaded file is a valid, readable image.
+
+    Checks:
+    - File can be opened as an image
+    - Image format is recognized
+    - Image data is not corrupted
+
+    Raises:
+        ValidationError: If image is invalid or corrupted
+    """
+    if not image_field:
+        return
+
+    try:
+        # Open the image file
+        img = Image.open(image_field)
+
+        # Verify the image by loading it (detects truncated/corrupted files)
+        img.verify()
+
+        # Reset file pointer after verify (verify() makes the file unusable)
+        image_field.seek(0)
+
+        # Try to open again and load the image data to ensure it's readable
+        img = Image.open(image_field)
+        img.load()
+
+        # Reset file pointer for subsequent operations
+        image_field.seek(0)
+
+        # Check if format is supported by web browsers
+        if img.format not in SUPPORTED_IMAGE_FORMATS:
+            raise ValidationError(
+                f'Unsupported image format: {img.format}. '
+                f'Supported formats for web: {", ".join(SUPPORTED_IMAGE_FORMATS)}'
+            )
+
+    except ValidationError:
+        # Re-raise ValidationErrors as-is
+        raise
+    except Exception as e:
+        # Catch any PIL errors (IOError, SyntaxError, etc.)
+        raise ValidationError(
+            f'Invalid or corrupted image file: {str(e)}'
+        )
 
 
 # Default theme colors
@@ -80,6 +135,7 @@ class Deal(models.Model):
         upload_to='game_images/%Y/%m/',
         null=True,
         blank=True,
+        validators=[validate_image],
         help_text="Game image (required when published)"
     )
     image_attribution = models.TextField(
