@@ -146,7 +146,10 @@ def notify_deal(deal_id: int, channel_ids: list[int] = None, force: bool = False
 @user_tracked_task()
 def search_and_download_image(deal_id: int, search_query: str = None) -> dict:
     """
-    Search for and download an image for a deal.
+    Search for and download a valid image for a deal.
+
+    Tries multiple images from search results until a valid one is found.
+    Validates each image before saving to ensure it's not corrupted.
 
     Automatically tracks which user initiated the task via thread-local storage.
 
@@ -174,35 +177,54 @@ def search_and_download_image(deal_id: int, search_query: str = None) -> dict:
             search_engine_id=settings.GOOGLE_SEARCH_ENGINE_ID
         )
 
-        image_results = provider.search(search_query, limit=1)
+        # Fetch up to 10 images to try (Google API max per request)
+        image_results = provider.search(search_query, limit=10)
 
         if not image_results:
             msg = f"No images found for query: {search_query}"
             logger.warning(msg)
             return {"success": False, "error": msg}
 
-        first_image = image_results[0]
-        first_image_url = first_image.url
+        # Try each image until we find a valid one
+        errors = []
+        for idx, image_result in enumerate(image_results, 1):
+            try:
+                logger.info(f"Trying image {idx}/{len(image_results)} for '{deal.name}': {image_result.url}")
 
-        # Download the image
-        try:
-            image_content, image_filename = download_image_from_url(first_image_url)
-            deal.image.save(image_filename, image_content, save=False)
+                # Download the image
+                image_content, image_filename = download_image_from_url(image_result.url)
 
-            # Save attribution URL if available
-            if first_image.page_url:
-                deal.image_attribution = first_image.page_url
+                # Try to save the image (this will trigger validation)
+                deal.image.save(image_filename, image_content, save=False)
 
-            deal.save()
+                # Save attribution URL if available
+                if image_result.page_url:
+                    deal.image_attribution = image_result.page_url
 
-            msg = f'Found and set image for "{deal.name}"'
-            logger.info(msg)
-            return {"success": True, "message": msg, "image_url": first_image_url}
+                # Save the deal (this will also run model validation)
+                deal.save()
 
-        except Exception as e:
-            error_msg = f"Error downloading image: {str(e)}"
-            logger.error(error_msg)
-            return {"success": False, "error": error_msg}
+                msg = f'Found and set valid image for "{deal.name}" (tried {idx} image(s))'
+                logger.info(msg)
+                return {
+                    "success": True,
+                    "message": msg,
+                    "image_url": image_result.url,
+                    "attempts": idx,
+                    "total_images": len(image_results)
+                }
+
+            except Exception as e:
+                error_msg = f"Image {idx} failed: {str(e)}"
+                errors.append(error_msg)
+                logger.warning(f"'{deal.name}' - {error_msg}")
+                # Continue to next image
+                continue
+
+        # If we get here, all images failed
+        error_summary = f"All {len(image_results)} images failed validation. Errors: {'; '.join(errors)}"
+        logger.error(f"'{deal.name}' - {error_summary}")
+        return {"success": False, "error": error_summary, "attempts": len(image_results)}
 
     except Exception as e:
         error_msg = f"Error searching for image: {str(e)}"
@@ -252,6 +274,8 @@ def download_image_from_attribution(deal_id: int) -> dict:
     """
     Download image from the URL stored in deal.image_attribution field.
 
+    Validates the image to ensure it's not corrupted before saving.
+
     Automatically tracks which user initiated the task via thread-local storage.
 
     Args:
@@ -286,13 +310,14 @@ def download_image_from_attribution(deal_id: int) -> dict:
 
     try:
         image_content, image_filename = download_image_from_url(deal.image_attribution)
+        # save=True will trigger validation and save the deal
         deal.image.save(image_filename, image_content, save=True)
 
-        msg = f"Downloaded image from attribution URL for '{deal.name}'"
+        msg = f"Downloaded and validated image from attribution URL for '{deal.name}'"
         logger.info(msg)
         return {"success": True, "message": msg, "image_url": deal.image_attribution}
 
     except Exception as e:
-        error_msg = f"Error downloading image for '{deal.name}': {str(e)}"
+        error_msg = f"Error downloading or validating image for '{deal.name}': {str(e)}"
         logger.exception(error_msg)
         return {"success": False, "error": error_msg}
