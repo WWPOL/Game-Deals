@@ -16,6 +16,40 @@ from .widgets import ColorPalettePreviewWidget
 from .tasks import notify_deal, search_and_download_image, extract_colors_from_deal_image
 
 
+class HasImageFilter(admin.SimpleListFilter):
+    title = 'has image'
+    parameter_name = 'has_image'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Yes'),
+            ('no', 'No'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'yes':
+            return queryset.exclude(image='')
+        if self.value() == 'no':
+            return queryset.filter(image='')
+
+
+class HasPaletteFilter(admin.SimpleListFilter):
+    title = 'has palette'
+    parameter_name = 'has_palette'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Yes'),
+            ('no', 'No'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'yes':
+            return queryset.filter(color_palettes__isnull=False).distinct()
+        if self.value() == 'no':
+            return queryset.filter(color_palettes__isnull=True)
+
+
 class ColorPaletteInline(TabularInline):
     model = ColorPalette
     extra = 0
@@ -127,7 +161,7 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
     form = DealAdminForm
     inlines = [ColorPaletteInline, NotificationLogInline]
     list_display = ('name', 'status', 'price', 'expires', 'is_active', 'created_at')
-    list_filter = ('status', 'expires', 'created_at')
+    list_filter = ('status', HasImageFilter, HasPaletteFilter, 'expires', 'created_at')
     search_fields = ('name',)
     actions = ['publish_deals_bulk', 'unpublish_deals_bulk', 'reextract_colors_bulk', 'image_search_bulk']
     fieldsets = (
