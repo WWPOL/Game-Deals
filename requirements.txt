@@ -4,6 +4,7 @@ dj-database-url~=2.3
 celery~=5.4
 django-celery-results~=2.5
 redis~=5.2
+flower~=2.0
 requests~=2.32
 pydantic~=2.10
 google-api-python-client~=2.159

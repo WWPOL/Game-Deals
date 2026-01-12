@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        command: ["celery", "-A", "config", "flower", "--port=5555"]
+        ports:
+        - containerPort: 5555
+          name: http

@@ -2,15 +2,16 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-- postgres
-- redis
-- django
-- celery
-- flower
+- ../app
+- resources/service.yaml
+
+patches:
+- path: patches/deployment.yaml
+
+nameSuffix: -flower
 
 labels:
 - includeSelectors: true
   includeTemplates: true
   pairs:
-    app.kubernetes.io/name: game-deals
-    project: game-deals
+    component: flower

@@ -64,5 +64,22 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
     restart: always
 
+  flower:
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+    command: celery -A config flower --port=5555
+    volumes:
+      - .:/app
+    ports:
+      - "5555:5555"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/game_deals
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+    restart: always
+
 volumes:
   postgres_18_data: {}

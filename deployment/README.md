@@ -7,11 +7,12 @@ This directory contains Kustomize base manifests for deploying Game-Deals to Kub
 ```
 k8s/
 ├── base/              # Base manifests (reference from other repos)
-│   ├── app/           # Shared Django/Celery deployment base
+│   ├── app/           # Shared Django/Celery/Flower deployment base
 │   ├── postgres/      # PostgreSQL StatefulSet
 │   ├── redis/         # Redis Deployment
 │   ├── django/        # Django web service
-│   └── celery/        # Celery worker
+│   ├── celery/        # Celery worker
+│   └── flower/        # Flower monitoring UI
 └── examples/
     └── dev/           # Example overlay for development environment
 ```
@@ -99,8 +100,9 @@ GOOGLE_SEARCH_ENGINE_ID=your-search-engine-id
 - **Redis**: Deployment (ephemeral)
 - **Django**: Web service exposed on port 8000
 - **Celery**: Background worker (no service)
+- **Flower**: Celery monitoring UI exposed on port 5555
 
 All components use common labels:
 - `app.kubernetes.io/name: game-deals`
 - `project: game-deals`
-- `component: <postgres|redis|django|celery>`
+- `component: <postgres|redis|django|celery|flower>`

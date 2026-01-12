@@ -56,6 +56,17 @@ A Django app with Celery for background tasks.
 
 The app will then be accessible at http://localhost:8000
 
+## Services
+
+The following services run in Docker Compose:
+
+- **web** (Django) - http://localhost:8000
+- **postgres** - PostgreSQL database
+- **redis** - Redis cache and message broker
+- **celery** - Background task worker
+- **celery-beat** - Task scheduler
+- **flower** - Celery monitoring UI at http://localhost:5555
+
 # Operations
 ## Configuration
 Environment variables are used for configuration.
