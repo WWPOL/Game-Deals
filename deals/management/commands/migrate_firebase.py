@@ -182,7 +182,8 @@ EXAMPLES:
         logger.info(f"Found {total} deals to migrate")
 
         migrated = 0
-        errors = 0
+        skipped = 0
+        error_list = []
 
         for index, fb_deal in enumerate(firebase_deals, 1):
             try:
@@ -192,8 +193,23 @@ EXAMPLES:
                 progress_pct = (index / total * 100)
                 progress_str = f"[{index}/{total}] ({progress_pct:.1f}%)"
 
+                # Check if deal already exists (idempotent check using natural key)
+                # Use name, link, price, expires to identify duplicate deals
+                existing_deal = Deal.objects.filter(
+                    name=mapped_data.name,
+                    link=mapped_data.link,
+                    price=mapped_data.price,
+                    expires=mapped_data.expires
+                ).first()
+
+                if existing_deal:
+                    logger.debug(f"{progress_str} ⊘ Skipped (already exists): {mapped_data.name}")
+                    skipped += 1
+                    continue
+
                 if dry_run:
                     logger.info(f"{progress_str} [DRY RUN] Would create: {mapped_data.name}")
+                    migrated += 1
                     continue
 
                 # Create deal from mapped data
@@ -215,16 +231,31 @@ EXAMPLES:
             except Exception as e:
                 progress_pct = (index / total * 100)
                 progress_str = f"[{index}/{total}] ({progress_pct:.1f}%)"
-                logger.error(f"{progress_str} ✗ Error migrating {fb_deal.name}: {e}")
-                errors += 1
+                error_msg = f"{progress_str} ✗ {fb_deal.name}: {str(e)}"
+                logger.error(error_msg)
+                error_list.append({
+                    'name': fb_deal.name,
+                    'error': str(e),
+                    'index': index
+                })
 
         # Final summary
         logger.info("=" * 50)
         logger.info("Migration complete!")
         logger.info(f"  Total: {total}")
         logger.info(f"  Migrated: {migrated}")
-        if errors > 0:
-            logger.error(f"  Errors: {errors}")
+        if skipped > 0:
+            logger.info(f"  Skipped (already exists): {skipped}")
+        if error_list:
+            logger.error(f"  Errors: {len(error_list)}")
+            logger.error("")
+            logger.error("=" * 50)
+            logger.error("ERRORS ENCOUNTERED:")
+            logger.error("=" * 50)
+            for err in error_list:
+                logger.error(f"[{err['index']}] {err['name']}")
+                logger.error(f"    Error: {err['error']}")
+                logger.error("")
         logger.info("=" * 50)
 
     def parse_firestore_export(self, json_file_path: str) -> list[FirebaseDeal]:
