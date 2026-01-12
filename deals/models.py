@@ -82,18 +82,17 @@ class Deal(models.Model):
         blank=True,
         help_text="Game image (required when published)"
     )
-    image_attribution = models.URLField(
-        max_length=500,
+    image_attribution = models.TextField(
         null=True,
         blank=True,
-        help_text="Source URL for image attribution (optional)"
+        help_text="Source URL or text for image attribution (optional)"
     )
     auto_extract_palette = models.BooleanField(
         default=True,
         help_text="Automatically extract color palette when image changes"
     )
     link = models.URLField(
-        max_length=500,
+        max_length=2048,
         null=True,
         blank=True,
         help_text="Store URL to purchase (required when published)"
@@ -348,7 +347,7 @@ class DiscordWebhookConfig(models.Model):
         help_text="Parent notification channel"
     )
     webhook_url = models.URLField(
-        max_length=500,
+        max_length=2048,
         help_text="Discord webhook URL (from Server Settings -> Integrations -> Webhooks)"
     )
     username = models.CharField(
