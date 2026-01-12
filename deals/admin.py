@@ -234,10 +234,10 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
 
     @unfold_action(label="Search for Images", short_description="Open image search page for this deal")
     def image_search(self, request, obj):
-        """Action to search for images for this deal"""
-        # Call bulk action with single-item queryset
-        queryset = Deal.objects.filter(pk=obj.pk)
-        return self.image_search_bulk(request, queryset)
+        """Action to search for images for this deal and select from results"""
+        # Redirect directly to the image search UI
+        url = reverse('admin_search_images_with_id', args=[obj.pk])
+        return HttpResponseRedirect(url)
 
     @unfold_action(label="Publish Deal", short_description="Publish this deal and send notifications")
     def publish_deal(self, request, obj):
@@ -310,16 +310,18 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
         if skipped_count:
             self.message_user(request, f'{skipped_count} deal(s) skipped (no image)', level=messages.WARNING)
 
-    @admin.action(description='Search for images')
+    @admin.action(description='Search for images and auto-select first')
     def image_search_bulk(self, request, queryset):
-        """Bulk action to open image search - only works with one selected item"""
-        if queryset.count() != 1:
-            self.message_user(request, 'Please select exactly one deal to search for images', level=messages.WARNING)
-            return
+        """Bulk action to automatically search for and select the first image found"""
+        queued_count = 0
 
-        deal = queryset.first()
-        url = reverse('admin_search_images_with_id', args=[deal.pk])
-        return HttpResponseRedirect(url)
+        for deal in queryset:
+            if deal.name:
+                search_and_download_image.delay(deal.pk)
+                queued_count += 1
+
+        if queued_count:
+            self.message_user(request, f'Queued image search for {queued_count} deal(s) - check task monitor for progress')
 
     @admin.action(description='Publish deals and send notifications')
     def publish_deals_bulk(self, request, queryset):
