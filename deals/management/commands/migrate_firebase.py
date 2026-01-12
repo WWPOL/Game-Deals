@@ -2,6 +2,7 @@
 import argparse
 import json
 import logging
+import traceback
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
@@ -147,7 +148,7 @@ WHAT THIS COMMAND DOES:
 
 - Parses and validates JSON using Pydantic
 - Maps Firebase fields to Django Deal model
-- Creates Deal records in the database
+- Creates Deal records in the database as DRAFTS
 - Stores Firebase image URLs in image_attribution field
 - Generates unique slugs in year/month/name format
 - Converts is_free boolean to price=0 decimal
@@ -236,6 +237,7 @@ EXAMPLES:
                 error_list.append({
                     'name': fb_deal.name,
                     'error': str(e),
+                    'traceback': traceback.format_exc(),
                     'index': index
                 })
 
@@ -255,6 +257,9 @@ EXAMPLES:
             for err in error_list:
                 logger.error(f"[{err['index']}] {err['name']}")
                 logger.error(f"    Error: {err['error']}")
+                logger.error(f"    Traceback:")
+                for line in err['traceback'].splitlines():
+                    logger.error(f"      {line}")
                 logger.error("")
         logger.info("=" * 50)
 
@@ -293,7 +298,7 @@ EXAMPLES:
 
         return MappedDealData(
             name=firebase_deal.name,
-            status='published',  # All migrated deals are published
+            status='draft',  # All migrated deals start as drafts
             slug=slug,
             price=price,
             expires=firebase_deal.expires,
