@@ -4,6 +4,7 @@ Celery tasks for the deals app.
 
 from django.conf import settings
 from django.db import transaction
+from urllib.parse import urlparse
 import logging
 
 from tasks.celery_utils import user_tracked_task
@@ -242,5 +243,56 @@ def extract_colors_from_deal_image(deal_id: int) -> dict:
 
     except Exception as e:
         error_msg = f"Error extracting colors for '{deal.name}': {str(e)}"
+        logger.exception(error_msg)
+        return {"success": False, "error": error_msg}
+
+
+@user_tracked_task()
+def download_image_from_attribution(deal_id: int) -> dict:
+    """
+    Download image from the URL stored in deal.image_attribution field.
+
+    Automatically tracks which user initiated the task via thread-local storage.
+
+    Args:
+        deal_id: ID of the Deal to download image for
+
+    Returns:
+        dict: Status information about the image download
+    """
+    try:
+        deal = Deal.objects.get(pk=deal_id)
+    except Deal.DoesNotExist:
+        error_msg = f"Deal with ID {deal_id} not found"
+        logger.error(error_msg)
+        return {"success": False, "error": error_msg}
+
+    if not deal.image_attribution:
+        error_msg = f"Deal '{deal.name}' has no image_attribution URL to download from"
+        logger.warning(error_msg)
+        return {"success": False, "error": error_msg}
+
+    # Validate that image_attribution is a valid URL
+    try:
+        parsed = urlparse(deal.image_attribution)
+        if not all([parsed.scheme, parsed.netloc]):
+            error_msg = f"Deal '{deal.name}' image_attribution is not a valid URL: {deal.image_attribution}"
+            logger.warning(error_msg)
+            return {"success": False, "error": error_msg}
+    except Exception as e:
+        error_msg = f"Deal '{deal.name}' failed to parse image_attribution URL: {str(e)}"
+        logger.error(error_msg)
+        return {"success": False, "error": error_msg}
+
+    try:
+        image_content, image_filename = download_image_from_url(deal.image_attribution)
+        deal.image.save(image_filename, image_content, save=True)
+
+        msg = f"Downloaded image from attribution URL for '{deal.name}'"
+        logger.info(msg)
+        return {"success": True, "message": msg, "image_url": deal.image_attribution}
+
+    except Exception as e:
+        error_msg = f"Error downloading image for '{deal.name}': {str(e)}"
         logger.exception(error_msg)
         return {"success": False, "error": error_msg}

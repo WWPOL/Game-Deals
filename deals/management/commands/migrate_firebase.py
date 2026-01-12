@@ -2,14 +2,12 @@
 import argparse
 import json
 import logging
-import requests
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional, Any
 
 from django.core.management.base import BaseCommand
-from django.core.files.base import ContentFile
 from django.utils.text import slugify
 from pydantic import BaseModel, Field, BeforeValidator
 from typing_extensions import Annotated
@@ -49,27 +47,27 @@ def parse_firebase_timestamp(value: Any) -> Optional[datetime]:
     return None
 
 
-def parse_price(value: Any) -> Optional[float]:
-    """Parse price value to float
+def parse_price(value: Any) -> Optional[Decimal]:
+    """Parse price value to Decimal
 
     Handles multiple formats:
     - Empty string: "" -> None
-    - String: "19.99" -> 19.99
-    - Number: 19.99 or 19 -> 19.99
+    - String: "19.99" -> Decimal('19.99')
+    - Number: 19.99 or 19 -> Decimal('19.99')
     """
     # Treat empty/falsy values as None (except 0)
     if not value and value != 0:
         return None
 
-    # Already a number
-    if isinstance(value, (int, float)):
-        return float(value)
+    # Already a Decimal
+    if isinstance(value, Decimal):
+        return value
 
-    # String
-    if isinstance(value, str):
+    # Number or string
+    if isinstance(value, (int, float, str)):
         try:
-            return float(value)
-        except ValueError:
+            return Decimal(str(value))
+        except Exception:
             return None
 
     return None
@@ -79,7 +77,7 @@ def parse_price(value: Any) -> Optional[float]:
 FirebaseTimestamp = Annotated[Optional[datetime], BeforeValidator(parse_firebase_timestamp)]
 
 # Custom Pydantic type for price values
-FirebasePrice = Annotated[Optional[float], BeforeValidator(parse_price)]
+FirebasePrice = Annotated[Optional[Decimal], BeforeValidator(parse_price)]
 
 
 class FirebaseDeal(BaseModel):
@@ -102,7 +100,7 @@ class MappedDealData:
     name: str
     status: str
     slug: str
-    price: float
+    price: Decimal
     expires: Optional[datetime]
     link: str
     image_attribution: str
@@ -149,17 +147,22 @@ WHAT THIS COMMAND DOES:
 
 - Parses and validates JSON using Pydantic
 - Maps Firebase fields to Django Deal model
-- Downloads images from Firebase URLs to Django storage (S3 or local)
-- Automatically extracts color palettes from images
+- Creates Deal records in the database
+- Stores Firebase image URLs in image_attribution field
 - Generates unique slugs in year/month/name format
 - Converts is_free boolean to price=0 decimal
+
+NOTE: This command only creates database records. To download images and extract
+colors, run these commands after migration:
+    $ python manage.py queue_download_images
+    $ python manage.py queue_extract_colors
 
 EXAMPLES:
 
     # Dry run to preview what will be migrated
     $ python manage.py migrate_firebase deals-export.json --dry-run
 
-    # Full migration (downloads images, extracts colors, creates deals)
+    # Full migration (creates database records)
     $ python manage.py migrate_firebase deals-export.json
         """
         return parser
@@ -206,19 +209,6 @@ EXAMPLES:
                 )
                 deal.save()
 
-                # Download and attach image
-                if fb_deal.image:
-                    filename, image_content = self.download_and_upload_image(
-                        fb_deal.image,
-                        deal.name
-                    )
-                    if filename and image_content:
-                        deal.image.save(filename, image_content, save=True)
-
-                        # Extract colors from uploaded image
-                        if deal.image:
-                            deal.extract_and_save_colors()
-
                 logger.info(f"{progress_str} ✓ Migrated: {deal.name}")
                 migrated += 1
 
@@ -259,7 +249,12 @@ EXAMPLES:
         """Map Firebase deal structure to Django Deal model fields"""
 
         # Handle price (is_free → price=0)
-        price = Decimal('0') if firebase_deal.is_free else (firebase_deal.price or Decimal('0'))
+        if firebase_deal.is_free:
+            price = Decimal('0')
+        elif firebase_deal.price is not None:
+            price = firebase_deal.price
+        else:
+            price = Decimal('0')
 
         # Generate slug from name and created_at
         created_at = firebase_deal.created_at or datetime.now()
@@ -292,21 +287,3 @@ EXAMPLES:
             counter += 1
 
         return unique_slug
-
-    def download_and_upload_image(self, image_url: str, deal_name: str) -> tuple[Optional[str], Optional[ContentFile]]:
-        """Download image from URL and return Django file"""
-        try:
-            response = requests.get(image_url, timeout=30, stream=True)
-            response.raise_for_status()
-
-            # Get filename from URL or generate one
-            filename = f"{slugify(deal_name)}.jpg"
-
-            # Create ContentFile for Django ImageField
-            image_content = ContentFile(response.content)
-
-            return filename, image_content
-
-        except requests.RequestException as e:
-            logger.error(f"Failed to download image {image_url}: {e}")
-            return None, None
