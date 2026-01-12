@@ -4,7 +4,7 @@ import json
 import logging
 import traceback
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Optional, Any
 
@@ -223,6 +223,10 @@ EXAMPLES:
                     image_attribution=mapped_data.image_attribution,
                     auto_extract_palette=mapped_data.auto_extract_palette,
                 )
+                deal.save()
+
+                # Set created_at after bc it automatically sets to now when created (cannot be overriden)
+                deal.created_at = mapped_data.expires - timedelta(weeks=1)
                 deal.save()
 
                 logger.info(f"{progress_str} ✓ Migrated: {deal.name}")
