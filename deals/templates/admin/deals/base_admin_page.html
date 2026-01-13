@@ -1,8 +1,10 @@
-{% extends "unfold/layouts/base_simple.html" %}
+{% extends "admin/base.html" %}
 {% load static admin_list %}
 
-{# This base template includes the branding block automatically #}
-{# Use this for custom admin pages to get the full admin UI with sidebar, header, and branding #}
+{# This base template extends unfold's admin/base.html which includes: #}
+{# - Full admin UI with sidebar, header, and branding #}
+{# - Messages block with proper styling #}
+{# - All standard admin functionality #}
 
 {% block branding %}
     {% include "unfold/helpers/site_branding.html" %}
