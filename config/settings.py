@@ -281,10 +281,6 @@ else:
         },
     }
 
-# Temporary directory for image downloads (used by color extraction)
-# In production, this should be ephemeral storage (emptyDir in Kubernetes)
-TEMP_DOWNLOAD_DIR = get_env('TEMP_DOWNLOAD_DIR', '/tmp/game-deals')
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 

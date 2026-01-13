@@ -11,6 +11,7 @@ from tasks.celery_utils import user_tracked_task
 from deals.models import Deal, NotificationChannel, NotificationLog
 from deals.services.discord_notifier import send_discord_notification, DiscordNotificationError
 from deals.services.image_search import GoogleCustomSearchProvider, download_image_from_url
+from common.fields import validate_image_content
 
 logger = logging.getLogger(__name__)
 
@@ -194,7 +195,11 @@ def search_and_download_image(deal_id: int, search_query: str = None) -> dict:
                 # Download the image
                 image_content, image_filename = download_image_from_url(image_result.url)
 
-                # Try to save the image (this will trigger validation)
+                # Validate the image in memory BEFORE writing to storage
+                # (Only needed here since we're trying multiple images)
+                validate_image_content(image_content)
+
+                # Image is valid, now write it to storage (disk/S3/etc)
                 deal.image.save(image_filename, image_content, save=False)
 
                 # Save attribution URL if available
@@ -230,6 +235,54 @@ def search_and_download_image(deal_id: int, search_query: str = None) -> dict:
         error_msg = f"Error searching for image: {str(e)}"
         logger.exception(error_msg)
         return {"success": False, "error": error_msg}
+
+
+@user_tracked_task()
+def download_and_set_image(deal_id: int, image_url: str, attribution_url: str = None) -> dict:
+    """
+    Download image from URL and set it on the deal.
+
+    Validates image before saving to prevent corrupted files.
+    Automatically queues color extraction after successful save.
+
+    Args:
+        deal_id: ID of the Deal to set image for
+        image_url: URL of the image to download
+        attribution_url: Optional attribution URL
+
+    Returns:
+        dict: Status information
+    """
+    try:
+        deal = Deal.objects.get(pk=deal_id)
+    except Deal.DoesNotExist:
+        return {"success": False, "error": f"Deal {deal_id} not found"}
+
+    try:
+        # Download image
+        image_content, image_filename = download_image_from_url(image_url)
+
+        # Validate before saving
+        validate_image_content(image_content)
+
+        # Save the image file to storage and update the deal's image field.
+        # save=True also saves the Deal model, which will trigger the async color extraction.
+        deal.image.save(image_filename, image_content, save=True)
+
+        # If there's an attribution URL, update the model again.
+        if attribution_url:
+            deal.image_attribution = attribution_url
+            deal.save(update_fields=['image_attribution'])
+
+        return {
+            "success": True,
+            "message": f"Image set successfully for '{deal.name}'",
+            "image_url": image_url
+        }
+
+    except Exception as e:
+        logger.exception(f"Failed to download/set image for deal {deal_id} from url {image_url}")
+        return {"success": False, "error": str(e)}
 
 
 @user_tracked_task()
@@ -272,9 +325,8 @@ def extract_colors_from_deal_image(deal_id: int) -> dict:
 @user_tracked_task()
 def download_image_from_attribution(deal_id: int) -> dict:
     """
-    Download image from the URL stored in deal.image_attribution field.
-
-    Validates the image to ensure it's not corrupted before saving.
+    Queues a task to download an image from the URL stored in the deal's
+    image_attribution field.
 
     Automatically tracks which user initiated the task via thread-local storage.
 
@@ -282,7 +334,7 @@ def download_image_from_attribution(deal_id: int) -> dict:
         deal_id: ID of the Deal to download image for
 
     Returns:
-        dict: Status information about the image download
+        dict: Status information about the task queuing
     """
     try:
         deal = Deal.objects.get(pk=deal_id)
@@ -296,28 +348,9 @@ def download_image_from_attribution(deal_id: int) -> dict:
         logger.warning(error_msg)
         return {"success": False, "error": error_msg}
 
-    # Validate that image_attribution is a valid URL
-    try:
-        parsed = urlparse(deal.image_attribution)
-        if not all([parsed.scheme, parsed.netloc]):
-            error_msg = f"Deal '{deal.name}' image_attribution is not a valid URL: {deal.image_attribution}"
-            logger.warning(error_msg)
-            return {"success": False, "error": error_msg}
-    except Exception as e:
-        error_msg = f"Deal '{deal.name}' failed to parse image_attribution URL: {str(e)}"
-        logger.error(error_msg)
-        return {"success": False, "error": error_msg}
+    # Queue the new generic download task
+    task = download_and_set_image.delay(deal_id, deal.image_attribution, deal.image_attribution)
 
-    try:
-        image_content, image_filename = download_image_from_url(deal.image_attribution)
-        # save=True will trigger validation and save the deal
-        deal.image.save(image_filename, image_content, save=True)
-
-        msg = f"Downloaded and validated image from attribution URL for '{deal.name}'"
-        logger.info(msg)
-        return {"success": True, "message": msg, "image_url": deal.image_attribution}
-
-    except Exception as e:
-        error_msg = f"Error downloading or validating image for '{deal.name}': {str(e)}"
-        logger.exception(error_msg)
-        return {"success": False, "error": error_msg}
+    msg = f"Queued image download from attribution for '{deal.name}'"
+    logger.info(msg)
+    return {"success": True, "message": msg, "task_id": task.id}

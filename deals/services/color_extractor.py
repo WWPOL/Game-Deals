@@ -1,14 +1,12 @@
 """Extract dominant colors from images"""
+import io
 import logging
-import os
-import tempfile
 from contextlib import contextmanager
 from typing import Tuple, List
 from PIL import Image
 import numpy as np
 from sklearn.cluster import KMeans
 import requests
-from django.conf import settings
 
 from deals.models import ColorPalette
 
@@ -153,63 +151,36 @@ def get_image_file_from_django_file(django_file):
     Get a file-like object from a Django File (ImageField).
 
     Handles both local filesystem and cloud storage (S3).
-    Downloads cloud images to temporary disk storage (not memory).
+    Cloud images are downloaded to memory (BytesIO) for processing.
     Ensures proper cleanup of resources in all cases.
 
     Args:
         django_file: Django FieldFile instance (e.g., deal.image)
 
     Yields:
-        File-like object (opened file handle)
+        File-like object (opened file handle or BytesIO)
     """
     if hasattr(django_file, 'path'):
         # Local filesystem - open file and yield handle
         with open(django_file.path, 'rb') as f:
             yield f
     else:
-        # Cloud storage - download to temporary file on disk
-        logger.info(f"Downloading image from cloud storage: {django_file.url}")
-        temp_file_path = None
-        temp_file = None
+        # Cloud storage - download to memory
+        logger.info(f"Downloading image from cloud storage to memory: {django_file.url}")
         try:
-            # Get temp directory from settings
-            temp_dir = getattr(settings, 'TEMP_DOWNLOAD_DIR', '/tmp/game-deals')
-            os.makedirs(temp_dir, exist_ok=True)
-
-            # Create temporary file
-            temp_file = tempfile.NamedTemporaryFile(
-                mode='w+b',
-                dir=temp_dir,
-                delete=False,
-                suffix='.tmp'
-            )
-            temp_file_path = temp_file.name
-
-            # Download to temp file
-            response = requests.get(django_file.url, timeout=10, stream=True)
+            # Download image directly to memory
+            response = requests.get(django_file.url, timeout=10)
             response.raise_for_status()
 
-            # Write chunks to disk to avoid loading entire file in memory
-            for chunk in response.iter_content(chunk_size=8192):
-                temp_file.write(chunk)
-            temp_file.close()
+            # Create BytesIO object from response content
+            image_bytes = io.BytesIO(response.content)
 
-            # Open and yield the temp file
-            with open(temp_file_path, 'rb') as f:
-                yield f
+            # Yield the BytesIO object
+            yield image_bytes
 
         except requests.RequestException as e:
             logger.error(f"Failed to download image from {django_file.url}: {e}")
             raise Exception(f"Failed to download image: {e}")
-        finally:
-            # Clean up temporary file
-            if temp_file is not None and not temp_file.closed:
-                temp_file.close()
-            if temp_file_path and os.path.exists(temp_file_path):
-                try:
-                    os.unlink(temp_file_path)
-                except OSError as e:
-                    logger.warning(f"Failed to delete temporary file {temp_file_path}: {e}")
 
 
 def extract_colors_from_image(image_file, max_colors: int = 6, min_colors: int = 2) -> List[ColorPalette]:

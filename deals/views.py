@@ -283,7 +283,8 @@ class DealDetailView(DealPaginationMixin, DetailView):
 def search_deal_images(request, deal_id=None):
     """Search for images for a deal and allow admin to select one"""
     from django.conf import settings
-    from .services.image_search import GoogleCustomSearchProvider, download_image_from_url
+    from .services.image_search import GoogleCustomSearchProvider
+    from .tasks import download_and_set_image
 
     deal = None
     game_name = request.GET.get('name', '')
@@ -298,23 +299,13 @@ def search_deal_images(request, deal_id=None):
         selected_page_url = request.POST.get('page_url', '')
         if selected_image_url:
             if deal_id:
-                # Download and save the image
-                try:
-                    image_content, image_filename = download_image_from_url(selected_image_url)
-                    deal.image.save(image_filename, image_content, save=False)
-
-                    # Save attribution if available
-                    if selected_page_url:
-                        deal.image_attribution = selected_page_url
-
-                    # Save deal (will auto-extract colors if auto_extract_palette is enabled)
-                    deal.save()
-
-                    return redirect('admin:deals_deal_change', deal.id)
-                except Exception as e:
-                    # Handle download error
-                    from django.contrib import messages
-                    messages.error(request, f'Error downloading image: {e}')
+                # Queue async task to download and set the image
+                download_and_set_image.delay(deal_id, selected_image_url, selected_page_url)
+                messages.success(
+                    request,
+                    'Image download queued for processing. Check the task monitor for progress.'
+                )
+                return redirect('admin:deals_deal_change', deal.id)
             else:
                 # For new deals, redirect to add form with the URL
                 # The admin's save_model will handle downloading and color extraction
