@@ -79,6 +79,7 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/game_deals
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/0
+      FLOWER_UNAUTHENTICATED_API: "true"
     restart: always
 
 volumes:

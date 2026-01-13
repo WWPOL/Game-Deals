@@ -456,14 +456,10 @@ All work from plan `/home/noah/.claude/plans/structured-stargazing-river.md` is 
 
 ### Next Steps
 
-#### 1. Migrate all image processing to tasks
-Make sure no image processing logic is occuring in web worker
-
-- Refactor `download_image_from_attribution` task to use the new `download_and_set_image` task to reduce code duplication.
-- add a control for max file size so it doesn't try to download anything too big and OOMKILL
-
-#### 1. Figure out why migrated deals don't have images after I run the image search task
-I imported all the deals and ran the auto-search image task on them. I had to keep running the task a few rounds (I would filter for deals without images, then I would use the bulk action to auto search images, but then it would only find images for half of them, rinse and repeat). However the filter may be broken or something, bc now there are still ton's of deals without images on the frontend (even though the filter only shows 5).
+- Fix inteligent memory refactor: it seems to be stalling all tasks
+- Fix flower reverse proxy
+- Add view in flower and view task result links to usertask
+- If user logged in when viewing deal add a "View in admin" link
 
 #### 1. Channel Message Preview Page
 **Goal**: Preview how deal notifications will appear for each channel type before sending.

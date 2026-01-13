@@ -14,6 +14,8 @@ import os
 import sys
 from pathlib import Path
 import dj_database_url
+from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -87,6 +89,7 @@ INSTALLED_APPS = [
     'django_select2',  # Select2 widgets for autocomplete
     'django_celery_results',  # Celery result backend using Django ORM
     'rest_framework',  # Django REST Framework for API endpoints
+    'revproxy.apps.RevProxyConfig',  # Django reverse proxy
 
     # Django-allauth for OAuth/OIDC authentication
     'allauth',
@@ -296,6 +299,9 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
 CELERY_RESULT_EXTENDED = True  # Store additional task metadata
 
+# Flower Configuration
+FLOWER_URL = get_env('FLOWER_URL', 'http://flower:5555')
+
 # Image Processing Configuration
 # Maximum memory (in MB) to be used by the image processing pipeline.
 # This should be set lower than the container's memory limit.
@@ -316,6 +322,18 @@ UNFOLD = {
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,
     "SHOW_LANGUAGES": True,  # Enable language selector in admin
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": True,
+    },
+    "SITE_DROPDOWN": [
+        {
+            "title": _("Flower (Celery Tasks)"),
+            "icon": "monitoring",
+            "link": reverse_lazy("admin_flower", kwargs={"path": ""}),
+            "permission": lambda request: request.user.has_perm("common.can_view_flower"),
+        },
+    ],
 }
 
 # Authentication URLs

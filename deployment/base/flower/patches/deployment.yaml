@@ -11,3 +11,7 @@ spec:
         ports:
         - containerPort: 5555
           name: http
+        env:
+        # Django handles the authentication
+        - name: FLOWER_UNAUTHENTICATED_API
+          value: "true"
