@@ -151,12 +151,15 @@ class Deal(models.Model):
         Returns:
             int: Number of colors extracted
         """
-        from .services.color_extractor import extract_colors_from_django_file
+        # Import here to avoid circular import (exception to no-imports-in-functions rule)
+        from common.image_memory_manager import get_managed_image
+        from .services.color_extractor import extract_colors_from_image_content
 
         if not self.image:
             return 0
 
-        palette_entries = extract_colors_from_django_file(self.image)
+        with get_managed_image(django_file=self.image) as image_bytes:
+            palette_entries = extract_colors_from_image_content(image_bytes)
 
         # Clear existing palette and create new entries
         self.color_palette.all().delete()

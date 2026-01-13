@@ -1,12 +1,10 @@
 """Extract dominant colors from images"""
 import io
 import logging
-from contextlib import contextmanager
 from typing import Tuple, List
 from PIL import Image
 import numpy as np
 from sklearn.cluster import KMeans
-import requests
 
 from deals.models import ColorPalette
 
@@ -145,44 +143,6 @@ def find_foreground_color(palette: List[Tuple[int, int, int]], background_color:
     return "#ffffff" if white_contrast > black_contrast else "#000000"
 
 
-@contextmanager
-def get_image_file_from_django_file(django_file):
-    """
-    Get a file-like object from a Django File (ImageField).
-
-    Handles both local filesystem and cloud storage (S3).
-    Cloud images are downloaded to memory (BytesIO) for processing.
-    Ensures proper cleanup of resources in all cases.
-
-    Args:
-        django_file: Django FieldFile instance (e.g., deal.image)
-
-    Yields:
-        File-like object (opened file handle or BytesIO)
-    """
-    if hasattr(django_file, 'path'):
-        # Local filesystem - open file and yield handle
-        with open(django_file.path, 'rb') as f:
-            yield f
-    else:
-        # Cloud storage - download to memory
-        logger.info(f"Downloading image from cloud storage to memory: {django_file.url}")
-        try:
-            # Download image directly to memory
-            response = requests.get(django_file.url, timeout=10)
-            response.raise_for_status()
-
-            # Create BytesIO object from response content
-            image_bytes = io.BytesIO(response.content)
-
-            # Yield the BytesIO object
-            yield image_bytes
-
-        except requests.RequestException as e:
-            logger.error(f"Failed to download image from {django_file.url}: {e}")
-            raise Exception(f"Failed to download image: {e}")
-
-
 def extract_colors_from_image(image_file, max_colors: int = 6, min_colors: int = 2) -> List[ColorPalette]:
     """
     Extract weighted color palette from a file-like object.
@@ -254,15 +214,14 @@ def extract_colors_from_image(image_file, max_colors: int = 6, min_colors: int =
     return palette_entries
 
 
-def extract_colors_from_django_file(django_file, max_colors: int = 6, min_colors: int = 2) -> List[ColorPalette]:
+def extract_colors_from_image_content(image_content: bytes, max_colors: int = 6, min_colors: int = 2) -> List[ColorPalette]:
     """
-    Extract weighted color palette from a Django File (ImageField).
+    Extract weighted color palette from raw image bytes.
 
-    Convenience function that combines get_image_file_from_django_file
-    and extract_colors_from_image.
+    Convenience wrapper that handles BytesIO conversion internally.
 
     Args:
-        django_file: Django FieldFile instance (e.g., deal.image)
+        image_content: Raw image bytes
         max_colors: Maximum number of colors to extract (default 6)
         min_colors: Minimum number of colors to extract (default 2)
 
@@ -270,80 +229,7 @@ def extract_colors_from_django_file(django_file, max_colors: int = 6, min_colors
         List of unsaved ColorPalette model instances sorted by weight descending
 
     Raises:
-        Exception: If color extraction fails
+        Exception: If color extraction fails (invalid image, etc.)
     """
-    with get_image_file_from_django_file(django_file) as image_file:
-        return extract_colors_from_image(image_file, max_colors, min_colors)
-
-
-def extract_colors_from_url(image_path: str, max_colors: int = 6, min_colors: int = 2) -> List[ColorPalette]:
-    """
-    Extract weighted color palette with foreground/background pairs from a local image file.
-
-    Returns 2-6 ColorPalette model instances (unsaved) sorted by weight descending (weights sum to 1.0).
-    If fewer than min_colors diverse colors found, reduces distance threshold.
-
-    Args:
-        image_path: Local file path of the image to analyze
-        max_colors: Maximum number of colors to extract (default 6)
-        min_colors: Minimum number of colors to extract (default 2)
-
-    Returns:
-        List of unsaved ColorPalette model instances sorted by weight descending
-
-    Raises:
-        Exception: If color extraction fails (file not found, invalid image, etc.)
-    """
-    # Load image from local file
-    img = Image.open(image_path)
-    img = img.convert('RGB')
-    img.thumbnail((200, 200))
-
-    # Convert to numpy array
-    img_array = np.array(img)
-    pixels = img_array.reshape(-1, 3)
-
-    # Use k-means clustering with more clusters to get more color candidates
-    # We'll select the most diverse subset from these
-    n_clusters = max(12, max_colors * 2)
-    kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
-    kmeans.fit(pixels)
-
-    # Get colors and their proportions
-    colors = kmeans.cluster_centers_.astype(int)
-    labels = kmeans.labels_
-    counts = np.bincount(labels)
-
-    # Select diverse colors with adaptive threshold
-    diverse_indices = select_diverse_colors(colors, counts, max_colors, min_colors, min_distance=100)
-
-    # Calculate normalized weights (sum to 1.0)
-    total_pixels = sum(counts[idx] for idx in diverse_indices)
-    weights = [counts[idx] / total_pixels for idx in diverse_indices]
-
-    # Build palette RGB list for foreground color finding
-    palette_rgb = [tuple(colors[idx]) for idx in diverse_indices]
-
-    # Create ColorPalette instances (unsaved)
-    palette_entries = []
-    for idx, weight in zip(diverse_indices, weights):
-        bg_rgb = tuple(colors[idx])
-        bg_hex = rgb_to_hex(bg_rgb)
-
-        # Find best contrasting foreground color for this background
-        fg_hex = find_foreground_color(palette_rgb, bg_rgb)
-
-        palette_entries.append(ColorPalette(
-            background_color=bg_hex,
-            foreground_color=fg_hex,
-            weight=weight
-        ))
-
-    # Sort by weight descending (most prominent first)
-    palette_entries.sort(key=lambda e: e.weight, reverse=True)
-
-    logger.info(f"Extracted {len(palette_entries)} diverse colors from {image_path}")
-    for i, entry in enumerate(palette_entries):
-        logger.debug(f"  {i+1}. {entry.background_color} (fg: {entry.foreground_color}): {entry.weight:.1%}")
-
-    return palette_entries
+    image_file = io.BytesIO(image_content)
+    return extract_colors_from_image(image_file, max_colors, min_colors)

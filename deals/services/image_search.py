@@ -7,6 +7,7 @@ import requests
 from django.core.files.base import ContentFile
 from urllib.parse import urlparse
 import os
+from common.image_memory_manager import get_managed_image
 
 
 @dataclass
@@ -118,28 +119,30 @@ def download_image_from_url(url: str, timeout: int = 10) -> Tuple[ContentFile, s
 
     Raises:
         requests.RequestException: If download fails
+        ImageTooLargeError: If image exceeds memory limit
+        MemoryAllocationError: If insufficient memory available
     """
-    response = requests.get(url, timeout=timeout, stream=True)
-    response.raise_for_status()
+    # Use managed image download with memory tracking
+    with get_managed_image(image_url=url) as image_content:
+        # Get filename from URL or generate one
+        parsed_url = urlparse(url)
+        filename = os.path.basename(parsed_url.path)
 
-    # Get filename from URL or generate one
-    parsed_url = urlparse(url)
-    filename = os.path.basename(parsed_url.path)
+        # If no filename or no extension, use a default
+        if not filename or '.' not in filename:
+            # Make a HEAD request to get Content-Type for extension detection
+            response = requests.head(url, timeout=timeout)
+            content_type = response.headers.get('Content-Type', '')
+            ext = 'jpg'  # default
+            if 'png' in content_type:
+                ext = 'png'
+            elif 'webp' in content_type:
+                ext = 'webp'
+            elif 'gif' in content_type:
+                ext = 'gif'
+            filename = f'image.{ext}'
 
-    # If no filename or no extension, use a default
-    if not filename or '.' not in filename:
-        # Try to get extension from Content-Type header
-        content_type = response.headers.get('Content-Type', '')
-        ext = 'jpg'  # default
-        if 'png' in content_type:
-            ext = 'png'
-        elif 'webp' in content_type:
-            ext = 'webp'
-        elif 'gif' in content_type:
-            ext = 'gif'
-        filename = f'image.{ext}'
+        # Create ContentFile from managed image content
+        content = ContentFile(image_content)
 
-    # Create ContentFile from response content
-    content = ContentFile(response.content)
-
-    return content, filename
+        return content, filename

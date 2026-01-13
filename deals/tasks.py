@@ -12,6 +12,7 @@ from deals.models import Deal, NotificationChannel, NotificationLog
 from deals.services.discord_notifier import send_discord_notification, DiscordNotificationError
 from deals.services.image_search import GoogleCustomSearchProvider, download_image_from_url
 from common.fields import validate_image_content
+from common.image_memory_manager import ImageTooLargeError, MemoryAllocationError
 
 logger = logging.getLogger(__name__)
 
@@ -280,6 +281,11 @@ def download_and_set_image(deal_id: int, image_url: str, attribution_url: str = 
             "image_url": image_url
         }
 
+    except (ImageTooLargeError, MemoryAllocationError) as e:
+        error_msg = f"Memory error for deal {deal_id}: {str(e)}"
+        logger.error(error_msg)
+        return {"success": False, "error": error_msg}
+
     except Exception as e:
         logger.exception(f"Failed to download/set image for deal {deal_id} from url {image_url}")
         return {"success": False, "error": str(e)}
@@ -315,6 +321,11 @@ def extract_colors_from_deal_image(deal_id: int) -> dict:
         msg = f"Extracted {num_colors} colors from image for '{deal.name}'"
         logger.info(msg)
         return {"success": True, "message": msg, "num_colors": num_colors}
+
+    except (ImageTooLargeError, MemoryAllocationError) as e:
+        error_msg = f"Memory error extracting colors for '{deal.name}': {str(e)}"
+        logger.error(error_msg)
+        return {"success": False, "error": error_msg}
 
     except Exception as e:
         error_msg = f"Error extracting colors for '{deal.name}': {str(e)}"

@@ -296,6 +296,12 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
 CELERY_RESULT_EXTENDED = True  # Store additional task metadata
 
+# Image Processing Configuration
+# Maximum memory (in MB) to be used by the image processing pipeline.
+# This should be set lower than the container's memory limit.
+# Ensure your Celery workers have enough memory for this value * number of concurrent tasks.
+IMAGE_PROCESSING_MAX_MEMORY_MB = int(get_env('IMAGE_PROCESSING_MAX_MEMORY_MB', 128))
+
 # Google Custom Search API Configuration
 # Get your API key from: https://console.cloud.google.com/apis/credentials
 # Create a Custom Search Engine at: https://programmablesearchengine.google.com/
