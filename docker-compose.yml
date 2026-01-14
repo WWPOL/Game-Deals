@@ -20,14 +20,14 @@ services:
 
   web:
     build:
-      context: .
+      context: ./app
       dockerfile: dev.Dockerfile
     volumes:
-      - .:/app
+      - ./app:/app
     ports:
       - "8000:8000"
     env_file:
-      - .env
+      - ./app/.env
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/game_deals
       REDIS_URL: redis://redis:6379/0
@@ -36,13 +36,13 @@ services:
 
   celery:
     build:
-      context: .
+      context: ./app
       dockerfile: dev.Dockerfile
     command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A config worker -l info
     volumes:
-      - .:/app
+      - ./app:/app
     env_file:
-      - .env
+      - ./app/.env
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/game_deals
       REDIS_URL: redis://redis:6379/0
@@ -51,13 +51,13 @@ services:
 
   celery-beat:
     build:
-      context: .
+      context: ./app
       dockerfile: dev.Dockerfile
     command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A config beat -l info
     volumes:
-      - .:/app
+      - ./app:/app
     env_file:
-      - .env
+      - ./app/.env
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/game_deals
       REDIS_URL: redis://redis:6379/0
@@ -66,15 +66,15 @@ services:
 
   flower:
     build:
-      context: .
+      context: ./app
       dockerfile: dev.Dockerfile
     command: celery -A config flower --port=5555
     volumes:
-      - .:/app
+      - ./app:/app
     ports:
       - "5555:5555"
     env_file:
-      - .env
+      - ./app/.env
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/game_deals
       REDIS_URL: redis://redis:6379/0
