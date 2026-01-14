@@ -30,6 +30,7 @@ admin.site.unregister(SocialAccount)
 @admin.register(User)
 class UserAdmin(BaseUserAdmin, ModelAdmin):
     """User admin with Unfold styling"""
+
     form = UserChangeForm
     add_form = UserCreationForm
     change_password_form = AdminPasswordChangeForm
@@ -38,16 +39,19 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
 @admin.register(Group)
 class GroupAdmin(BaseGroupAdmin, ModelAdmin):
     """Group admin with Unfold styling"""
+
     pass
 
 
 @admin.register(TaskResult)
 class TaskResultAdmin(BaseTaskResultAdmin, ModelAdmin):
     """Celery Task Result admin with Unfold styling"""
+
     pass
 
 
 @admin.register(GroupResult)
 class GroupResultAdmin(BaseGroupResultAdmin, ModelAdmin):
     """Celery Group Result admin with Unfold styling"""
+
     pass

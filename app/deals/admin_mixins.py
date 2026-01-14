@@ -1,6 +1,7 @@
 """
 Custom admin decorators and mixins for integrating django-object-actions with Unfold theme.
 """
+
 from functools import wraps
 
 
@@ -17,12 +18,13 @@ def unfold_action(label=None, short_description=None):
             # action code here
             pass
     """
+
     def decorator(func):
         # Unfold theme classes for action buttons (matches History/View on site buttons)
-        unfold_link_classes = 'cursor-pointer flex grow items-center gap-2 px-3 py-2 text-left whitespace-nowrap'
+        unfold_link_classes = "cursor-pointer flex grow items-center gap-2 px-3 py-2 text-left whitespace-nowrap"
 
         # Set the attrs attribute for django-object-actions
-        func.attrs = {'class': unfold_link_classes}
+        func.attrs = {"class": unfold_link_classes}
 
         # Set label and description if provided
         if label:
@@ -36,9 +38,9 @@ def unfold_action(label=None, short_description=None):
 
         # Copy attributes to wrapper
         wrapper.attrs = func.attrs
-        if hasattr(func, 'label'):
+        if hasattr(func, "label"):
             wrapper.label = func.label
-        if hasattr(func, 'short_description'):
+        if hasattr(func, "short_description"):
             wrapper.short_description = func.short_description
 
         return wrapper

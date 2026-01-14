@@ -1,6 +1,7 @@
 """
 Views for common app functionality.
 """
+
 from django.contrib import messages
 from django.contrib.auth import logout as auth_logout
 from django.shortcuts import redirect

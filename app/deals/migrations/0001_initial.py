@@ -10,93 +10,372 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Deal',
+            name="Deal",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text='Game title', max_length=255)),
-                ('status', models.CharField(choices=[('draft', 'Draft'), ('published', 'Published')], default='draft', help_text='Deal status', max_length=20)),
-                ('slug', models.CharField(blank=True, help_text='URL-friendly name with format: year/month/slug (auto-generated)', max_length=255, unique=True)),
-                ('original_price', models.DecimalField(blank=True, decimal_places=2, help_text='Original price before discount (optional)', max_digits=10, null=True, validators=[django.core.validators.MinValueValidator(0)])),
-                ('price', models.DecimalField(decimal_places=2, default=0, help_text='Discounted price (0 for free)', max_digits=10, validators=[django.core.validators.MinValueValidator(0)])),
-                ('expires', models.DateTimeField(blank=True, help_text='Deal expiration date (required when published)', null=True)),
-                ('image', common.fields.ValidatedImageField(blank=True, help_text='Game image (required when published)', null=True, upload_to='game_images/%Y/%m/')),
-                ('image_attribution', models.TextField(blank=True, help_text='Source URL or text for image attribution (optional)', null=True)),
-                ('auto_extract_palette', models.BooleanField(default=True, help_text='Automatically extract color palette when image changes')),
-                ('link', models.URLField(blank=True, help_text='Store URL to purchase (required when published)', max_length=2048, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(help_text="Game title", max_length=255)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[("draft", "Draft"), ("published", "Published")],
+                        default="draft",
+                        help_text="Deal status",
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "slug",
+                    models.CharField(
+                        blank=True,
+                        help_text="URL-friendly name with format: year/month/slug (auto-generated)",
+                        max_length=255,
+                        unique=True,
+                    ),
+                ),
+                (
+                    "original_price",
+                    models.DecimalField(
+                        blank=True,
+                        decimal_places=2,
+                        help_text="Original price before discount (optional)",
+                        max_digits=10,
+                        null=True,
+                        validators=[django.core.validators.MinValueValidator(0)],
+                    ),
+                ),
+                (
+                    "price",
+                    models.DecimalField(
+                        decimal_places=2,
+                        default=0,
+                        help_text="Discounted price (0 for free)",
+                        max_digits=10,
+                        validators=[django.core.validators.MinValueValidator(0)],
+                    ),
+                ),
+                (
+                    "expires",
+                    models.DateTimeField(
+                        blank=True,
+                        help_text="Deal expiration date (required when published)",
+                        null=True,
+                    ),
+                ),
+                (
+                    "image",
+                    common.fields.ValidatedImageField(
+                        blank=True,
+                        help_text="Game image (required when published)",
+                        null=True,
+                        upload_to="game_images/%Y/%m/",
+                    ),
+                ),
+                (
+                    "image_attribution",
+                    models.TextField(
+                        blank=True,
+                        help_text="Source URL or text for image attribution (optional)",
+                        null=True,
+                    ),
+                ),
+                (
+                    "auto_extract_palette",
+                    models.BooleanField(
+                        default=True,
+                        help_text="Automatically extract color palette when image changes",
+                    ),
+                ),
+                (
+                    "link",
+                    models.URLField(
+                        blank=True,
+                        help_text="Store URL to purchase (required when published)",
+                        max_length=2048,
+                        null=True,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
             options={
-                'ordering': ['-created_at'],
-                'indexes': [models.Index(fields=['-created_at'], name='deals_deal_created_483300_idx'), models.Index(fields=['expires'], name='deals_deal_expires_3d03d2_idx')],
+                "ordering": ["-created_at"],
+                "indexes": [
+                    models.Index(
+                        fields=["-created_at"], name="deals_deal_created_483300_idx"
+                    ),
+                    models.Index(
+                        fields=["expires"], name="deals_deal_expires_3d03d2_idx"
+                    ),
+                ],
             },
         ),
         migrations.CreateModel(
-            name='NotificationChannel',
+            name="NotificationChannel",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text="Human-readable channel name (e.g., 'Main Discord', 'Test Channel')", max_length=100, unique=True)),
-                ('type', models.CharField(choices=[('discord_webhook', 'Discord Webhook')], default='discord_webhook', help_text='Type of notification channel')),
-                ('auto_notify', models.BooleanField(default=True, help_text='Automatically send notifications when new deals are published')),
-                ('active', models.BooleanField(default=True, help_text='Enable/disable this channel without deleting it')),
-                ('is_test_channel', models.BooleanField(default=False, help_text='Test channels can receive notifications for draft deals (for testing purposes)')),
-                ('message_preamble', models.TextField(blank=True, default='', help_text="Optional text message to send before the embed (e.g., '@everyone New deal!')")),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="Human-readable channel name (e.g., 'Main Discord', 'Test Channel')",
+                        max_length=100,
+                        unique=True,
+                    ),
+                ),
+                (
+                    "type",
+                    models.CharField(
+                        choices=[("discord_webhook", "Discord Webhook")],
+                        default="discord_webhook",
+                        help_text="Type of notification channel",
+                    ),
+                ),
+                (
+                    "auto_notify",
+                    models.BooleanField(
+                        default=True,
+                        help_text="Automatically send notifications when new deals are published",
+                    ),
+                ),
+                (
+                    "active",
+                    models.BooleanField(
+                        default=True,
+                        help_text="Enable/disable this channel without deleting it",
+                    ),
+                ),
+                (
+                    "is_test_channel",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Test channels can receive notifications for draft deals (for testing purposes)",
+                    ),
+                ),
+                (
+                    "message_preamble",
+                    models.TextField(
+                        blank=True,
+                        default="",
+                        help_text="Optional text message to send before the embed (e.g., '@everyone New deal!')",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
             options={
-                'ordering': ['name'],
-                'indexes': [models.Index(fields=['type', 'active'], name='deals_notif_type_1b953b_idx'), models.Index(fields=['auto_notify', 'active'], name='deals_notif_auto_no_1db59b_idx')],
+                "ordering": ["name"],
+                "indexes": [
+                    models.Index(
+                        fields=["type", "active"], name="deals_notif_type_1b953b_idx"
+                    ),
+                    models.Index(
+                        fields=["auto_notify", "active"],
+                        name="deals_notif_auto_no_1db59b_idx",
+                    ),
+                ],
             },
         ),
         migrations.CreateModel(
-            name='DiscordWebhookConfig',
+            name="DiscordWebhookConfig",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('webhook_url', models.URLField(help_text='Discord webhook URL (from Server Settings -> Integrations -> Webhooks)', max_length=2048)),
-                ('username', models.CharField(default='Game Deals Bot', help_text='Bot username displayed in Discord (max 80 characters)', max_length=80)),
-                ('avatar', models.ImageField(blank=True, help_text='Bot avatar image (optional, will be uploaded and URL used)', null=True, upload_to='discord_avatars/')),
-                ('channel', models.OneToOneField(help_text='Parent notification channel', on_delete=django.db.models.deletion.CASCADE, related_name='discord_webhook_config', to='deals.notificationchannel')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "webhook_url",
+                    models.URLField(
+                        help_text="Discord webhook URL (from Server Settings -> Integrations -> Webhooks)",
+                        max_length=2048,
+                    ),
+                ),
+                (
+                    "username",
+                    models.CharField(
+                        default="Game Deals Bot",
+                        help_text="Bot username displayed in Discord (max 80 characters)",
+                        max_length=80,
+                    ),
+                ),
+                (
+                    "avatar",
+                    models.ImageField(
+                        blank=True,
+                        help_text="Bot avatar image (optional, will be uploaded and URL used)",
+                        null=True,
+                        upload_to="discord_avatars/",
+                    ),
+                ),
+                (
+                    "channel",
+                    models.OneToOneField(
+                        help_text="Parent notification channel",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="discord_webhook_config",
+                        to="deals.notificationchannel",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Discord Webhook Configuration',
-                'verbose_name_plural': 'Discord Webhook Configurations',
+                "verbose_name": "Discord Webhook Configuration",
+                "verbose_name_plural": "Discord Webhook Configurations",
             },
         ),
         migrations.CreateModel(
-            name='ColorPalette',
+            name="ColorPalette",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('background_color', models.CharField(help_text='Main palette color (e.g., #3B82F6)', max_length=7)),
-                ('foreground_color', models.CharField(help_text='Contrasting text color for accessibility (e.g., #FFFFFF)', max_length=7)),
-                ('weight', models.FloatField(help_text='Relative prominence (any positive number, higher = more dominant)', validators=[django.core.validators.MinValueValidator(0.0)])),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('deal', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='color_palette', to='deals.deal')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "background_color",
+                    models.CharField(
+                        help_text="Main palette color (e.g., #3B82F6)", max_length=7
+                    ),
+                ),
+                (
+                    "foreground_color",
+                    models.CharField(
+                        help_text="Contrasting text color for accessibility (e.g., #FFFFFF)",
+                        max_length=7,
+                    ),
+                ),
+                (
+                    "weight",
+                    models.FloatField(
+                        help_text="Relative prominence (any positive number, higher = more dominant)",
+                        validators=[django.core.validators.MinValueValidator(0.0)],
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "deal",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="color_palette",
+                        to="deals.deal",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['deal', '-weight'],
-                'indexes': [models.Index(fields=['deal', '-weight'], name='deals_color_deal_id_129b19_idx'), models.Index(fields=['background_color'], name='deals_color_backgro_34cf95_idx')],
+                "ordering": ["deal", "-weight"],
+                "indexes": [
+                    models.Index(
+                        fields=["deal", "-weight"],
+                        name="deals_color_deal_id_129b19_idx",
+                    ),
+                    models.Index(
+                        fields=["background_color"],
+                        name="deals_color_backgro_34cf95_idx",
+                    ),
+                ],
             },
         ),
         migrations.CreateModel(
-            name='NotificationLog',
+            name="NotificationLog",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('status', models.CharField(choices=[('success', 'Success'), ('failed', 'Failed'), ('pending', 'Pending')], default='pending', help_text='Status of the notification')),
-                ('status_message', models.TextField(blank=True, help_text='Additional details about the notification status (error message, success info, etc.)', null=True)),
-                ('sent_at', models.DateTimeField(auto_now_add=True)),
-                ('channel', models.ForeignKey(help_text='Channel the notification was sent to', on_delete=django.db.models.deletion.CASCADE, related_name='notification_logs', to='deals.notificationchannel')),
-                ('deal', models.ForeignKey(help_text='Deal that was notified', on_delete=django.db.models.deletion.CASCADE, related_name='notification_logs', to='deals.deal')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("success", "Success"),
+                            ("failed", "Failed"),
+                            ("pending", "Pending"),
+                        ],
+                        default="pending",
+                        help_text="Status of the notification",
+                    ),
+                ),
+                (
+                    "status_message",
+                    models.TextField(
+                        blank=True,
+                        help_text="Additional details about the notification status (error message, success info, etc.)",
+                        null=True,
+                    ),
+                ),
+                ("sent_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "channel",
+                    models.ForeignKey(
+                        help_text="Channel the notification was sent to",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="notification_logs",
+                        to="deals.notificationchannel",
+                    ),
+                ),
+                (
+                    "deal",
+                    models.ForeignKey(
+                        help_text="Deal that was notified",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="notification_logs",
+                        to="deals.deal",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-sent_at'],
-                'indexes': [models.Index(fields=['deal', 'channel'], name='deals_notif_deal_id_ccd4b8_idx'), models.Index(fields=['channel', '-sent_at'], name='deals_notif_channel_e54d3d_idx'), models.Index(fields=['status', '-sent_at'], name='deals_notif_status_89a924_idx')],
-                'constraints': [models.UniqueConstraint(condition=models.Q(('status', 'success')), fields=('deal', 'channel'), name='unique_successful_notification')],
+                "ordering": ["-sent_at"],
+                "indexes": [
+                    models.Index(
+                        fields=["deal", "channel"],
+                        name="deals_notif_deal_id_ccd4b8_idx",
+                    ),
+                    models.Index(
+                        fields=["channel", "-sent_at"],
+                        name="deals_notif_channel_e54d3d_idx",
+                    ),
+                    models.Index(
+                        fields=["status", "-sent_at"],
+                        name="deals_notif_status_89a924_idx",
+                    ),
+                ],
+                "constraints": [
+                    models.UniqueConstraint(
+                        condition=models.Q(("status", "success")),
+                        fields=("deal", "channel"),
+                        name="unique_successful_notification",
+                    )
+                ],
             },
         ),
     ]

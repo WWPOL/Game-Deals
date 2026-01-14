@@ -1,4 +1,5 @@
 """Template tags for working with color palettes"""
+
 from django import template
 
 register = template.Library()
@@ -35,13 +36,19 @@ def palette_gradient_css(color_palette):
 @register.filter
 def palette_backgrounds(color_palette):
     """Get list of background colors sorted by weight descending"""
-    return [e.background_color for e in sorted(color_palette, key=lambda x: x.weight, reverse=True)]
+    return [
+        e.background_color
+        for e in sorted(color_palette, key=lambda x: x.weight, reverse=True)
+    ]
 
 
 @register.filter
 def palette_foregrounds(color_palette):
     """Get list of foreground colors sorted by weight descending"""
-    return [e.foreground_color for e in sorted(color_palette, key=lambda x: x.weight, reverse=True)]
+    return [
+        e.foreground_color
+        for e in sorted(color_palette, key=lambda x: x.weight, reverse=True)
+    ]
 
 
 @register.filter
@@ -82,7 +89,7 @@ def deal_css(deal, *utilities):
     return f"{scope} {utility_classes}" if utilities else scope
 
 
-@register.inclusion_tag('deals/partials/deal_variables.html')
+@register.inclusion_tag("deals/partials/deal_variables.html")
 def deal_variables(deal):
     """
     Generate CSS variable definitions for a deal.
@@ -91,15 +98,15 @@ def deal_variables(deal):
     Renders: <style>.deal-123 { --deal-bg-primary: #...; }</style>
     """
     # Get primary color (highest weight)
-    primary = deal.color_palette.order_by('-weight').first()
+    primary = deal.color_palette.order_by("-weight").first()
 
     # Get gradient string using existing filter
     gradient_css = palette_gradient_css(deal.color_palette.all())
 
     return {
-        'deal_id': deal.id,
-        'bg_primary': primary.background_color,
-        'fg_primary': primary.foreground_color,
-        'gradient': f'linear-gradient(135deg, {gradient_css})',
-        'gradient_shimmer': f'linear-gradient(110deg, {gradient_css})',
+        "deal_id": deal.id,
+        "bg_primary": primary.background_color,
+        "fg_primary": primary.foreground_color,
+        "gradient": f"linear-gradient(135deg, {gradient_css})",
+        "gradient_shimmer": f"linear-gradient(110deg, {gradient_css})",
     }

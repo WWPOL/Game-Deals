@@ -15,18 +15,67 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='UserTask',
+            name="UserTask",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('task_id', models.CharField(db_index=True, help_text='Celery task ID', max_length=255, unique=True)),
-                ('task_name', models.CharField(help_text="Name of the task (e.g., 'deals.tasks.notify_deal')", max_length=255)),
-                ('seen', models.BooleanField(default=False, help_text='Whether user has been notified of task completion')),
-                ('initiated_at', models.DateTimeField(auto_now_add=True, help_text='When the task was initiated')),
-                ('user', models.ForeignKey(help_text='User who initiated this task', on_delete=django.db.models.deletion.CASCADE, related_name='initiated_tasks', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "task_id",
+                    models.CharField(
+                        db_index=True,
+                        help_text="Celery task ID",
+                        max_length=255,
+                        unique=True,
+                    ),
+                ),
+                (
+                    "task_name",
+                    models.CharField(
+                        help_text="Name of the task (e.g., 'deals.tasks.notify_deal')",
+                        max_length=255,
+                    ),
+                ),
+                (
+                    "seen",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Whether user has been notified of task completion",
+                    ),
+                ),
+                (
+                    "initiated_at",
+                    models.DateTimeField(
+                        auto_now_add=True, help_text="When the task was initiated"
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        help_text="User who initiated this task",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="initiated_tasks",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-initiated_at'],
-                'indexes': [models.Index(fields=['user', '-initiated_at'], name='tasks_usert_user_id_b90387_idx'), models.Index(fields=['user', 'seen'], name='tasks_usert_user_id_ac4dc5_idx')],
+                "ordering": ["-initiated_at"],
+                "indexes": [
+                    models.Index(
+                        fields=["user", "-initiated_at"],
+                        name="tasks_usert_user_id_b90387_idx",
+                    ),
+                    models.Index(
+                        fields=["user", "seen"], name="tasks_usert_user_id_ac4dc5_idx"
+                    ),
+                ],
             },
         ),
     ]

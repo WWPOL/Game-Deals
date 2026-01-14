@@ -1,6 +1,7 @@
 """
 Celery utilities for user-tracked tasks.
 """
+
 from celery import shared_task, Task
 from functools import wraps
 import logging
@@ -19,14 +20,15 @@ class UserTrackedTask(Task):
     (via thread-local storage) and stored in task metadata. A UserTask record
     is created to track the task for notification purposes.
     """
+
     def apply_async(self, args=None, kwargs=None, **options):
         """Override to automatically store user_id and create UserTask record."""
         # Get current user from thread-local storage
         user = get_current_user()
         if user and user.is_authenticated:
-            headers = options.get('headers', {})
-            headers['user_id'] = user.id
-            options['headers'] = headers
+            headers = options.get("headers", {})
+            headers["user_id"] = user.id
+            options["headers"] = headers
             logger.debug(f"Task {self.name} initiated by user {user.id}")
 
         # Call parent to get the AsyncResult
@@ -39,7 +41,9 @@ class UserTrackedTask(Task):
                 task_id=result.id,
                 task_name=self.name,
             )
-            logger.info(f"Created UserTask record for {self.name} (ID: {result.id}) - User: {user.username}")
+            logger.info(
+                f"Created UserTask record for {self.name} (ID: {result.id}) - User: {user.username}"
+            )
 
         return result
 
@@ -59,24 +63,28 @@ def user_tracked_task(*task_args, **task_kwargs):
         # Call normally - user is captured automatically:
         my_task.delay(arg1, arg2)
     """
+
     def decorator(func):
         # Set base class for the task
-        task_kwargs['base'] = UserTrackedTask
-        task_kwargs['bind'] = True  # Bind to get access to self (task instance)
+        task_kwargs["base"] = UserTrackedTask
+        task_kwargs["bind"] = True  # Bind to get access to self (task instance)
 
         @shared_task(*task_args, **task_kwargs)
         @wraps(func)
         def wrapped_task(self, *args, **kwargs):
             # Log user_id if available in task headers
             user_id = None
-            if hasattr(self.request, 'headers') and self.request.headers:
-                user_id = self.request.headers.get('user_id')
+            if hasattr(self.request, "headers") and self.request.headers:
+                user_id = self.request.headers.get("user_id")
 
             if user_id:
-                logger.info(f"Task {self.name} (ID: {self.request.id}) running for user {user_id}")
+                logger.info(
+                    f"Task {self.name} (ID: {self.request.id}) running for user {user_id}"
+                )
 
             # Call the original function (without self, since original function doesn't expect it)
             return func(*args, **kwargs)
 
         return wrapped_task
+
     return decorator

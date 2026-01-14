@@ -1,6 +1,7 @@
 """
 Serializers for common app API endpoints.
 """
+
 from rest_framework import serializers
 from django_celery_results.models import TaskResult
 
@@ -11,6 +12,7 @@ class UserTaskSerializer(serializers.ModelSerializer):
     """
     Serializer for UserTask model with task status information.
     """
+
     status = serializers.CharField(read_only=True)
     is_running = serializers.BooleanField(read_only=True)
     is_completed = serializers.BooleanField(read_only=True)
@@ -20,16 +22,16 @@ class UserTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserTask
         fields = [
-            'id',
-            'task_id',
-            'task_name',
-            'status',
-            'is_running',
-            'is_completed',
-            'result',
-            'initiated_at',
-            'date_done',
-            'seen',
+            "id",
+            "task_id",
+            "task_name",
+            "status",
+            "is_running",
+            "is_completed",
+            "result",
+            "initiated_at",
+            "date_done",
+            "seen",
         ]
 
     def get_result(self, obj):
@@ -51,5 +53,6 @@ class TaskStatusResponseSerializer(serializers.Serializer):
     """
     Serializer for task status API response.
     """
+
     running_count = serializers.IntegerField()
     recently_completed = UserTaskSerializer(many=True)

@@ -1,4 +1,5 @@
 """Django management command to download deals from Firebase Firestore to JSON"""
+
 import argparse
 import json
 import logging
@@ -11,10 +12,10 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = 'Download deals from Firebase Firestore to JSON file'
+    help = "Download deals from Firebase Firestore to JSON file"
 
     def create_parser(self, prog_name, subcommand, **kwargs):
-        kwargs['formatter_class'] = argparse.RawTextHelpFormatter
+        kwargs["formatter_class"] = argparse.RawTextHelpFormatter
         parser = super().create_parser(prog_name, subcommand, **kwargs)
         parser.epilog = """
 FIRESTORE COLLECTION:
@@ -47,28 +48,21 @@ EXAMPLES:
         return parser
 
     def add_arguments(self, parser):
+        parser.add_argument("output_file", type=str, help="Path to output JSON file")
         parser.add_argument(
-            'output_file',
-            type=str,
-            help='Path to output JSON file'
+            "--project-id", type=str, help="Firebase project ID", default=None
         )
         parser.add_argument(
-            '--project-id',
+            "--collection",
             type=str,
-            help='Firebase project ID',
-            default=None
-        )
-        parser.add_argument(
-            '--collection',
-            type=str,
-            default='deals',
-            help='Firestore collection name (default: deals)'
+            default="deals",
+            help="Firestore collection name (default: deals)",
         )
 
     def handle(self, *args, **options):
-        output_file = options['output_file']
-        project_id = options['project_id']
-        collection_name = options['collection']
+        output_file = options["output_file"]
+        project_id = options["project_id"]
+        collection_name = options["collection"]
 
         db = firestore.Client(project=project_id)
         deals_ref = db.collection(collection_name)
@@ -84,7 +78,7 @@ EXAMPLES:
 
             # Convert Firestore timestamps to ISO strings for JSON serialization
             for key, value in deal_data.items():
-                if hasattr(value, 'timestamp'):  # Firestore timestamp
+                if hasattr(value, "timestamp"):  # Firestore timestamp
                     deal_data[key] = value.isoformat()
 
             deals[doc.id] = deal_data
@@ -94,8 +88,8 @@ EXAMPLES:
 
         # Write to JSON file
         logger.info(f"Writing to {output_file}...")
-        with open(output_file, 'w') as f:
-            json.dump({'deals': deals}, f, indent=2, default=str)
+        with open(output_file, "w") as f:
+            json.dump({"deals": deals}, f, indent=2, default=str)
 
         logger.info(f"✓ Successfully exported {count} deals to {output_file}")
         logger.info(f"Next step: python manage.py migrate_firebase {output_file}")

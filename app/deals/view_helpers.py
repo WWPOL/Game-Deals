@@ -22,18 +22,18 @@ def get_deal_pagination_context(current_deal=None, user=None):
     active_deals = list(Deal.objects.active(user))
 
     context = {
-        'active_deals_count': len(active_deals),
-        'current_deal_position': None,
-        'previous_deal': None,
-        'next_deal': None,
-        'first_deal': None,
+        "active_deals_count": len(active_deals),
+        "current_deal_position": None,
+        "previous_deal": None,
+        "next_deal": None,
+        "first_deal": None,
     }
 
     if not active_deals:
         return context
 
     # Set first deal for badge link
-    context['first_deal'] = active_deals[0]
+    context["first_deal"] = active_deals[0]
 
     # If no current deal (home page), don't provide navigation
     if current_deal is None:
@@ -41,16 +41,18 @@ def get_deal_pagination_context(current_deal=None, user=None):
 
     # Find current deal position
     try:
-        current_index = next(i for i, deal in enumerate(active_deals) if deal.id == current_deal.id)
-        context['current_deal_position'] = current_index + 1
+        current_index = next(
+            i for i, deal in enumerate(active_deals) if deal.id == current_deal.id
+        )
+        context["current_deal_position"] = current_index + 1
 
         # Get previous deal (None if at first position)
         if current_index > 0:
-            context['previous_deal'] = active_deals[current_index - 1]
+            context["previous_deal"] = active_deals[current_index - 1]
 
         # Get next deal (None if at last position)
         if current_index < len(active_deals) - 1:
-            context['next_deal'] = active_deals[current_index + 1]
+            context["next_deal"] = active_deals[current_index + 1]
     except StopIteration:
         # Current deal is not in active deals (expired or draft)
         pass

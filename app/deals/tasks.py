@@ -9,8 +9,14 @@ import logging
 
 from tasks.celery_utils import user_tracked_task
 from deals.models import Deal, NotificationChannel, NotificationLog
-from deals.services.discord_notifier import send_discord_notification, DiscordNotificationError
-from deals.services.image_search import GoogleCustomSearchProvider, download_image_from_url
+from deals.services.discord_notifier import (
+    send_discord_notification,
+    DiscordNotificationError,
+)
+from deals.services.image_search import (
+    GoogleCustomSearchProvider,
+    download_image_from_url,
+)
 from common.fields import validate_image_content
 from common.image_memory_manager import ImageTooLargeError, MemoryAllocationError
 
@@ -32,14 +38,16 @@ def send_discord_webhook(deal_id: int, channel_id: int) -> dict:
         dict: Status information about the notification
     """
     try:
-        deal = Deal.objects.prefetch_related('color_palette').get(pk=deal_id)
+        deal = Deal.objects.prefetch_related("color_palette").get(pk=deal_id)
     except Deal.DoesNotExist:
         error_msg = f"Deal with ID {deal_id} not found"
         logger.error(error_msg)
         return {"success": False, "error": error_msg}
 
     try:
-        channel = NotificationChannel.objects.select_related('discord_webhook_config').get(pk=channel_id)
+        channel = NotificationChannel.objects.select_related(
+            "discord_webhook_config"
+        ).get(pk=channel_id)
     except NotificationChannel.DoesNotExist:
         error_msg = f"NotificationChannel with ID {channel_id} not found"
         logger.error(error_msg)
@@ -53,9 +61,7 @@ def send_discord_webhook(deal_id: int, channel_id: int) -> dict:
 
     # Create pending notification log
     log = NotificationLog.objects.create(
-        deal=deal,
-        channel=channel,
-        status=NotificationLog.Status.PENDING
+        deal=deal, channel=channel, status=NotificationLog.Status.PENDING
     )
 
     try:
@@ -88,7 +94,9 @@ def send_discord_webhook(deal_id: int, channel_id: int) -> dict:
 
 
 @user_tracked_task()
-def notify_deal(deal_id: int, channel_ids: list[int] = None, force: bool = False) -> dict:
+def notify_deal(
+    deal_id: int, channel_ids: list[int] = None, force: bool = False
+) -> dict:
     """
     Send notifications for a deal to specified channels (or all auto-notify channels).
 
@@ -123,25 +131,27 @@ def notify_deal(deal_id: int, channel_ids: list[int] = None, force: bool = False
     # If force=True, delete existing successful notification logs
     if force:
         deleted_count = NotificationLog.objects.filter(
-            deal=deal,
-            channel__in=channels,
-            status=NotificationLog.Status.SUCCESS
+            deal=deal, channel__in=channels, status=NotificationLog.Status.SUCCESS
         ).delete()[0]
         if deleted_count:
-            logger.info(f"Force flag set - deleted {deleted_count} successful log(s) for deal '{deal.name}'")
+            logger.info(
+                f"Force flag set - deleted {deleted_count} successful log(s) for deal '{deal.name}'"
+            )
 
     # Queue notification tasks for each channel
     task_ids = []
     for channel in channels:
         result = send_discord_webhook.delay(deal_id, channel.id)
         task_ids.append(result.id)
-        logger.info(f"Queued notification task for deal '{deal.name}' to channel '{channel.name}'")
+        logger.info(
+            f"Queued notification task for deal '{deal.name}' to channel '{channel.name}'"
+        )
 
     return {
         "success": True,
         "message": f"Queued {len(task_ids)} notification task(s) for deal '{deal.name}'",
         "task_ids": task_ids,
-        "channel_count": len(task_ids)
+        "channel_count": len(task_ids),
     }
 
 
@@ -176,7 +186,7 @@ def search_and_download_image(deal_id: int, search_query: str = None) -> dict:
     try:
         provider = GoogleCustomSearchProvider(
             api_key=settings.GOOGLE_API_KEY,
-            search_engine_id=settings.GOOGLE_SEARCH_ENGINE_ID
+            search_engine_id=settings.GOOGLE_SEARCH_ENGINE_ID,
         )
 
         # Fetch up to 10 images to try (Google API max per request)
@@ -191,10 +201,14 @@ def search_and_download_image(deal_id: int, search_query: str = None) -> dict:
         errors = []
         for idx, image_result in enumerate(image_results, 1):
             try:
-                logger.info(f"Trying image {idx}/{len(image_results)} for '{deal.name}': {image_result.url}")
+                logger.info(
+                    f"Trying image {idx}/{len(image_results)} for '{deal.name}': {image_result.url}"
+                )
 
                 # Download the image
-                image_content, image_filename = download_image_from_url(image_result.url)
+                image_content, image_filename = download_image_from_url(
+                    image_result.url
+                )
 
                 # Validate the image in memory BEFORE writing to storage
                 # (Only needed here since we're trying multiple images)
@@ -217,7 +231,7 @@ def search_and_download_image(deal_id: int, search_query: str = None) -> dict:
                     "message": msg,
                     "image_url": image_result.url,
                     "attempts": idx,
-                    "total_images": len(image_results)
+                    "total_images": len(image_results),
                 }
 
             except Exception as e:
@@ -230,7 +244,11 @@ def search_and_download_image(deal_id: int, search_query: str = None) -> dict:
         # If we get here, all images failed
         error_summary = f"All {len(image_results)} images failed validation. Errors: {'; '.join(errors)}"
         logger.error(f"'{deal.name}' - {error_summary}")
-        return {"success": False, "error": error_summary, "attempts": len(image_results)}
+        return {
+            "success": False,
+            "error": error_summary,
+            "attempts": len(image_results),
+        }
 
     except Exception as e:
         error_msg = f"Error searching for image: {str(e)}"
@@ -239,7 +257,9 @@ def search_and_download_image(deal_id: int, search_query: str = None) -> dict:
 
 
 @user_tracked_task()
-def download_and_set_image(deal_id: int, image_url: str, attribution_url: str = None) -> dict:
+def download_and_set_image(
+    deal_id: int, image_url: str, attribution_url: str = None
+) -> dict:
     """
     Download image from URL and set it on the deal.
 
@@ -273,12 +293,12 @@ def download_and_set_image(deal_id: int, image_url: str, attribution_url: str = 
         # If there's an attribution URL, update the model again.
         if attribution_url:
             deal.image_attribution = attribution_url
-            deal.save(update_fields=['image_attribution'])
+            deal.save(update_fields=["image_attribution"])
 
         return {
             "success": True,
             "message": f"Image set successfully for '{deal.name}'",
-            "image_url": image_url
+            "image_url": image_url,
         }
 
     except (ImageTooLargeError, MemoryAllocationError) as e:
@@ -287,7 +307,9 @@ def download_and_set_image(deal_id: int, image_url: str, attribution_url: str = 
         return {"success": False, "error": error_msg}
 
     except Exception as e:
-        logger.exception(f"Failed to download/set image for deal {deal_id} from url {image_url}")
+        logger.exception(
+            f"Failed to download/set image for deal {deal_id} from url {image_url}"
+        )
         return {"success": False, "error": str(e)}
 
 
@@ -360,7 +382,9 @@ def download_image_from_attribution(deal_id: int) -> dict:
         return {"success": False, "error": error_msg}
 
     # Queue the new generic download task
-    task = download_and_set_image.delay(deal_id, deal.image_attribution, deal.image_attribution)
+    task = download_and_set_image.delay(
+        deal_id, deal.image_attribution, deal.image_attribution
+    )
 
     msg = f"Queued image download from attribution for '{deal.name}'"
     logger.info(msg)

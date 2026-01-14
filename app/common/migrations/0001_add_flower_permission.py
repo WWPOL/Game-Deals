@@ -7,19 +7,28 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='CommonPermissions',
+            name="CommonPermissions",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
             ],
             options={
-                'permissions': [('can_view_flower', 'Can view Flower monitoring dashboard')],
-                'managed': False,
-                'default_permissions': (),
+                "permissions": [
+                    ("can_view_flower", "Can view Flower monitoring dashboard")
+                ],
+                "managed": False,
+                "default_permissions": (),
             },
         ),
     ]

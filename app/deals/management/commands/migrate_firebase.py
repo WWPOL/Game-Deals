@@ -1,4 +1,5 @@
 """Django management command to migrate deals from Firebase JSON export to Django"""
+
 import argparse
 import json
 import logging
@@ -30,12 +31,12 @@ def parse_firebase_timestamp(value: Any) -> Optional[datetime]:
         return None
 
     # Firestore Timestamp object
-    if isinstance(value, dict) and '_seconds' in value:
-        return datetime.fromtimestamp(value['_seconds'])
+    if isinstance(value, dict) and "_seconds" in value:
+        return datetime.fromtimestamp(value["_seconds"])
 
     # ISO string
     if isinstance(value, str):
-        return datetime.fromisoformat(value.replace('Z', '+00:00'))
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
     # Unix timestamp
     if isinstance(value, (int, float)):
@@ -75,7 +76,9 @@ def parse_price(value: Any) -> Optional[Decimal]:
 
 
 # Custom Pydantic type for Firebase timestamps
-FirebaseTimestamp = Annotated[Optional[datetime], BeforeValidator(parse_firebase_timestamp)]
+FirebaseTimestamp = Annotated[
+    Optional[datetime], BeforeValidator(parse_firebase_timestamp)
+]
 
 # Custom Pydantic type for price values
 FirebasePrice = Annotated[Optional[Decimal], BeforeValidator(parse_price)]
@@ -83,7 +86,8 @@ FirebasePrice = Annotated[Optional[Decimal], BeforeValidator(parse_price)]
 
 class FirebaseDeal(BaseModel):
     """Firebase Firestore deal document structure"""
-    id: str = Field(default='', description="Document ID from Firestore")
+
+    id: str = Field(default="", description="Document ID from Firestore")
     name: str
     price: FirebasePrice = None
     is_free: bool = False
@@ -98,6 +102,7 @@ class FirebaseDeal(BaseModel):
 @dataclass
 class MappedDealData:
     """Typed data for creating Django Deal model"""
+
     name: str
     status: str
     slug: str
@@ -110,10 +115,12 @@ class MappedDealData:
 
 
 class Command(BaseCommand):
-    help = 'Migrate deals from Firebase JSON export to Django'
+    help = "Migrate deals from Firebase JSON export to Django"
 
     def create_parser(self, prog_name, subcommand, **kwargs):
-        kwargs['formatter_class'] = argparse.RawTextHelpFormatter # so multi line help text works
+        kwargs["formatter_class"] = (
+            argparse.RawTextHelpFormatter
+        )  # so multi line help text works
         parser = super().create_parser(prog_name, subcommand, **kwargs)
         parser.epilog = """
 WORKFLOW:
@@ -169,12 +176,14 @@ EXAMPLES:
         return parser
 
     def add_arguments(self, parser):
-        parser.add_argument('json_file', type=str, help='Path to Firebase export JSON')
-        parser.add_argument('--dry-run', action='store_true', help='Preview without saving')
+        parser.add_argument("json_file", type=str, help="Path to Firebase export JSON")
+        parser.add_argument(
+            "--dry-run", action="store_true", help="Preview without saving"
+        )
 
     def handle(self, *args, **options):
-        json_file = options['json_file']
-        dry_run = options['dry_run']
+        json_file = options["json_file"]
+        dry_run = options["dry_run"]
 
         # Parse Firebase export with Pydantic validation
         firebase_deals = self.parse_firestore_export(json_file)
@@ -191,7 +200,7 @@ EXAMPLES:
                 # Map fields with type safety
                 mapped_data = self.map_firebase_to_django(fb_deal)
 
-                progress_pct = (index / total * 100)
+                progress_pct = index / total * 100
                 progress_str = f"[{index}/{total}] ({progress_pct:.1f}%)"
 
                 # Check if deal already exists (idempotent check using natural key)
@@ -200,16 +209,20 @@ EXAMPLES:
                     name=mapped_data.name,
                     link=mapped_data.link,
                     price=mapped_data.price,
-                    expires=mapped_data.expires
+                    expires=mapped_data.expires,
                 ).first()
 
                 if existing_deal:
-                    logger.debug(f"{progress_str} ⊘ Skipped (already exists): {mapped_data.name}")
+                    logger.debug(
+                        f"{progress_str} ⊘ Skipped (already exists): {mapped_data.name}"
+                    )
                     skipped += 1
                     continue
 
                 if dry_run:
-                    logger.info(f"{progress_str} [DRY RUN] Would create: {mapped_data.name}")
+                    logger.info(
+                        f"{progress_str} [DRY RUN] Would create: {mapped_data.name}"
+                    )
                     migrated += 1
                     continue
 
@@ -234,16 +247,18 @@ EXAMPLES:
                 migrated += 1
 
             except Exception as e:
-                progress_pct = (index / total * 100)
+                progress_pct = index / total * 100
                 progress_str = f"[{index}/{total}] ({progress_pct:.1f}%)"
                 error_msg = f"{progress_str} ✗ {fb_deal.name}: {str(e)}"
                 logger.error(error_msg)
-                error_list.append({
-                    'name': fb_deal.name,
-                    'error': str(e),
-                    'traceback': traceback.format_exc(),
-                    'index': index
-                })
+                error_list.append(
+                    {
+                        "name": fb_deal.name,
+                        "error": str(e),
+                        "traceback": traceback.format_exc(),
+                        "index": index,
+                    }
+                )
 
         # Final summary
         logger.info("=" * 50)
@@ -262,22 +277,22 @@ EXAMPLES:
                 logger.error(f"[{err['index']}] {err['name']}")
                 logger.error(f"    Error: {err['error']}")
                 logger.error(f"    Traceback:")
-                for line in err['traceback'].splitlines():
+                for line in err["traceback"].splitlines():
                     logger.error(f"      {line}")
                 logger.error("")
         logger.info("=" * 50)
 
     def parse_firestore_export(self, json_file_path: str) -> list[FirebaseDeal]:
         """Parse Firebase Firestore export JSON with Pydantic validation"""
-        with open(json_file_path, 'r') as f:
+        with open(json_file_path, "r") as f:
             data = json.load(f)
 
         deals = []
 
         # Firestore export format: {"deals": {"id": {...}}}
-        if isinstance(data, dict) and 'deals' in data:
-            for deal_id, deal_data in data['deals'].items():
-                deal_data['id'] = deal_id
+        if isinstance(data, dict) and "deals" in data:
+            for deal_id, deal_data in data["deals"].items():
+                deal_data["id"] = deal_id
                 deals.append(FirebaseDeal(**deal_data))
         # Array format: [{...}, {...}]
         elif isinstance(data, list):
@@ -290,19 +305,21 @@ EXAMPLES:
 
         # Handle price (is_free → price=0)
         if firebase_deal.is_free:
-            price = Decimal('0')
+            price = Decimal("0")
         elif firebase_deal.price is not None:
             price = firebase_deal.price
         else:
-            price = Decimal('0')
+            price = Decimal("0")
 
         # Generate slug from name and created_at
-        created_at = firebase_deal.created_at or firebase_deal.expires - timedelta(weeks=1)
+        created_at = firebase_deal.created_at or firebase_deal.expires - timedelta(
+            weeks=1
+        )
         slug = self.generate_slug(firebase_deal.name, created_at)
 
         return MappedDealData(
             name=firebase_deal.name,
-            status='draft',  # All migrated deals start as drafts
+            status="draft",  # All migrated deals start as drafts
             slug=slug,
             price=price,
             expires=firebase_deal.expires,

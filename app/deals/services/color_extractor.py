@@ -1,4 +1,5 @@
 """Extract dominant colors from images"""
+
 import io
 import logging
 from typing import Tuple, List
@@ -41,10 +42,16 @@ def color_distance(color1: Tuple[int, int, int], color2: Tuple[int, int, int]) -
     r1, g1, b1 = color1
     r2, g2, b2 = color2
     # Weighted Euclidean distance for better perceptual difference
-    return np.sqrt(2 * (r1 - r2)**2 + 4 * (g1 - g2)**2 + 3 * (b1 - b2)**2)
+    return np.sqrt(2 * (r1 - r2) ** 2 + 4 * (g1 - g2) ** 2 + 3 * (b1 - b2) ** 2)
 
 
-def select_diverse_colors(colors: np.ndarray, counts: np.ndarray, max_colors: int = 6, min_colors: int = 2, min_distance: float = 100) -> List[int]:
+def select_diverse_colors(
+    colors: np.ndarray,
+    counts: np.ndarray,
+    max_colors: int = 6,
+    min_colors: int = 2,
+    min_distance: float = 100,
+) -> List[int]:
     """
     Select 2-6 diverse colors, adapting distance threshold if needed.
 
@@ -92,12 +99,16 @@ def select_diverse_colors(colors: np.ndarray, counts: np.ndarray, max_colors: in
 
     # If we don't have enough diverse colors, retry with lower threshold
     if len(selected_indices) < min_colors and min_distance > 10:
-        return select_diverse_colors(colors, counts, max_colors, min_colors, min_distance * 0.7)
+        return select_diverse_colors(
+            colors, counts, max_colors, min_colors, min_distance * 0.7
+        )
 
     return selected_indices
 
 
-def find_foreground_color(palette: List[Tuple[int, int, int]], background_color: Tuple[int, int, int]) -> str:
+def find_foreground_color(
+    palette: List[Tuple[int, int, int]], background_color: Tuple[int, int, int]
+) -> str:
     """
     Find best contrasting foreground color for the given background.
 
@@ -143,7 +154,9 @@ def find_foreground_color(palette: List[Tuple[int, int, int]], background_color:
     return "#ffffff" if white_contrast > black_contrast else "#000000"
 
 
-def extract_colors_from_image(image_file, max_colors: int = 6, min_colors: int = 2) -> List[ColorPalette]:
+def extract_colors_from_image(
+    image_file, max_colors: int = 6, min_colors: int = 2
+) -> List[ColorPalette]:
     """
     Extract weighted color palette from a file-like object.
 
@@ -162,7 +175,7 @@ def extract_colors_from_image(image_file, max_colors: int = 6, min_colors: int =
     """
     # Load and process image
     img = Image.open(image_file)
-    img = img.convert('RGB')
+    img = img.convert("RGB")
     img.thumbnail((200, 200))
 
     # Convert to numpy array
@@ -180,7 +193,9 @@ def extract_colors_from_image(image_file, max_colors: int = 6, min_colors: int =
     counts = np.bincount(labels)
 
     # Select diverse colors with adaptive threshold
-    diverse_indices = select_diverse_colors(colors, counts, max_colors, min_colors, min_distance=100)
+    diverse_indices = select_diverse_colors(
+        colors, counts, max_colors, min_colors, min_distance=100
+    )
 
     # Calculate normalized weights (sum to 1.0)
     total_pixels = sum(counts[idx] for idx in diverse_indices)
@@ -198,23 +213,27 @@ def extract_colors_from_image(image_file, max_colors: int = 6, min_colors: int =
         # Find best contrasting foreground color
         fg_hex = find_foreground_color(palette_rgb, bg_rgb)
 
-        palette_entries.append(ColorPalette(
-            background_color=bg_hex,
-            foreground_color=fg_hex,
-            weight=weight
-        ))
+        palette_entries.append(
+            ColorPalette(
+                background_color=bg_hex, foreground_color=fg_hex, weight=weight
+            )
+        )
 
     # Sort by weight descending (most prominent first)
     palette_entries.sort(key=lambda e: e.weight, reverse=True)
 
     logger.info(f"Extracted {len(palette_entries)} diverse colors")
     for i, entry in enumerate(palette_entries):
-        logger.debug(f"  {i+1}. {entry.background_color} (fg: {entry.foreground_color}): {entry.weight:.1%}")
+        logger.debug(
+            f"  {i+1}. {entry.background_color} (fg: {entry.foreground_color}): {entry.weight:.1%}"
+        )
 
     return palette_entries
 
 
-def extract_colors_from_image_content(image_content: bytes, max_colors: int = 6, min_colors: int = 2) -> List[ColorPalette]:
+def extract_colors_from_image_content(
+    image_content: bytes, max_colors: int = 6, min_colors: int = 2
+) -> List[ColorPalette]:
     """
     Extract weighted color palette from raw image bytes.
 

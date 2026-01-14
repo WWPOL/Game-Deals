@@ -1,4 +1,5 @@
 """Custom Django model fields"""
+
 from django.db import models
 from django.core.exceptions import ValidationError
 from PIL import Image
@@ -6,7 +7,7 @@ from PIL import Image
 
 # Web browser supported image formats
 # Based on MDN: https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Formats/Image_types
-SUPPORTED_IMAGE_FORMATS = ['JPEG', 'PNG', 'GIF', 'WEBP', 'AVIF', 'SVG']
+SUPPORTED_IMAGE_FORMATS = ["JPEG", "PNG", "GIF", "WEBP", "AVIF", "SVG"]
 
 
 def validate_image_content(image_file):
@@ -26,7 +27,7 @@ def validate_image_content(image_file):
 
     try:
         # Save current position
-        current_pos = image_file.tell() if hasattr(image_file, 'tell') else 0
+        current_pos = image_file.tell() if hasattr(image_file, "tell") else 0
 
         # Open the image file
         img = Image.open(image_file)
@@ -44,7 +45,7 @@ def validate_image_content(image_file):
         # Check if format is supported by web browsers
         if img.format not in SUPPORTED_IMAGE_FORMATS:
             raise ValidationError(
-                f'Unsupported image format: {img.format}. '
+                f"Unsupported image format: {img.format}. "
                 f'Supported formats for web: {", ".join(SUPPORTED_IMAGE_FORMATS)}'
             )
 
@@ -56,9 +57,7 @@ def validate_image_content(image_file):
         raise
     except Exception as e:
         # Catch any PIL errors (IOError, SyntaxError, etc.)
-        raise ValidationError(
-            f'Invalid or corrupted image file: {str(e)}'
-        )
+        raise ValidationError(f"Invalid or corrupted image file: {str(e)}")
 
 
 class ValidatedImageField(models.ImageField):
@@ -78,7 +77,7 @@ class ValidatedImageField(models.ImageField):
         file = super().pre_save(model_instance, add)
 
         # If a new file was uploaded, validate it
-        if file and hasattr(file, 'file'):
+        if file and hasattr(file, "file"):
             # file.file is the actual file object (ContentFile, UploadedFile, etc.)
             validate_image_content(file.file)
 

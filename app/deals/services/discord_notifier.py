@@ -17,22 +17,26 @@ from deals.utils import build_site_url
 
 class DiscordNotificationError(Exception):
     """Exception raised when Discord notification fails"""
+
     pass
 
 
 class DiscordEmbedImage(BaseModel):
     """Discord embed image"""
+
     url: str
 
 
 class DiscordEmbedFooter(BaseModel):
     """Discord embed footer"""
+
     text: str
     icon_url: Optional[str] = None
 
 
 class DiscordEmbed(BaseModel):
     """Discord embed object following Discord API specification"""
+
     title: str
     description: str
     url: Optional[str] = None
@@ -44,6 +48,7 @@ class DiscordEmbed(BaseModel):
 
 class DiscordWebhookPayload(BaseModel):
     """Discord webhook payload"""
+
     content: Optional[str] = None
     embeds: list[DiscordEmbed]
     username: Optional[str] = None
@@ -62,10 +67,10 @@ def build_deal_embed(deal: Deal) -> DiscordEmbed:
     """
     # Get the most prominent color for the embed color
     primary_color = None
-    first_palette_entry = deal.color_palette.order_by('-weight').first()
+    first_palette_entry = deal.color_palette.order_by("-weight").first()
     if first_palette_entry:
         # Convert hex color to decimal (Discord expects integer color)
-        hex_color = first_palette_entry.background_color.lstrip('#')
+        hex_color = first_palette_entry.background_color.lstrip("#")
         primary_color = int(hex_color, 16)
 
     # Build description with pricing info
@@ -76,7 +81,9 @@ def build_deal_embed(deal: Deal) -> DiscordEmbed:
         description_parts.append("**FREE** 🎁")
     else:
         if deal.original_price and deal.original_price > deal.price:
-            discount_percent = ((deal.original_price - deal.price) / deal.original_price) * 100
+            discount_percent = (
+                (deal.original_price - deal.price) / deal.original_price
+            ) * 100
             description_parts.append(
                 f"~~${deal.original_price}~~ **${deal.price}** "
                 f"({discount_percent:.0f}% OFF) 💸"
@@ -114,7 +121,7 @@ def build_deal_embed(deal: Deal) -> DiscordEmbed:
         description="\n".join(description_parts),
         timestamp=timezone.now().isoformat(),
         image=image_embed,
-        footer=DiscordEmbedFooter(text="Game Deals")
+        footer=DiscordEmbedFooter(text="Game Deals"),
     )
 
 
@@ -135,18 +142,24 @@ def send_discord_notification(deal: Deal, channel: NotificationChannel) -> bool:
     if not channel or not channel.active:
         raise DiscordNotificationError("Channel is not active")
 
-    if channel.type != 'discord_webhook':
-        raise DiscordNotificationError(f"Channel type '{channel.type}' is not supported by Discord notifier")
+    if channel.type != "discord_webhook":
+        raise DiscordNotificationError(
+            f"Channel type '{channel.type}' is not supported by Discord notifier"
+        )
 
     # Get Discord-specific configuration
     try:
         config = channel.discord_webhook_config
     except DiscordWebhookConfig.DoesNotExist:
-        raise DiscordNotificationError("Discord webhook configuration not found for this channel")
+        raise DiscordNotificationError(
+            "Discord webhook configuration not found for this channel"
+        )
 
     webhook_url = config.webhook_url
     if not webhook_url:
-        raise DiscordNotificationError("Discord webhook URL not configured for this channel")
+        raise DiscordNotificationError(
+            "Discord webhook URL not configured for this channel"
+        )
 
     # Build the embed
     embed = build_deal_embed(deal)
@@ -161,16 +174,12 @@ def send_discord_notification(deal: Deal, channel: NotificationChannel) -> bool:
         content=channel.message_preamble if channel.message_preamble else None,
         embeds=[embed],
         username=config.username,
-        avatar_url=avatar_url
+        avatar_url=avatar_url,
     )
 
     # Send the request
     try:
-        response = requests.post(
-            webhook_url,
-            json=payload.model_dump(),
-            timeout=10
-        )
+        response = requests.post(webhook_url, json=payload.model_dump(), timeout=10)
 
         # Check response
         if response.status_code == 204:

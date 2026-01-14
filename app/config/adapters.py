@@ -34,7 +34,7 @@ class NoSignupSocialAccountAdapter(DefaultSocialAccountAdapter):
             return
 
         # Get email from social account
-        email = sociallogin.account.extra_data.get('email')
+        email = sociallogin.account.extra_data.get("email")
         if not email:
             return
 

@@ -44,107 +44,106 @@ def get_env(name: str, default: str | None = None) -> str | None:
         The environment variable value, default, or empty string during collectstatic
     """
     if is_collectstatic() and default is None:
-        return os.environ.get(name, '')
+        return os.environ.get(name, "")
     return os.environ.get(name, default)
 
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = get_env('SECRET_KEY')
+SECRET_KEY = get_env("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = get_env("DEBUG", "").lower() == 'true'
+DEBUG = get_env("DEBUG", "").lower() == "true"
 
 ALLOWED_HOSTS = [
-  host.strip()
-  for host in get_env("ALLOWED_HOSTS", "").split(",")
-  if host.strip()
+    host.strip() for host in get_env("ALLOWED_HOSTS", "").split(",") if host.strip()
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-  origin.strip()
-  for origin in get_env("CSRF_TRUSTED_ORIGINS", "").split(",")
-  if origin.strip()
+    origin.strip()
+    for origin in get_env("CSRF_TRUSTED_ORIGINS", "").split(",")
+    if origin.strip()
 ]
 
 # Silence system checks for intentional configurations
 SILENCED_SYSTEM_CHECKS = [
-    'account.W001',  # ACCOUNT_LOGIN_METHODS vs ACCOUNT_SIGNUP_FIELDS mismatch (valid: signup disabled, login enabled)
+    "account.W001",  # ACCOUNT_LOGIN_METHODS vs ACCOUNT_SIGNUP_FIELDS mismatch (valid: signup disabled, login enabled)
 ]
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'unfold',  # Unfold admin theme (must be before django.contrib.admin)
-    'django_object_actions',  # Django Object Actions for custom admin actions
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'whitenoise.runserver_nostatic',  # WhiteNoise static file serving (before staticfiles)
-    'django.contrib.staticfiles',
-    'django.contrib.sites',  # Required by allauth
-    'tz_detect',  # Timezone detection
-    'django_extensions',
-    'django_select2',  # Select2 widgets for autocomplete
-    'django_celery_results',  # Celery result backend using Django ORM
-    'rest_framework',  # Django REST Framework for API endpoints
-    'revproxy.apps.RevProxyConfig',  # Django reverse proxy
-
+    "unfold",  # Unfold admin theme (must be before django.contrib.admin)
+    "django_object_actions",  # Django Object Actions for custom admin actions
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "whitenoise.runserver_nostatic",  # WhiteNoise static file serving (before staticfiles)
+    "django.contrib.staticfiles",
+    "django.contrib.sites",  # Required by allauth
+    "tz_detect",  # Timezone detection
+    "django_extensions",
+    "django_select2",  # Select2 widgets for autocomplete
+    "django_celery_results",  # Celery result backend using Django ORM
+    "rest_framework",  # Django REST Framework for API endpoints
+    "revproxy.apps.RevProxyConfig",  # Django reverse proxy
     # Django-allauth for OAuth/OIDC authentication
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'allauth.socialaccount.providers.google',
-
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
     # Local apps
-    'common',
-    'deals',
-    'tasks',
+    "common",
+    "deals",
+    "tasks",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # WhiteNoise static file serving
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.locale.LocaleMiddleware',  # Language detection (after SessionMiddleware)
-    'tz_detect.middleware.TimezoneMiddleware',  # Timezone detection (after SessionMiddleware)
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'allauth.account.middleware.AccountMiddleware',  # Required by django-allauth
-    'tasks.middleware.CurrentUserMiddleware',  # Store current user in thread-local storage
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # WhiteNoise static file serving
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",  # Language detection (after SessionMiddleware)
+    "tz_detect.middleware.TimezoneMiddleware",  # Timezone detection (after SessionMiddleware)
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "allauth.account.middleware.AccountMiddleware",  # Required by django-allauth
+    "tasks.middleware.CurrentUserMiddleware",  # Store current user in thread-local storage
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'config.urls'
+ROOT_URLCONF = "config.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],  # Project-level templates override app templates
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [
+            BASE_DIR / "templates"
+        ],  # Project-level templates override app templates
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'config.wsgi.application'
+WSGI_APPLICATION = "config.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': dj_database_url.config(
-        default='postgresql://postgres:postgres@localhost:5432/game_deals',
-        conn_max_age=600
+    "default": dj_database_url.config(
+        default="postgresql://postgres:postgres@localhost:5432/game_deals",
+        conn_max_age=600,
     )
 }
 
@@ -152,28 +151,28 @@ DATABASES = {
 SITE_ID = 1
 
 # Site URL for building absolute URLs (e.g., in Discord embeds)
-SITE_URL = get_env('SITE_URL', 'http://localhost:8000')
+SITE_URL = get_env("SITE_URL", "http://localhost:8000")
 
 # Authentication Backends
 AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',  # Default Django auth
-    'allauth.account.auth_backends.AuthenticationBackend',  # Allauth backend
+    "django.contrib.auth.backends.ModelBackend",  # Default Django auth
+    "allauth.account.auth_backends.AuthenticationBackend",  # Allauth backend
 ]
 
 
 # Logging Configuration
 # https://docs.djangoproject.com/en/5.2/topics/logging/
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
         },
     },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
     },
 }
 
@@ -183,16 +182,16 @@ LOGGING = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -200,14 +199,14 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
 # Limit available languages (add more as needed)
 LANGUAGES = [
-    ('en', 'English'),
+    ("en", "English"),
 ]
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -217,29 +216,29 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = "static/"
 STATICFILES_DIRS = [
-    BASE_DIR / 'static',
+    BASE_DIR / "static",
 ]
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Media files (User uploads)
 # https://docs.djangoproject.com/en/5.2/topics/files/
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 # Storage Configuration
 # Use S3-compatible storage for production, local filesystem for development
-USE_S3 = get_env('USE_S3_STORAGE', 'false').lower() == 'true'
+USE_S3 = get_env("USE_S3_STORAGE", "false").lower() == "true"
 
 if USE_S3:
-    S3_ACCESS_KEY = get_env('S3_ACCESS_KEY')
-    S3_SECRET_KEY = get_env('S3_SECRET_KEY')
-    S3_BUCKET_NAME = get_env('S3_BUCKET_NAME')
-    S3_REGION = get_env('S3_REGION')
-    S3_ENDPOINT_URL = get_env('S3_ENDPOINT_URL')
-    S3_CUSTOM_DOMAIN = get_env('S3_CUSTOM_DOMAIN')
+    S3_ACCESS_KEY = get_env("S3_ACCESS_KEY")
+    S3_SECRET_KEY = get_env("S3_SECRET_KEY")
+    S3_BUCKET_NAME = get_env("S3_BUCKET_NAME")
+    S3_REGION = get_env("S3_REGION")
+    S3_ENDPOINT_URL = get_env("S3_ENDPOINT_URL")
+    S3_CUSTOM_DOMAIN = get_env("S3_CUSTOM_DOMAIN")
 
     # S3-compatible storage (AWS S3, Digital Ocean Spaces, MinIO, etc.)
     STORAGES = {
@@ -257,7 +256,7 @@ if USE_S3:
                 },
                 "file_overwrite": False,  # Don't overwrite existing files
                 "default_acl": "public-read",  # Make uploaded files publicly readable
-            }
+            },
         },
         "staticfiles": {
             "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
@@ -287,32 +286,32 @@ else:
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Celery Configuration
-CELERY_BROKER_URL = get_env('CELERY_BROKER_URL', 'redis://localhost:6379/0')
-CELERY_RESULT_BACKEND = 'django-db'  # Use Django ORM for task results
-CELERY_CACHE_BACKEND = 'django-cache'  # Use Django cache for caching results
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'UTC'
+CELERY_BROKER_URL = get_env("CELERY_BROKER_URL", "redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = "django-db"  # Use Django ORM for task results
+CELERY_CACHE_BACKEND = "django-cache"  # Use Django cache for caching results
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = "UTC"
 CELERY_RESULT_EXTENDED = True  # Store additional task metadata
 
 # Flower Configuration
-FLOWER_URL = get_env('FLOWER_URL', 'http://flower:5555')
+FLOWER_URL = get_env("FLOWER_URL", "http://flower:5555")
 
 # Image Processing Configuration
 # Maximum memory (in MB) to be used by the image processing pipeline.
 # This should be set lower than the container's memory limit.
 # Ensure your Celery workers have enough memory for this value * number of concurrent tasks.
-IMAGE_PROCESSING_MAX_MEMORY_MB = int(get_env('IMAGE_PROCESSING_MAX_MEMORY_MB', 128))
+IMAGE_PROCESSING_MAX_MEMORY_MB = int(get_env("IMAGE_PROCESSING_MAX_MEMORY_MB", 128))
 
 # Google Custom Search API Configuration
 # Get your API key from: https://console.cloud.google.com/apis/credentials
 # Create a Custom Search Engine at: https://programmablesearchengine.google.com/
-GOOGLE_API_KEY = get_env('GOOGLE_API_KEY')
-GOOGLE_SEARCH_ENGINE_ID = get_env('GOOGLE_SEARCH_ENGINE_ID')
+GOOGLE_API_KEY = get_env("GOOGLE_API_KEY")
+GOOGLE_SEARCH_ENGINE_ID = get_env("GOOGLE_SEARCH_ENGINE_ID")
 
 # Admin Branding
 UNFOLD = {
@@ -331,33 +330,39 @@ UNFOLD = {
             "title": _("Flower (Celery Tasks)"),
             "icon": "monitoring",
             "link": reverse_lazy("admin_flower", kwargs={"path": ""}),
-            "permission": lambda request: request.user.has_perm("common.can_view_flower"),
+            "permission": lambda request: request.user.has_perm(
+                "common.can_view_flower"
+            ),
         },
     ],
 }
 
 # Authentication URLs
-LOGIN_REDIRECT_URL = '/admin/'
-LOGOUT_REDIRECT_URL = '/'
-LOGIN_URL = '/admin/login/'
+LOGIN_REDIRECT_URL = "/admin/"
+LOGOUT_REDIRECT_URL = "/"
+LOGIN_URL = "/admin/login/"
 
 # Django-allauth Configuration
 # Admin-only site: Manually create users with email, then they log in via Google OAuth
-ACCOUNT_LOGIN_METHODS = ['email']  # Match users by email (not username)
-ACCOUNT_EMAIL_VERIFICATION = 'none'  # No email sending capability
-ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https' if not DEBUG else 'http'
+ACCOUNT_LOGIN_METHODS = ["email"]  # Match users by email (not username)
+ACCOUNT_EMAIL_VERIFICATION = "none"  # No email sending capability
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https" if not DEBUG else "http"
 ACCOUNT_SIGNUP_ENABLED = False
 
 # Disable automatic signup - users must be manually created first
-ACCOUNT_ADAPTER = 'config.adapters.NoSignupAccountAdapter'
-SOCIALACCOUNT_ADAPTER = 'config.adapters.NoSignupSocialAccountAdapter'
+ACCOUNT_ADAPTER = "config.adapters.NoSignupAccountAdapter"
+SOCIALACCOUNT_ADAPTER = "config.adapters.NoSignupSocialAccountAdapter"
 
 # Social account settings
 SOCIALACCOUNT_AUTO_SIGNUP = False  # Do not create accounts automatically
 SOCIALACCOUNT_EMAIL_AUTHENTICATION = True  # Match by email
-SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True  # Auto-connect Google account to existing user by email
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = (
+    True  # Auto-connect Google account to existing user by email
+)
 SOCIALACCOUNT_QUERY_EMAIL = True  # Request email from Google
-SOCIALACCOUNT_LOGIN_ON_GET = True  # Skip intermediate confirmation page and redirect directly to OAuth provider
+SOCIALACCOUNT_LOGIN_ON_GET = (
+    True  # Skip intermediate confirmation page and redirect directly to OAuth provider
+)
 
 # Google OAuth Configuration
 # Get credentials from: https://console.cloud.google.com/apis/credentials
@@ -365,18 +370,18 @@ SOCIALACCOUNT_LOGIN_ON_GET = True  # Skip intermediate confirmation page and red
 # - http://localhost:8000/accounts/google/login/callback/ (development)
 # - https://yourdomain.com/accounts/google/login/callback/ (production)
 SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'SCOPE': [
-            'profile',
-            'email',
+    "google": {
+        "SCOPE": [
+            "profile",
+            "email",
         ],
-        'AUTH_PARAMS': {
-            'access_type': 'online',
+        "AUTH_PARAMS": {
+            "access_type": "online",
         },
-        'APP': {
-            'client_id': get_env('GOOGLE_OAUTH_CLIENT_ID', ''),
-            'secret': get_env('GOOGLE_OAUTH_SECRET', ''),
-            'key': ''
-        }
+        "APP": {
+            "client_id": get_env("GOOGLE_OAUTH_CLIENT_ID", ""),
+            "secret": get_env("GOOGLE_OAUTH_SECRET", ""),
+            "key": "",
+        },
     }
 }

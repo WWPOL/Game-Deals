@@ -15,17 +15,18 @@ from common.permissions import CommonPermission
 
 class TaskStatusFilter(admin.SimpleListFilter):
     """Custom filter for task status since it's a property, not a DB field."""
-    title = 'status'
-    parameter_name = 'status'
+
+    title = "status"
+    parameter_name = "status"
 
     def lookups(self, request, model_admin):
         """Return list of status options."""
         return (
-            ('PENDING', 'Pending'),
-            ('STARTED', 'Started'),
-            ('SUCCESS', 'Success'),
-            ('FAILURE', 'Failure'),
-            ('REVOKED', 'Revoked'),
+            ("PENDING", "Pending"),
+            ("STARTED", "Started"),
+            ("SUCCESS", "Success"),
+            ("FAILURE", "Failure"),
+            ("REVOKED", "Revoked"),
         )
 
     def queryset(self, request, queryset):
@@ -43,6 +44,7 @@ class TaskStatusFilter(admin.SimpleListFilter):
 @admin.register(UserTask)
 class UserTaskAdmin(DjangoObjectActions, ModelAdmin):
     """Admin for UserTask."""
+
     list_display = (
         "user",
         "task_name",
@@ -64,8 +66,8 @@ class UserTaskAdmin(DjangoObjectActions, ModelAdmin):
         "initiated_at",
         "status",
     )
-    actions = ['force_finish_tasks']
-    change_actions = ['view_in_flower', 'view_task_result', 'force_finish_task_single']
+    actions = ["force_finish_tasks"]
+    change_actions = ["view_in_flower", "view_task_result", "force_finish_task_single"]
 
     def status(self, obj):
         return obj.status
@@ -88,11 +90,11 @@ class UserTaskAdmin(DjangoObjectActions, ModelAdmin):
             TaskResult.objects.update_or_create(
                 task_id=user_task.task_id,
                 defaults={
-                    'status': 'REVOKED',
-                    'result': '{"message": "Task forcibly cancelled by admin"}',
-                    'date_done': datetime.now(),
-                    'task_name': user_task.task_name,
-                }
+                    "status": "REVOKED",
+                    "result": '{"message": "Task forcibly cancelled by admin"}',
+                    "date_done": datetime.now(),
+                    "task_name": user_task.task_name,
+                },
             )
 
             # Mark as seen so user knows it's been handled
@@ -102,6 +104,7 @@ class UserTaskAdmin(DjangoObjectActions, ModelAdmin):
             count += 1
 
         self.message_user(request, f"Successfully cancelled {count} task(s).")
+
     force_finish_tasks.short_description = "Force finish and cancel selected tasks"
 
     def has_view_in_flower_permission(self, request, obj=None):
@@ -112,22 +115,29 @@ class UserTaskAdmin(DjangoObjectActions, ModelAdmin):
     def view_in_flower(self, request, obj):
         """Redirect to Flower task detail page."""
         # Build Flower URL
-        flower_url = reverse('admin_flower', kwargs={'path': f'task/{obj.task_id}'})
+        flower_url = reverse("admin_flower", kwargs={"path": f"task/{obj.task_id}"})
         return HttpResponseRedirect(flower_url)
 
-    @unfold_action(label="View Task Result", short_description="View task result details")
+    @unfold_action(
+        label="View Task Result", short_description="View task result details"
+    )
     def view_task_result(self, request, obj):
         """Redirect to TaskResult admin page if it exists."""
         result = obj.task_result
         if not result:
-            self.message_user(request, "Task result not found yet.", level='warning')
-            return HttpResponseRedirect(request.META.get('HTTP_REFERER', '../'))
+            self.message_user(request, "Task result not found yet.", level="warning")
+            return HttpResponseRedirect(request.META.get("HTTP_REFERER", "../"))
 
         # Redirect to TaskResult admin change page
-        result_url = reverse('admin:django_celery_results_taskresult_change', args=[result.pk])
+        result_url = reverse(
+            "admin:django_celery_results_taskresult_change", args=[result.pk]
+        )
         return HttpResponseRedirect(result_url)
 
-    @unfold_action(label="Force Finish & Cancel", short_description="Force finish and cancel this task")
+    @unfold_action(
+        label="Force Finish & Cancel",
+        short_description="Force finish and cancel this task",
+    )
     def force_finish_task_single(self, request, obj):
         """Object action to force a single task to finish and cancel it."""
         # Call bulk logic with a queryset of one item

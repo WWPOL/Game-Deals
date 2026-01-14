@@ -1,4 +1,5 @@
 """Abstract base class and implementations for image search"""
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
@@ -13,6 +14,7 @@ from common.image_memory_manager import get_managed_image
 @dataclass
 class ImageResult:
     """Represents a single image search result"""
+
     url: str
     thumbnail: str
     title: str
@@ -74,29 +76,35 @@ class GoogleCustomSearchProvider(ImageSearchProvider):
             # Limit to 10 per request (API limitation)
             num_results = min(limit, 10)
 
-            result = service.cse().list(
-                q=query,
-                cx=self.search_engine_id,
-                searchType='image',
-                num=num_results,
-                imgSize='XXLARGE',  # Prefer biggest images
-                safe='active',      # Safe search
-                rights='cc_publicdomain,cc_attribute,cc_sharealike,cc_noncommercial,cc_nonderived',  # Filter by usage rights
-            ).execute()
+            result = (
+                service.cse()
+                .list(
+                    q=query,
+                    cx=self.search_engine_id,
+                    searchType="image",
+                    num=num_results,
+                    imgSize="XXLARGE",  # Prefer biggest images
+                    safe="active",  # Safe search
+                    rights="cc_publicdomain,cc_attribute,cc_sharealike,cc_noncommercial,cc_nonderived",  # Filter by usage rights
+                )
+                .execute()
+            )
 
             images = []
-            for item in result.get('items', []):
+            for item in result.get("items", []):
                 # Extract image info
-                image_info = item.get('image', {})
-                images.append(ImageResult(
-                    url=item.get('link', ''),
-                    thumbnail=image_info.get('thumbnailLink', ''),
-                    title=item.get('title', ''),
-                    width=image_info.get('width', 0),
-                    height=image_info.get('height', 0),
-                    source=item.get('displayLink', ''),
-                    page_url=image_info.get('contextLink', '')
-                ))
+                image_info = item.get("image", {})
+                images.append(
+                    ImageResult(
+                        url=item.get("link", ""),
+                        thumbnail=image_info.get("thumbnailLink", ""),
+                        title=item.get("title", ""),
+                        width=image_info.get("width", 0),
+                        height=image_info.get("height", 0),
+                        source=item.get("displayLink", ""),
+                        page_url=image_info.get("contextLink", ""),
+                    )
+                )
 
             return images
 
@@ -129,18 +137,18 @@ def download_image_from_url(url: str, timeout: int = 10) -> Tuple[ContentFile, s
         filename = os.path.basename(parsed_url.path)
 
         # If no filename or no extension, use a default
-        if not filename or '.' not in filename:
+        if not filename or "." not in filename:
             # Make a HEAD request to get Content-Type for extension detection
             response = requests.head(url, timeout=timeout)
-            content_type = response.headers.get('Content-Type', '')
-            ext = 'jpg'  # default
-            if 'png' in content_type:
-                ext = 'png'
-            elif 'webp' in content_type:
-                ext = 'webp'
-            elif 'gif' in content_type:
-                ext = 'gif'
-            filename = f'image.{ext}'
+            content_type = response.headers.get("Content-Type", "")
+            ext = "jpg"  # default
+            if "png" in content_type:
+                ext = "png"
+            elif "webp" in content_type:
+                ext = "webp"
+            elif "gif" in content_type:
+                ext = "gif"
+            filename = f"image.{ext}"
 
         # Create ContentFile from managed image content
         content = ContentFile(image_content)

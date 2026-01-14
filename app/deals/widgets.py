@@ -1,4 +1,5 @@
 """Custom widgets for Deal admin"""
+
 import json
 from django import forms
 from django.utils.safestring import mark_safe
@@ -11,11 +12,11 @@ class ColorPickerWidget(forms.Widget):
     def render(self, name, value, attrs=None, renderer=None):
         """Render a single color picker with text input"""
         if not value:
-            value = '#ffffff'
+            value = "#ffffff"
 
-        attrs_id = attrs.get('id', f'id_{name}') if attrs else f'id_{name}'
+        attrs_id = attrs.get("id", f"id_{name}") if attrs else f"id_{name}"
 
-        widget_html = f'''
+        widget_html = f"""
         <div style="display: flex; align-items: center; gap: 10px;">
             <input type="color"
                    value="{value}"
@@ -38,7 +39,7 @@ class ColorPickerWidget(forms.Widget):
             if (colorPicker) colorPicker.value = newColor;
         }}
         </script>
-        '''
+        """
 
         return mark_safe(widget_html)
 
@@ -65,17 +66,17 @@ class ColorPaletteWidget(forms.Widget):
 
         # Ensure we have at least 6 colors
         while len(value) < 6:
-            value.append('#3b82f6')
+            value.append("#3b82f6")
 
-        attrs_id = attrs.get('id', f'id_{name}') if attrs else f'id_{name}'
+        attrs_id = attrs.get("id", f"id_{name}") if attrs else f"id_{name}"
 
-        widget_html = f'''
+        widget_html = f"""
         <div id="{attrs_id}_container" style="display: flex; flex-direction: column; gap: 15px;">
             <div id="{attrs_id}_swatches" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-start;">
-        '''
+        """
 
         for i, color in enumerate(value):
-            widget_html += f'''
+            widget_html += f"""
                 <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
                     <input type="color"
                            value="{color}"
@@ -87,9 +88,9 @@ class ColorPaletteWidget(forms.Widget):
                            style="width: 70px; font-size: 10px; text-align: center; padding: 2px; border: 1px solid #ddd; border-radius: 3px;">
                     <div style="font-size: 9px; color: #999;">Color {i + 1}</div>
                 </div>
-            '''
+            """
 
-        widget_html += f'''
+        widget_html += f"""
             </div>
             <input type="hidden" name="{name}" value='{json.dumps(value)}' id="{attrs_id}">
         </div>
@@ -110,13 +111,13 @@ class ColorPaletteWidget(forms.Widget):
             if (textInputs[index]) textInputs[index].value = newColor;
         }}
         </script>
-        '''
+        """
 
         return mark_safe(widget_html)
 
     def value_from_datadict(self, data, files, name):
         """Extract value from form data"""
-        value = data.get(name, '[]')
+        value = data.get(name, "[]")
         if isinstance(value, list):
             # Convert list to JSON string for JSONField
             return json.dumps(value)
@@ -126,8 +127,8 @@ class ColorPaletteWidget(forms.Widget):
                 json.loads(value)  # Validate it's valid JSON
                 return value
             except json.JSONDecodeError:
-                return '[]'
-        return '[]'
+                return "[]"
+        return "[]"
 
 
 class ColorPalettePreviewWidget(forms.Widget):
@@ -136,13 +137,13 @@ class ColorPalettePreviewWidget(forms.Widget):
     def render(self, name, value, attrs=None, renderer=None):
         """Render color preview showing TEXT on background color."""
         if not value or not isinstance(value, dict):
-            bg_color = value if value else '#000000'
-            fg_color = '#ffffff'
+            bg_color = value if value else "#000000"
+            fg_color = "#ffffff"
             weight = 0
         else:
-            bg_color = value.get('background_color', '#000000')
-            fg_color = value.get('foreground_color', '#ffffff')
-            weight = value.get('weight', 0)
+            bg_color = value.get("background_color", "#000000")
+            fg_color = value.get("foreground_color", "#ffffff")
+            weight = value.get("weight", 0)
 
         # Pre-format percentage since format_html doesn't support format specifiers
         weight_pct = f"{weight:.1%}"
@@ -151,10 +152,10 @@ class ColorPalettePreviewWidget(forms.Widget):
             '<div style="display: inline-flex; gap: 8px; align-items: center;">'
             '<div style="width: 100px; height: 40px; background: {}; color: {}; display: flex; align-items: center; justify-content: center; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; font-weight: 600;">TEXT</div>'
             '<span style="font-size: 11px; color: #666; font-family: monospace;">{}</span>'
-            '</div>',
+            "</div>",
             bg_color,
             fg_color,
-            weight_pct
+            weight_pct,
         )
 
 
@@ -172,38 +173,42 @@ class ColorPaletteEditWidget(forms.MultiWidget):
         """Split value into background and foreground colors."""
         if value:
             if isinstance(value, dict):
-                return [value.get('background_color'), value.get('foreground_color')]
+                return [value.get("background_color"), value.get("foreground_color")]
             elif isinstance(value, (list, tuple)) and len(value) == 2:
                 return value
-        return ['#000000', '#ffffff']
+        return ["#000000", "#ffffff"]
 
     def render(self, name, value, attrs=None, renderer=None):
         """Render preview with click-to-edit functionality."""
         if not attrs:
             attrs = {}
 
-        attrs_id = attrs.get('id', f'id_{name}')
+        attrs_id = attrs.get("id", f"id_{name}")
 
         # Decompress value to get bg and fg colors
         if value:
             if isinstance(value, dict):
-                bg_color = value.get('background_color', '#000000')
-                fg_color = value.get('foreground_color', '#ffffff')
+                bg_color = value.get("background_color", "#000000")
+                fg_color = value.get("foreground_color", "#ffffff")
             elif isinstance(value, (list, tuple)) and len(value) == 2:
-                bg_color = value[0] or '#000000'
-                fg_color = value[1] or '#ffffff'
+                bg_color = value[0] or "#000000"
+                fg_color = value[1] or "#ffffff"
             else:
-                bg_color = '#000000'
-                fg_color = '#ffffff'
+                bg_color = "#000000"
+                fg_color = "#ffffff"
         else:
-            bg_color = '#000000'
-            fg_color = '#ffffff'
+            bg_color = "#000000"
+            fg_color = "#ffffff"
 
         # Render the two ColorPickerWidgets
-        bg_widget_html = self.widgets[0].render(f'{name}_0', bg_color, {'id': f'{attrs_id}_0'})
-        fg_widget_html = self.widgets[1].render(f'{name}_1', fg_color, {'id': f'{attrs_id}_1'})
+        bg_widget_html = self.widgets[0].render(
+            f"{name}_0", bg_color, {"id": f"{attrs_id}_0"}
+        )
+        fg_widget_html = self.widgets[1].render(
+            f"{name}_1", fg_color, {"id": f"{attrs_id}_1"}
+        )
 
-        widget_html = f'''
+        widget_html = f"""
         <div id="{attrs_id}_container" style="display: inline-block;">
             <!-- Preview Mode (default) -->
             <div id="{attrs_id}_preview" style="cursor: pointer; display: inline-flex; gap: 8px; align-items: center;"
@@ -269,6 +274,6 @@ class ColorPaletteEditWidget(forms.MultiWidget):
             }}
         }}
         </script>
-        '''
+        """
 
         return mark_safe(widget_html)

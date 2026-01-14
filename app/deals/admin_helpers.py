@@ -1,4 +1,5 @@
 """Helper utilities for custom admin views"""
+
 from django.contrib import admin
 from django.shortcuts import render
 
