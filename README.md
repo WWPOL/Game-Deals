@@ -41,7 +41,7 @@ A Django app with Celery for background tasks.
 ## Setup
 
 1. Set environment variables
-  - Make a copy of [[.env.example]] named `.env`
+  - Make a copy of [[app/.env.example]] named `.env`
   - Follow instructions in [Configuration](#configuration) to obtain values
 2. Build and start containers
   - Build the base image for the development Docker container (you must rebuild this any time you change Python dependencies):
