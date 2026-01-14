@@ -68,7 +68,7 @@ services:
     build:
       context: .
       dockerfile: dev.Dockerfile
-    command: celery -A config flower --port=5555
+    command: celery -A config flower --port=5555 --url_prefix=admin/flower
     volumes:
       - .:/app
     ports:

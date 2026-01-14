@@ -2,7 +2,6 @@ from django.contrib import admin
 from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
-from deals import views as deals_views
 from config import views as config_views
 
 # Admin branding
@@ -11,11 +10,6 @@ admin.site.site_title = "Game Deals Admin"
 admin.site.index_title = "Welcome to Game Deals Administration"
 
 urlpatterns = [
-    # Custom admin URLs must come before admin.site.urls
-    path('admin/deal/search-images/', deals_views.search_deal_images, name='admin_search_images'),
-    path('admin/deal/<int:deal_id>/search-images/', deals_views.search_deal_images, name='admin_search_images_with_id'),
-    path('admin/notification-channel/select-deals/', deals_views.select_deals_to_notify, name='admin_select_deals_to_notify'),
-    path('admin/notification-channel/<str:channel_ids>/select-deals/', deals_views.select_deals_to_notify, name='admin_select_deals_to_notify_with_ids'),
     re_path(r'^admin/flower/(?P<path>.*)$', config_views.FlowerProxyView.as_view(), name='admin_flower'),
     path('admin/', include('common.urls')),  # Common app admin API endpoints
     path('select2/', include('django_select2.urls')),  # Select2 autocomplete

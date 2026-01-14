@@ -22,10 +22,3 @@ class FlowerProxyView(PermissionRequiredMixin, ProxyView):
     permission_required = CommonPermission.CAN_VIEW_FLOWER.value
     upstream = settings.FLOWER_URL
     add_remote_user = False
-
-    def get_request_headers(self):
-        """Add Host header so Flower can generate correct URLs"""
-        headers = super().get_request_headers()
-        # Set the Host header to match the original request
-        headers['Host'] = self.request.get_host()
-        return headers
