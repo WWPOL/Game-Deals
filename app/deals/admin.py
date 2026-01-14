@@ -236,7 +236,7 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
     def image_search(self, request, obj):
         """Action to search for images for this deal and select from results"""
         # Redirect directly to the image search UI
-        url = reverse('admin_search_images_with_id', args=[obj.pk])
+        url = reverse('deals:admin_search_images_with_id', args=[obj.pk])
         return HttpResponseRedirect(url)
 
     @unfold_action(label="Publish Deal", short_description="Publish this deal and send notifications")
