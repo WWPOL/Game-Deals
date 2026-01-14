@@ -518,7 +518,7 @@ class NotificationChannelAdmin(DjangoObjectActions, ModelAdmin):
         channel_ids = ",".join(
             str(ch_id) for ch_id in queryset.values_list("id", flat=True)
         )
-        url = reverse("admin_select_deals_to_notify_with_ids", args=[channel_ids])
+        url = reverse("deals:admin_select_deals_to_notify_with_ids", args=[channel_ids])
         return HttpResponseRedirect(url)
 
     # Add actions to the change form

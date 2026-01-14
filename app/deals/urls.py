@@ -19,11 +19,6 @@ urlpatterns = [
         name="admin_search_images_with_id",
     ),
     path(
-        "admin/notification-channel/select-deals/",
-        views.select_deals_to_notify,
-        name="admin_select_deals_to_notify",
-    ),
-    path(
         "admin/notification-channel/<str:channel_ids>/select-deals/",
         views.select_deals_to_notify,
         name="admin_select_deals_to_notify_with_ids",
