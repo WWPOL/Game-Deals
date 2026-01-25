@@ -2,6 +2,8 @@
 Views for tasks app functionality.
 """
 
+from urllib.parse import urlparse, urlunparse
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
@@ -9,7 +11,6 @@ from django.utils import timezone
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.conf import settings
 from revproxy.views import ProxyView
-from django.urls import reverse_lazy
 from tasks.permissions import TasksPermission
 from datetime import timedelta
 
@@ -103,6 +104,14 @@ class TaskStatusAPIView(APIView):
 class FlowerProxyView(PermissionRequiredMixin, ProxyView):
     """Proxy view to secure Flower with Django authentication"""
 
+    @staticmethod
+    def _build_upstream():
+        """Parse FLOWER_URL and add /admin/flower/ path with trailing slash."""
+        parsed = urlparse(settings.FLOWER_URL)
+        path = parsed.path.rstrip("/") + "/admin/flower/"
+        return urlunparse(parsed._replace(path=path))
+
     permission_required = TasksPermission.CAN_VIEW_FLOWER.value
-    upstream = settings.FLOWER_URL
+    upstream = _build_upstream()
     add_remote_user = False
+    add_x_forwarded = True
