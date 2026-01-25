@@ -45,7 +45,7 @@ class ImageMemoryManager:
         Allocate memory for an image. Returns True on success, False on failure.
         """
         with self._lock:
-            if self.can_allocate(size_in_bytes):
+            if self._current_memory + size_in_bytes <= self._max_memory:
                 self._current_memory += size_in_bytes
                 return True
             return False
