@@ -22,7 +22,7 @@ services:
     build:
       context: ./app
       dockerfile: dev.Dockerfile
-    command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- python manage.py runserver --noreload 0.0.0.0:8000
+    command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive --no-restart-on-command-exit -- python manage.py runserver --noreload 0.0.0.0:8000
     volumes:
       - ./app:/app
     ports:
@@ -39,7 +39,7 @@ services:
     build:
       context: ./app
       dockerfile: dev.Dockerfile
-    command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A config worker -l info
+    command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive --no-restart-on-command-exit -- celery -A config worker -l info
     volumes:
       - ./app:/app
     env_file:
@@ -54,7 +54,7 @@ services:
     build:
       context: ./app
       dockerfile: dev.Dockerfile
-    command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A config beat -l info
+    command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive --no-restart-on-command-exit -- celery -A config beat -l info
     volumes:
       - ./app:/app
     env_file:
