@@ -2,7 +2,10 @@ from django.contrib import admin
 from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
+
+from common import views as common_views
 from config import views as config_views
+from tasks import views as tasks_views
 
 # Admin branding
 admin.site.site_header = "Game Deals Admin"
@@ -13,7 +16,7 @@ urlpatterns = [
     path("", include("deals.urls")),
     re_path(
         r"^admin/flower/(?P<path>.*)$",
-        config_views.FlowerProxyView.as_view(),
+        tasks_views.FlowerProxyView.as_view(),
         name="admin_flower",
     ),
     path("admin/", include("common.urls")),  # Common app admin API endpoints

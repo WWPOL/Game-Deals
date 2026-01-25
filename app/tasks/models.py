@@ -6,6 +6,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django_celery_results.models import TaskResult
 
+from .permissions import TasksPermission
 
 class UserTask(models.Model):
     """
@@ -72,3 +73,22 @@ class UserTask(models.Model):
     def is_completed(self):
         """Check if the task has completed (success or failure)."""
         return self.status in ("SUCCESS", "FAILURE")
+
+
+class TasksPermissions(models.Model):
+    """
+    Dummy model to define custom permissions for the tasks app.
+
+    This model is never instantiated - it exists solely to attach
+    custom permissions via Meta.permissions.
+    """
+
+    class Meta:
+        managed = False  # Don't create a database table
+        default_permissions = ()  # Don't create default add/change/delete/view permissions
+        permissions = [
+            (
+                TasksPermission.CAN_VIEW_FLOWER.codename,
+                "Can view Flower monitoring dashboard",
+            ),
+        ]

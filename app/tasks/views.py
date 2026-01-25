@@ -6,6 +6,11 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
 from django.utils import timezone
+from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.conf import settings
+from revproxy.views import ProxyView
+from django.urls import reverse_lazy
+from tasks.permissions import TasksPermission
 from datetime import timedelta
 
 from tasks.models import UserTask
@@ -93,3 +98,11 @@ class TaskStatusAPIView(APIView):
             UserTask.objects.filter(user=user, task_id__in=task_ids).update(seen=True)
 
         return Response({"success": True})
+
+
+class FlowerProxyView(PermissionRequiredMixin, ProxyView):
+    """Proxy view to secure Flower with Django authentication"""
+
+    permission_required = TasksPermission.CAN_VIEW_FLOWER.value
+    upstream = settings.FLOWER_URL
+    add_remote_user = False
