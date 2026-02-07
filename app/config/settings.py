@@ -98,6 +98,7 @@ INSTALLED_APPS = [
     "common",
     "deals",
     "tasks",
+    'django_cleanup.apps.CleanupConfig' # Must be last
 ]
 
 MIDDLEWARE = [
