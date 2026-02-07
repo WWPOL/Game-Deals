@@ -55,9 +55,9 @@ class HasPaletteFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == "yes":
-            return queryset.filter(color_palettes__isnull=False).distinct()
+            return queryset.filter(color_palette__isnull=False).distinct()
         if self.value() == "no":
-            return queryset.filter(color_palettes__isnull=True)
+            return queryset.filter(color_palette__isnull=True)
 
 
 class ColorPaletteInline(TabularInline):
