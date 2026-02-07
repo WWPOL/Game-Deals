@@ -7,6 +7,7 @@ Video game deal aggregation site.
 - [Overview](#overview)
 - [Development](#development)
 - [Deployment](#deployment)
+- [Operations](#operations)
 
 # Overview
 
@@ -106,4 +107,21 @@ Some actions must be completed once to finish setting up the site:
 3. Update the site domain:
    ```bash
    ./manage.py update_site_domain
+   ```
+
+# Operations
+## Migrating Deals
+To migrate deals from the legacy Firebase setup to this Django app:
+
+1. Download the deals from Firebase:
+   ```bash
+   ./manage.py download_firebase --project-id <GCP PROEJCT ID> <OUT FILE>
+   ```
+2. Import the deals into the deals table:
+   ```bash
+   ./manage.py migrate_firebase <OUT FILE>
+   ```
+3. Queue jobs to download the images for the deals:
+   ```bash
+   ./manage.py queue_download_images
    ```
