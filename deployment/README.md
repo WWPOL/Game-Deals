@@ -84,6 +84,7 @@ CSRF_TRUSTED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
 SITE_URL=https://yourdomain.com
 REDIS_URL=redis://redis:6379/0
 CELERY_BROKER_URL=redis://redis:6379/0
+FLOWER_URL=http://app-flower:5555
 GOOGLE_SEARCH_ENGINE_ID=your-search-engine-id
 
 # Optional: S3-compatible storage config (if using S3)
