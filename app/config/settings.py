@@ -298,6 +298,9 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "UTC"
 CELERY_RESULT_EXTENDED = True  # Store additional task metadata
+CELERY_WORKER_MAX_TASKS_PER_CHILD = 50  # Recycle workers to prevent memory growth
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1  # Don't buffer extra tasks (image downloads are memory-heavy)
+CELERY_WORKER_CONCURRENCY = 2  # 4 prefork workers + image processing exceeds 512Mi container limit
 
 # Flower Configuration
 FLOWER_URL = get_env("FLOWER_URL", "http://flower:5555")
