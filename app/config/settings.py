@@ -86,6 +86,7 @@ INSTALLED_APPS = [
     "tz_detect",  # Timezone detection
     "django_extensions",
     "django_select2",  # Select2 widgets for autocomplete
+    "unfold_contrib.select2_dark",  # Unfold styling for Select2 widgets
     "django_celery_results",  # Celery result backend using Django ORM
     "rest_framework",  # Django REST Framework for API endpoints
     "revproxy.apps.RevProxyConfig",  # Django reverse proxy
