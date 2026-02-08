@@ -176,6 +176,7 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
     search_fields = ("name",)
     actions = [
         "publish_deals_bulk",
+        "publish_deals_no_notifications_bulk",
         "unpublish_deals_bulk",
         "reextract_colors_bulk",
         "image_search_bulk",
@@ -189,6 +190,14 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
             "Metadata",
             {"fields": ("slug", "created_at", "updated_at"), "classes": ("collapse",)},
         ),
+    )
+
+    # Add actions to the change form
+    change_actions = (
+        "publish_deal",
+        "reextract_colors",
+        "image_search",
+        "unpublish_deal",
     )
 
     def save_model(self, request, obj, form, change):
@@ -281,14 +290,6 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
 
         # Redirect back to the same change form
         return redirect("admin:deals_deal_change", object_id=obj.pk)
-
-    # Add actions to the change form
-    change_actions = (
-        "publish_deal",
-        "reextract_colors",
-        "image_search",
-        "unpublish_deal",
-    )
 
     def get_change_actions(self, request, object_id, form_url):
         """Conditionally show actions based on object state"""
@@ -406,6 +407,49 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
         if published_count:
             self.message_user(
                 request, f"Published {published_count} deal(s) and queued notifications"
+            )
+        if already_published:
+            self.message_user(
+                request,
+                f"{already_published} deal(s) already published",
+                level=messages.INFO,
+            )
+        if error_count:
+            self.message_user(
+                request,
+                f"{error_count} deal(s) failed validation",
+                level=messages.WARNING,
+            )
+
+    @admin.action(description="Publish deals without sending notifications")
+    def publish_deals_no_notifications_bulk(self, request, queryset):
+        """Bulk action to publish selected deals without sending notifications"""
+        published_count = 0
+        already_published = 0
+        error_count = 0
+
+        for deal in queryset:
+            if deal.status == Deal.Status.PUBLISHED:
+                already_published += 1
+                continue
+
+            try:
+                deal.status = Deal.Status.PUBLISHED
+                deal.full_clean()
+                deal.save()
+
+                published_count += 1
+            except Exception as e:
+                error_count += 1
+                self.message_user(
+                    request,
+                    f'Error publishing "{deal.name}": {e}',
+                    level=messages.ERROR,
+                )
+
+        if published_count:
+            self.message_user(
+                request, f"Published {published_count} deal(s) without notifications"
             )
         if already_published:
             self.message_user(
