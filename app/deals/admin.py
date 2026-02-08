@@ -529,8 +529,31 @@ class NotificationChannelAdmin(DjangoObjectActions, ModelAdmin):
         url = reverse("deals:admin_select_deals_to_notify_with_ids", args=[channel_ids])
         return HttpResponseRedirect(url)
 
+    @unfold_action(
+        label="Duplicate Channel",
+        short_description="Duplicate this notification channel",
+    )
+    def duplicate_channel(self, request, obj):
+        """Create a duplicate of this notification channel and its config"""
+        config = obj.get_config()
+
+        # Duplicate the channel
+        obj.pk = None
+        obj.name = f"{obj.name} (copy)"
+        obj.save()
+
+        # Duplicate the type-specific config
+        if config:
+            config.pk = None
+            config.channel = obj
+            config.save()
+
+        self.message_user(request, f'Duplicated channel as "{obj.name}"')
+        url = reverse("admin:deals_notificationchannel_change", args=[obj.pk])
+        return HttpResponseRedirect(url)
+
     # Add actions to the change form
-    change_actions = ("send_notifications",)
+    change_actions = ("send_notifications", "duplicate_channel")
 
 
 @admin.register(NotificationLog)
