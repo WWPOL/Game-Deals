@@ -329,6 +329,9 @@ UNFOLD = {
         "show_search": True,
         "show_all_applications": True,
     },
+    "STYLES": [
+        "/static/css/admin-mobile-table.css",
+    ],
     "SITE_DROPDOWN": [
         {
             "title": _("Go to Site"),

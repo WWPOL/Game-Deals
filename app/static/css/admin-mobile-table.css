@@ -1,0 +1,26 @@
+/* Override Unfold's mobile card layout to keep table format on all screen sizes.
+   The td-level card classes (flex, before:content-[attr(data-label)], etc.) are
+   hardcoded in Unfold's Python (ROW_CLASSES), so we override them here. */
+
+/* Force table-cell display on all tds (overrides Tailwind "flex" class) */
+#result_list td,
+#result_list th {
+    display: table-cell !important;
+}
+
+/* Hide the data-label pseudo-elements that Unfold shows on mobile cards */
+#result_list td::before,
+#result_list th::before {
+    display: none !important;
+    content: none !important;
+}
+
+/* Show table headers on mobile (Unfold hides them with "hidden lg:table-cell") */
+#result_list thead th {
+    display: table-cell !important;
+}
+
+/* Ensure the checkbox column stays visible */
+#result_list td.action-checkbox {
+    display: table-cell !important;
+}
