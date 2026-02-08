@@ -7,7 +7,7 @@
 
 <!-- Admin Button -->
 {% if user.is_authenticated %}
-<a href="{% url 'admin:index' %}" class="{% if mobile %}block px-4 py-3{% else %}rounded-lg deal-bg-primary px-4 py-2{% endif %} deal-fg-primary font-semibold {% if not mobile %}deal-bg-primary{% endif %} hover:opacity-80 transition-opacity">
+<a href="{% if deal %}{% url 'admin:deals_deal_change' deal.pk %}{% else %}{% url 'admin:index' %}{% endif %}" class="{% if mobile %}block px-4 py-3{% else %}rounded-lg deal-bg-primary px-4 py-2{% endif %} deal-fg-primary font-semibold {% if not mobile %}deal-bg-primary{% endif %} hover:opacity-80 transition-opacity">
   Go to Console
 </a>
 {% endif %}
