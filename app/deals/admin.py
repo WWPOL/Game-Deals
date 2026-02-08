@@ -21,6 +21,8 @@ from .admin_mixins import unfold_action
 from .widgets import ColorPalettePreviewWidget
 from .tasks import (
     notify_deal,
+    publish_deal,
+    unpublish_deal,
     search_and_download_image,
     extract_colors_from_deal_image,
 )
@@ -378,78 +380,47 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
     @admin.action(description="Publish deals and send notifications")
     def publish_deals_bulk(self, request, queryset):
         """Bulk action to publish selected deals and send notifications"""
-        published_count = 0
+        queued_count = 0
         already_published = 0
-        error_count = 0
 
         for deal in queryset:
             if deal.status == Deal.Status.PUBLISHED:
                 already_published += 1
                 continue
 
-            try:
-                deal.status = Deal.Status.PUBLISHED
-                deal.full_clean()
-                deal.save()
+            publish_deal.delay(deal.pk, send_notifications=True)
+            queued_count += 1
 
-                # Send notifications
-                notify_deal.delay(deal.pk)
-
-                published_count += 1
-            except Exception as e:
-                error_count += 1
-                self.message_user(
-                    request,
-                    f'Error publishing "{deal.name}": {e}',
-                    level=messages.ERROR,
-                )
-
-        if published_count:
+        if queued_count:
             self.message_user(
-                request, f"Published {published_count} deal(s) and queued notifications"
+                request,
+                f"Queued publishing for {queued_count} deal(s) with notifications",
             )
         if already_published:
             self.message_user(
                 request,
                 f"{already_published} deal(s) already published",
                 level=messages.INFO,
-            )
-        if error_count:
-            self.message_user(
-                request,
-                f"{error_count} deal(s) failed validation",
-                level=messages.WARNING,
             )
 
     @admin.action(description="Publish deals without sending notifications")
     def publish_deals_no_notifications_bulk(self, request, queryset):
         """Bulk action to publish selected deals without sending notifications"""
-        published_count = 0
+        queued_count = 0
         already_published = 0
-        error_count = 0
 
         for deal in queryset:
             if deal.status == Deal.Status.PUBLISHED:
                 already_published += 1
                 continue
 
-            try:
-                deal.status = Deal.Status.PUBLISHED
-                deal.full_clean()
-                deal.save()
+            publish_deal.delay(deal.pk, send_notifications=False)
+            queued_count += 1
 
-                published_count += 1
-            except Exception as e:
-                error_count += 1
-                self.message_user(
-                    request,
-                    f'Error publishing "{deal.name}": {e}',
-                    level=messages.ERROR,
-                )
-
-        if published_count:
+        if queued_count:
             self.message_user(
-                request, f"Published {published_count} deal(s) without notifications"
+                request,
+                f"Queued publishing for {queued_count} deal(s) without notifications",
             )
         if already_published:
             self.message_user(
@@ -457,17 +428,11 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
                 f"{already_published} deal(s) already published",
                 level=messages.INFO,
             )
-        if error_count:
-            self.message_user(
-                request,
-                f"{error_count} deal(s) failed validation",
-                level=messages.WARNING,
-            )
 
     @admin.action(description="Unpublish deals")
     def unpublish_deals_bulk(self, request, queryset):
         """Bulk action to unpublish selected deals"""
-        unpublished_count = 0
+        queued_count = 0
         already_draft = 0
 
         for deal in queryset:
@@ -475,12 +440,11 @@ class DealAdmin(DjangoObjectActions, ModelAdmin):
                 already_draft += 1
                 continue
 
-            deal.status = Deal.Status.DRAFT
-            deal.save()
-            unpublished_count += 1
+            unpublish_deal.delay(deal.pk)
+            queued_count += 1
 
-        if unpublished_count:
-            self.message_user(request, f"Unpublished {unpublished_count} deal(s)")
+        if queued_count:
+            self.message_user(request, f"Queued unpublishing for {queued_count} deal(s)")
         if already_draft:
             self.message_user(
                 request,

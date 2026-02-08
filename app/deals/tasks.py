@@ -314,6 +314,80 @@ def download_and_set_image(
 
 
 @user_tracked_task()
+def publish_deal(deal_id: int, send_notifications: bool = True) -> dict:
+    """
+    Publish a deal and optionally send notifications.
+
+    Args:
+        deal_id: ID of the Deal to publish
+        send_notifications: Whether to queue notifications after publishing
+
+    Returns:
+        dict: Status information about the publish
+    """
+    try:
+        deal = Deal.objects.get(pk=deal_id)
+    except Deal.DoesNotExist:
+        error_msg = f"Deal with ID {deal_id} not found"
+        logger.error(error_msg)
+        return {"success": False, "error": error_msg}
+
+    if deal.status == Deal.Status.PUBLISHED:
+        msg = f"Deal '{deal.name}' is already published"
+        logger.info(msg)
+        return {"success": False, "error": msg, "already_published": True}
+
+    try:
+        deal.status = Deal.Status.PUBLISHED
+        deal.full_clean()
+        deal.save()
+    except Exception as e:
+        error_msg = f"Error publishing '{deal.name}': {str(e)}"
+        logger.error(error_msg)
+        return {"success": False, "error": error_msg}
+
+    if send_notifications:
+        notify_deal.delay(deal_id)
+        msg = f"Published deal '{deal.name}' and queued notifications"
+    else:
+        msg = f"Published deal '{deal.name}' without notifications"
+
+    logger.info(msg)
+    return {"success": True, "message": msg}
+
+
+@user_tracked_task()
+def unpublish_deal(deal_id: int) -> dict:
+    """
+    Unpublish a deal (set status back to draft).
+
+    Args:
+        deal_id: ID of the Deal to unpublish
+
+    Returns:
+        dict: Status information about the unpublish
+    """
+    try:
+        deal = Deal.objects.get(pk=deal_id)
+    except Deal.DoesNotExist:
+        error_msg = f"Deal with ID {deal_id} not found"
+        logger.error(error_msg)
+        return {"success": False, "error": error_msg}
+
+    if deal.status == Deal.Status.DRAFT:
+        msg = f"Deal '{deal.name}' is already in draft status"
+        logger.info(msg)
+        return {"success": False, "error": msg, "already_draft": True}
+
+    deal.status = Deal.Status.DRAFT
+    deal.save()
+
+    msg = f"Unpublished deal '{deal.name}'"
+    logger.info(msg)
+    return {"success": True, "message": msg}
+
+
+@user_tracked_task()
 def extract_colors_from_deal_image(deal_id: int) -> dict:
     """
     Extract color palette from a deal's image.
