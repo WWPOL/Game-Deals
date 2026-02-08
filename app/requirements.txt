@@ -26,3 +26,4 @@ firebase-admin~=6.6
 django-allauth~=65.4
 django-revproxy~=0.12
 django-cleanup~=9.0.0
+django-unfold-contrib~=0.1.0rc1

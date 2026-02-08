@@ -9,7 +9,7 @@ from datetime import datetime
 from django_celery_results.models import TaskResult
 
 from tasks.models import UserTask
-from deals.admin_mixins import unfold_action
+from unfold_contrib.actions import unfold_action
 from common.permissions import CommonPermission
 
 

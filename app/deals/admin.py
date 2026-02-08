@@ -17,7 +17,7 @@ from .models import (
     DiscordWebhookConfig,
 )
 from .forms import DealAdminForm
-from .admin_mixins import unfold_action
+from unfold_contrib.actions import unfold_action
 from .widgets import ColorPalettePreviewWidget
 from .tasks import (
     notify_deal,
@@ -26,7 +26,6 @@ from .tasks import (
     search_and_download_image,
     extract_colors_from_deal_image,
 )
-
 
 class HasImageFilter(admin.SimpleListFilter):
     title = "has image"
