@@ -331,6 +331,11 @@ UNFOLD = {
     },
     "SITE_DROPDOWN": [
         {
+            "title": _("Go to Site"),
+            "icon": "language",
+            "link": "/",
+        },
+        {
             "title": _("Flower (Celery Tasks)"),
             "icon": "monitoring",
             "link": reverse_lazy("admin_flower", kwargs={"path": ""}),
