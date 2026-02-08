@@ -100,13 +100,17 @@ def deal_variables(deal):
     # Get primary color (highest weight)
     primary = deal.color_palette.order_by("-weight").first()
 
-    # Get gradient string using existing filter
+    # Fall back to defaults if no palette exists
+    bg_primary = primary.background_color if primary else "#3b82f6"
+    fg_primary = primary.foreground_color if primary else "#ffffff"
+
+    # Get gradient string using existing filter (already has its own fallback)
     gradient_css = palette_gradient_css(deal.color_palette.all())
 
     return {
         "deal_id": deal.id,
-        "bg_primary": primary.background_color,
-        "fg_primary": primary.foreground_color,
+        "bg_primary": bg_primary,
+        "fg_primary": fg_primary,
         "gradient": f"linear-gradient(135deg, {gradient_css})",
         "gradient_shimmer": f"linear-gradient(110deg, {gradient_css})",
     }
