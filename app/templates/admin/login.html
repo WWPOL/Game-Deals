@@ -1,0 +1,16 @@
+{% extends 'admin/login.html' %}
+
+{% load i18n socialaccount %}
+
+{% block login_before %}
+    <div class="flex justify-center mb-6">
+        {% provider_login_url 'google' as google_login %}
+        {% include 'components/google_signin_button.html' with login_url=google_login %}
+    </div>
+
+    <div class="relative flex items-center justify-center my-6">
+        <div class="flex-grow border-t border-gray-300 dark:border-gray-600"></div>
+        <span class="flex-shrink mx-4 text-sm text-gray-500 dark:text-gray-400">{% trans "or" %}</span>
+        <div class="flex-grow border-t border-gray-300 dark:border-gray-600"></div>
+    </div>
+{% endblock %}

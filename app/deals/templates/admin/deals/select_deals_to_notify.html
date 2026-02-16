@@ -1,0 +1,71 @@
+{% extends "admin/deals/base_admin_page.html" %}
+{% load static %}
+
+{% block title %}Select Deals to Notify{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+{{ form.media }}
+{% endblock %}
+
+{% block content %}
+<div class="module">
+    <h1 class="text-2xl font-bold mb-4">Select Deals to Notify</h1>
+
+    <div class="border-l-4 border-base-300 bg-base-100 p-4 mb-4 rounded dark:bg-base-800 dark:border-base-600">
+        <h3 class="font-bold mb-2">Selected Channels:</h3>
+        <ul class="list-disc pl-5">
+            {% for channel in channels %}
+            <li>
+                <strong>{{ channel.name }}</strong> ({{ channel.get_type_display }})
+                {% if channel.is_test_channel %}
+                <span class="ml-2 px-2 py-0.5 text-xs font-semibold rounded bg-yellow-200 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">TEST</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="mb-4">
+        <a href="{% url 'admin:deals_notificationchannel_changelist' %}" class="button default">
+            ← Back to Channels
+        </a>
+    </div>
+
+    <form method="post" class="mt-6">
+        {% csrf_token %}
+
+        <div class="mb-5">
+            <h2 class="font-bold text-lg mb-4">Select Deals to Notify About</h2>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Choose which published deals to send notifications for.</p>
+
+            {% if form.non_field_errors %}
+            <div class="errornote mb-4 p-3 bg-red-100 border border-red-300 rounded dark:bg-red-900/20 dark:border-red-700">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            {% if form.deals.errors %}
+            <ul class="errorlist mb-2">
+                {% for error in form.deals.errors %}
+                <li class="text-red-600 dark:text-red-400">{{ error }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            <div class="mb-3">
+                {{ form.deals.label_tag }}
+                {{ form.deals }}
+            </div>
+
+            {% if form.deals.help_text %}
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">{{ form.deals.help_text }}</p>
+            {% endif %}
+        </div>
+
+        <div class="submit-row bg-gray-50 p-4 border-t border-gray-200 rounded-b dark:bg-gray-800/50 dark:border-gray-700">
+            <input type="submit" value="Send Notifications for Selected Deals" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 cursor-pointer">
+        </div>
+    </form>
+</div>
+{% endblock %}

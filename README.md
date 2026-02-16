@@ -7,6 +7,7 @@ Video game deal aggregation site.
 - [Overview](#overview)
 - [Development](#development)
 - [Deployment](#deployment)
+- [Operations](#operations)
 
 # Overview
 
@@ -36,139 +37,91 @@ Friendly website which provides those interested in gaming with notifications ab
 
 # Development
 
-A Gatsby/React app with a Firebase backend.
+A Django app with Celery for background tasks.
 
-Stuff we're using:
+## Setup
 
-- [Gatsby](https://www.gatsbyjs.org/)
-- [Gatsby Firebase Plugin](https://www.gatsbyjs.org/packages/gatsby-plugin-firebase/)
-- [React Bootstrap](https://react-bootstrap.github.io/)
+1. Set environment variables
+  - Make a copy of [[app/.env.example]] named `.env`
+  - Follow instructions in [Configuration](#configuration) to obtain values
+2. Build and start containers
+  - Build the base image for the development Docker container (you must rebuild this any time you change Python dependencies):
+    ```bash
+    ./scripts/build-images.sh
+    ```
+  - Start containers:
+    ```bash
+    docker compose up -d
+    ```
+3. Complete [First Time Setup](#first-time-setup)
 
-Make sure you have the latest versions of
-[NodeJS](https://nodejs.org/en/download/)
-and [Yarn](https://classic.yarnpkg.com/en/docs/install/).
+The app will then be accessible at http://localhost:8000
 
-## Website
+## Services
 
-Install dependencies:
+The following services run in Docker Compose:
 
-```
-yarn install
-```
+- **web** (Django) - http://localhost:8000
+- **postgres** - PostgreSQL database
+- **redis** - Redis cache and message broker
+- **celery** - Background task worker
+- **celery-beat** - Task scheduler
+- **flower** - Celery monitoring UI at http://localhost:5555
 
-Start the auto-reloading development server:
+# Operations
+## Configuration
+Environment variables are used for configuration.
 
-```
-yarn website
-```
+- **Google Custom Search API** (for image search):
+  - Get your API key from: https://console.cloud.google.com/apis/credentials
+  - Create a Custom Search Engine at: https://programmablesearchengine.google.com/
+    - Enable "Image search"
+    - Set "Sites to search" to `*` (entire web)
+  - Set env vars with values from dashboard:
+    - `GOOGLE_API_KEY`
+    - `GOOGLE_SEARCH_ENGINE_ID`
+- **Google OAuth** (for Sign In with Google):
+  - Go to https://console.cloud.google.com/apis/credentials
+  - Create OAuth 2.0 Client ID (or use existing credentials)
+    - Application type: Web application
+    - Add authorized redirect URIs:
+      - `http://localhost:8000/accounts/google/login/callback/` (development)
+      - `https://yourdomain.com/accounts/google/login/callback/` (production)
+  - Set env vars with values from dashboard:
+    - `GOOGLE_OAUTH_CLIENT_ID`
+    - `GOOGLE_OAUTH_SECRET`
 
-Then navigate to [localhost:8000](http://localhost:8000).
+## First Time Setup
+Some actions must be completed once to finish setting up the site:
 
-To make the website use a locally emulated version of Firebase create a
-Firebase service account and download the credentials JSON file, rename it
-to `firebase-service-account.json`.
+> Note: For local development you can run `manage.py` in the Docker dev container using `./scripts/manage.sh`
 
-```
-yarn emulate-firebase
-```
+1. Run migrations:
+   ```bash
+   ./manage.py migrate
+   ```
+2. Create an initial admin user:
+   ```bash
+   ./manage.py createsuperuser
+   ```
+3. Update the site domain:
+   ```bash
+   ./manage.py update_site_domain
+   ```
 
-Finally run:
+# Operations
+## Migrating Deals
+To migrate deals from the legacy Firebase setup to this Django app:
 
-```
-EMULATE_FIREBASE=true yarn website
-```
-
-## Functions
-
-Functions are located in [`./functions/index.js`](./functions/index.js).
-
-If you would like to run any of the `package.json` scripts in this directory the
-`--ignore-engines` option must be passed due to the fact that the `package.json`
-file defines the `engines` key for the sake of Firebase.
-
-## Firestore
-
-Firestore indexes are defined in `firestore.indexes.json`.
-
-Firestore rules are defined in `firestores.rules`.
-
-# Deployment
-
-## Instructions
-
-Preview a production build:
-
-```
-yarn preview-prod-website
-```
-
-Then navigate to [localhost:9000](http://localhost:9000).
-
-When ready to deploy (make sure to test the production build locally
-first!) push to master and GitHub actions will take care of the rest.
-
-## Manual Instructions
-
-If you would like to deploy manually follow these instructions.
-
-**Website**:
-
-Run:
-
-```
-yarn deploy-website
-```
-
-**Functions**:
-
-Run:
-
-```
-yarn deploy-functions
-```
-
-**Firestore**:
-
-Run:
-
-```
-yarn deploy-firestore
-```
-
-## Deployment Implementation Details
-
-### Website
-
-GitHub actions is used to automatically deploy the master branch to
-GitHub Pages.
-
-This uses GitHub Deploy Keys to authenticate the job runner. See the
-[JamesIves/github-pages-deploy-action](https://github.com/JamesIves/github-pages-deploy-action/tree/dev#using-an-ssh-deploy-key-)
-documentation for details about how this key is used.
-
-To set it up generate an SSH key with no password:
-
-```
-ssh-keygen -t ed25519 -f ./deploy_key
-```
-
-Then copy the contents of the `deploy-key.pub` file and add it as a deploy key
-with write access for this repository.
-
-Then copy the contents of the `deploy-key` file and add a secret named
-`DEPLOY_KEY` to this repository.
-
-Finally delete both the `deploy-key` and `deploy-key.pub` files.
-
-### Firebase
-
-The [Firebase GitHub Action](https://github.com/marketplace/actions/github-action-for-firebase)
-is used to deploy functions and firestore.
-
-Get a Firebase continuous integration authentication token:
-
-```
-yarn firebase login:ci
-```
-
-Set this value as the `FIREBASE_TOKEN` secret to the repository.
+1. Download the deals from Firebase:
+   ```bash
+   ./manage.py download_firebase --project-id <GCP PROEJCT ID> <OUT FILE>
+   ```
+2. Import the deals into the deals table:
+   ```bash
+   ./manage.py migrate_firebase <OUT FILE>
+   ```
+3. Queue jobs to download the images for the deals:
+   ```bash
+   ./manage.py queue_download_images
+   ```

@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+
+{% block title %}Server Error - Olly G's Game Deals{% endblock %}
+
+{% block content %}
+{% include 'components/error_page.html' with error_code="500" error_title="Server Error" error_message="Something went wrong on our end." error_submessage="Our team has been notified and we're working on fixing it!" pro_tip="Try refreshing the page in a few moments, or check back later for great deals!" %}
+{% endblock %}

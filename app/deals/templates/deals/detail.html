@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ deal.name }} - Olly G's Game Deals{% endblock %}
+
+{% block content %}
+<!-- Blob Background -->
+{% include 'components/blob_background.html' with colors=deal.color_palette.all %}
+
+<!-- Navigation Buttons (fixed on sides) -->
+{% include 'components/deal_pagination_prev.html' %}
+{% include 'components/deal_pagination_next.html' %}
+
+<!-- Deal Card Component -->
+{% include 'components/deal_card.html' with deal=deal show_back_button=True %}
+{% endblock %}

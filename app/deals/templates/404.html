@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+
+{% block title %}Page Not Found - Olly G's Game Deals{% endblock %}
+
+{% block content %}
+{% include 'components/error_page.html' with error_code="404" error_title="Not Found" error_message="Looks like this page doesn't exist." error_submessage="Don't worry, there are plenty of great deals waiting for you!" %}
+{% endblock %}

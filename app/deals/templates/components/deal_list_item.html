@@ -1,0 +1,43 @@
+{# Reusable deal list item component - pass a 'deal' object #}
+{% load deal_colors %}
+
+{% deal_variables deal %}
+<div class="{% deal_scope deal %} deal-wrapper-primary">
+<a href="{% url 'deals:detail' deal.slug %}" class="deal-card block bg-white/5 deal-bg-primary-20 rounded-lg overflow-hidden relative hover-sheen">
+    <div class="relative" style="aspect-ratio: 16 / 9; overflow: hidden;">
+        {% if deal.image %}
+        <img src="{{ deal.image.url }}"
+             alt="{{ deal.name }}"
+             class="w-full h-full object-cover">
+        {% endif %}
+        <div class="absolute top-3 right-3 price-badge px-3 py-1 rounded-lg backdrop-blur-sm deal-bg-primary deal-fg-primary deal-glow-sm">
+            {% if deal.original_price %}
+            <span class="text-sm font-bold mr-2" style="text-decoration: line-through; opacity: 0.7;">${{ deal.original_price }}</span>
+            {% endif %}
+            {% if deal.price == 0 %}
+            <span class="text-xl font-bold">FREE</span>
+            {% else %}
+            <span class="text-xl font-bold">${{ deal.price }}</span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="p-5 card-footer deal-bg-primary-40 deal-fg-primary deal-border-primary" style="border-top-width: 3px;">
+        <div class="flex items-start gap-2 mb-3">
+            <h2 class="text-xl font-bold line-clamp-2 flex-1">
+                {{ deal.name }}
+            </h2>
+            {% if user.is_staff and deal.status == 'draft' %}
+            <span class="bg-yellow-600 px-2 py-1 rounded text-xs font-bold whitespace-nowrap">DRAFT</span>
+            {% endif %}
+        </div>
+        <div class="flex items-center text-sm">
+            {% if deal.is_active %}
+            <span class="">⏰</span>
+            <span class="ml-2 ">Expires {{ deal.expires|timeuntil }}</span>
+            {% else %}
+            <span class="bg-red-600  px-2 py-1 rounded font-bold text-xs">EXPIRED</span>
+            {% endif %}
+        </div>
+    </div>
+</a>
+</div>

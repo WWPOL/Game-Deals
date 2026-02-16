@@ -1,0 +1,86 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      PGDATA: /var/lib/postgresql/18/docker
+      POSTGRES_DB: game_deals
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_18_data:/var/lib/postgresql/18/docker
+    ports:
+      - "5432:5432"
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: always
+
+  web:
+    build:
+      context: ./app
+      dockerfile: dev.Dockerfile
+    command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive --no-restart-on-command-exit -- python manage.py runserver --noreload 0.0.0.0:8000
+    volumes:
+      - ./app:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./app/.env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/game_deals
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+    restart: always
+
+  celery:
+    build:
+      context: ./app
+      dockerfile: dev.Dockerfile
+    command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive --no-restart-on-command-exit -- celery -A config worker -l info
+    volumes:
+      - ./app:/app
+    env_file:
+      - ./app/.env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/game_deals
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+    restart: always
+
+  celery-beat:
+    build:
+      context: ./app
+      dockerfile: dev.Dockerfile
+    command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive --no-restart-on-command-exit -- celery -A config beat -l info
+    volumes:
+      - ./app:/app
+    env_file:
+      - ./app/.env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/game_deals
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+    restart: always
+
+  flower:
+    build:
+      context: ./app
+      dockerfile: dev.Dockerfile
+    command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive --no-restart-on-command-exit -- celery -A config flower
+    volumes:
+      - ./app:/app
+    ports:
+      - "5555:5555"
+    env_file:
+      - ./app/.env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/game_deals
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+    restart: always
+
+volumes:
+  postgres_18_data: {}

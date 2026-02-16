@@ -1,0 +1,64 @@
+{% extends "admin/deals/base_admin_page.html" %}
+
+{% block title %}Search Images for {{ game_name|default:"Game" }}{% endblock %}
+
+{% block content %}
+<div class="module">
+    <h1>Search Images for: {{ game_name|default:"Game" }}</h1>
+
+    <div class="mb-4">
+        {% if deal %}
+        <a href="{% url 'admin:deals_deal_change' deal.id %}" class="button default">← Back to Deal</a>
+        {% else %}
+        <a href="javascript:window.close()" class="button default">← Close Window</a>
+        {% endif %}
+    </div>
+
+    {% if image_results %}
+    <div class="my-6">
+        <h2 class="font-bold text-lg mb-2">Select an Image</h2>
+        <p class="text-gray-600 dark:text-gray-400 mb-4">Click on an image to use it for this deal.</p>
+
+        <form method="post" class="mt-4" id="image_form">
+            {% csrf_token %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                {% for image in image_results %}
+                <div class="border border-gray-300 p-3 rounded cursor-pointer transition-all hover:border-blue-500 dark:border-gray-600 dark:hover:border-blue-400"
+                     onclick="selectAndSubmit('{{ image.url }}', '{{ image.page_url|escapejs }}')">
+                    <img src="{{ image.thumbnail }}"
+                         alt="{{ image.title }}"
+                         class="w-full h-48 object-cover rounded">
+                    <p class="mt-2 text-xs text-gray-600 dark:text-gray-400 truncate">
+                        {{ image.title|truncatewords:8 }}
+                    </p>
+                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                        {{ image.width }}x{{ image.height }}
+                    </p>
+                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-1 truncate">
+                        Source: {{ image.source }}
+                    </p>
+                </div>
+                {% endfor %}
+            </div>
+
+            <input type="hidden" name="image_url" id="selected_image_url" value="">
+            <input type="hidden" name="page_url" id="selected_page_url" value="">
+        </form>
+    </div>
+    {% else %}
+    <div class="my-6 p-6 bg-gray-100 rounded text-center dark:bg-gray-800/50">
+        <p class="text-gray-600 dark:text-gray-400 text-lg">No images found. Implementing image search...</p>
+        <p class="text-gray-500 dark:text-gray-500 mt-2">Image search functionality will be added soon.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function selectAndSubmit(url, pageUrl) {
+    document.getElementById('selected_image_url').value = url;
+    document.getElementById('selected_page_url').value = pageUrl || '';
+    // Always submit the form to extract colors on the server
+    document.getElementById('image_form').submit();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,283 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+
+{% block extrahead %}
+    {{ block.super }}
+
+    <style>
+        .task-notification {
+            position: fixed;
+            top: 5rem;
+            right: 1rem;
+            z-index: 9999;
+            max-width: 400px;
+        }
+
+        #task-popover {
+            position: absolute;
+            top: calc(100% + 0.5rem);
+            right: 0;
+            min-width: 300px;
+            max-width: 400px;
+            max-height: 400px;
+            overflow-y: auto;
+            background-color: #1f2937 !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2) !important;
+        }
+
+        .task-item {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .task-item:last-child {
+            border-bottom: none;
+        }
+
+        @keyframes badge-pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.5);
+                opacity: 0.5;
+            }
+        }
+
+        .badge-loading {
+            animation: badge-pulse 0.8s ease-in-out infinite;
+        }
+    </style>
+
+    <script>
+        // Task monitoring system
+        document.addEventListener('DOMContentLoaded', function() {
+            const taskMonitor = document.getElementById('task-monitor');
+            const taskMonitorBadge = document.getElementById('task-monitor-badge');
+            const taskMonitorIndicator = document.getElementById('task-monitor-indicator');
+            const taskCountEl = document.getElementById('task-count');
+            const taskPopover = document.getElementById('task-popover');
+            const taskList = document.getElementById('task-list');
+
+            if (!taskMonitor || !taskMonitorBadge || !taskMonitorIndicator || !taskCountEl || !taskPopover || !taskList) {
+                console.error('Task monitor elements not found in DOM');
+                return;
+            }
+
+            const POLL_INTERVAL = 3000; // 3 seconds
+            let pollTimeout;
+            let runningTasks = [];
+            let completedTasks = [];
+
+            async function checkTaskStatus() {
+                try {
+                    const response = await fetch('{% url "common:task_status_api" %}', {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        credentials: 'same-origin'
+                    });
+
+                    if (!response.ok) {
+                        console.error('Task status API error:', response.status);
+                        return;
+                    }
+
+                    const data = await response.json();
+
+                    // Store running and completed tasks
+                    runningTasks = data.running_tasks || [];
+                    completedTasks = data.recently_completed_all || [];
+
+                    // Update running task count and appearance
+                    taskCountEl.textContent = data.running_count;
+
+                    if (data.running_count > 0) {
+                        // Tasks running - blue badge with pulsing indicator
+                        taskMonitorBadge.className = 'bg-blue-500 text-white px-3 py-1.5 rounded-lg shadow-md flex items-center gap-2 text-sm transition-colors duration-300 cursor-pointer hover:opacity-90';
+                        taskMonitorIndicator.className = 'w-2 h-2 bg-white rounded-full badge-loading';
+                    } else {
+                        // No tasks - gray badge with static indicator
+                        taskMonitorBadge.className = 'bg-gray-400 text-white px-3 py-1.5 rounded-lg shadow-md flex items-center gap-2 text-sm transition-colors duration-300 cursor-pointer hover:opacity-90';
+                        taskMonitorIndicator.className = 'w-2 h-2 bg-white rounded-full';
+                    }
+
+                    // Update task list in popover
+                    updateTaskList();
+
+                    // Show notifications for completed tasks
+                    if (data.recently_completed && data.recently_completed.length > 0) {
+                        showCompletedNotifications(data.recently_completed);
+
+                        // Mark tasks as seen
+                        const taskIds = data.recently_completed.map(t => t.task_id);
+                        await markTasksAsSeen(taskIds);
+                    }
+
+                } catch (error) {
+                    console.error('Error checking task status:', error);
+                } finally {
+                    // Schedule next poll
+                    pollTimeout = setTimeout(checkTaskStatus, POLL_INTERVAL);
+                }
+            }
+
+            async function markTasksAsSeen(taskIds) {
+                try {
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+                    await fetch('{% url "common:task_status_api" %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ task_ids: taskIds })
+                    });
+                } catch (error) {
+                    console.error('Error marking tasks as seen:', error);
+                }
+            }
+
+            function showCompletedNotifications(tasks) {
+                tasks.forEach(task => {
+                    const isSuccess = task.status === 'SUCCESS';
+                    const message = getTaskMessage(task);
+
+                    showNotification(message, isSuccess ? 'success' : 'error');
+                });
+            }
+
+            function getTaskMessage(task) {
+                // Extract task name (remove module path)
+                const taskName = task.task_name.split('.').pop();
+
+                if (task.status === 'SUCCESS') {
+                    // Try to extract message from result
+                    if (task.result && typeof task.result === 'object' && task.result.message) {
+                        return task.result.message;
+                    }
+                    return `Task ${taskName} completed successfully`;
+                } else {
+                    // Try to extract error from result
+                    if (task.result && typeof task.result === 'object' && task.result.error) {
+                        return `Task ${taskName} failed: ${task.result.error}`;
+                    }
+                    return `Task ${taskName} failed`;
+                }
+            }
+
+            function showNotification(message, type = 'info') {
+                // Create notification element
+                const notification = document.createElement('div');
+                notification.className = `task-notification px-4 py-3 rounded-lg shadow-lg text-white transition-opacity duration-500 ${
+                    type === 'success' ? 'bg-green-500' :
+                    type === 'error' ? 'bg-red-500' :
+                    'bg-blue-500'
+                }`;
+                notification.textContent = message;
+
+                document.body.appendChild(notification);
+
+                // Auto-dismiss after 5 seconds
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                    setTimeout(() => notification.remove(), 500);
+                }, 5000);
+            }
+
+            function updateTaskList() {
+                let html = '';
+
+                // Running tasks section
+                if (runningTasks.length > 0) {
+                    html += '<div class="mb-3">';
+                    html += '<div class="text-xs text-blue-400 font-semibold mb-1">RUNNING</div>';
+                    html += runningTasks.map(task => {
+                        const taskName = task.task_name.split('.').pop();
+                        const timeAgo = getTimeAgo(task.initiated_at);
+                        const adminUrl = `/admin/tasks/usertask/${task.id}/change/`;
+                        return `
+                            <a href="${adminUrl}" class="task-item py-2 px-2 rounded hover:bg-gray-700 transition-colors block">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
+                                    <div class="text-sm font-medium">${taskName}</div>
+                                </div>
+                                <div class="text-xs text-gray-400 mt-0.5 ml-5">${timeAgo}</div>
+                            </a>
+                        `;
+                    }).join('');
+                    html += '</div>';
+                }
+
+                // Completed tasks section
+                if (completedTasks.length > 0) {
+                    html += '<div>';
+                    html += '<div class="text-xs text-green-400 font-semibold mb-1">COMPLETED</div>';
+                    html += completedTasks.map(task => {
+                        const taskName = task.task_name.split('.').pop();
+                        const timeAgo = getTimeAgo(task.initiated_at);
+                        const isSuccess = task.status === 'SUCCESS';
+                        const statusColor = isSuccess ? 'text-green-400' : 'text-red-400';
+                        const statusIcon = isSuccess ? '✓' : '✗';
+                        const adminUrl = `/admin/tasks/usertask/${task.id}/change/`;
+
+                        return `
+                            <a href="${adminUrl}" class="task-item py-2 px-2 rounded hover:bg-gray-700 transition-colors block">
+                                <div class="flex items-center gap-2">
+                                    <div class="${statusColor} text-xs font-bold">${statusIcon}</div>
+                                    <div class="text-sm font-medium">${taskName}</div>
+                                </div>
+                                <div class="text-xs text-gray-400 mt-0.5 ml-5">${timeAgo}</div>
+                            </a>
+                        `;
+                    }).join('');
+                    html += '</div>';
+                }
+
+                // Empty state
+                if (runningTasks.length === 0 && completedTasks.length === 0) {
+                    html = '<div class="text-gray-400 text-xs py-2">No recent tasks</div>';
+                }
+
+                taskList.innerHTML = html;
+            }
+
+            function getTimeAgo(isoString) {
+                const date = new Date(isoString);
+                const seconds = Math.floor((new Date() - date) / 1000);
+
+                if (seconds < 60) return `${seconds}s ago`;
+                const minutes = Math.floor(seconds / 60);
+                if (minutes < 60) return `${minutes}m ago`;
+                const hours = Math.floor(minutes / 60);
+                return `${hours}h ago`;
+            }
+
+            // Toggle popover on badge click
+            taskMonitorBadge.addEventListener('click', (e) => {
+                e.stopPropagation();
+                taskPopover.classList.toggle('hidden');
+            });
+
+            // Close popover when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!taskMonitor.contains(e.target)) {
+                    taskPopover.classList.add('hidden');
+                }
+            });
+
+            // Start polling when page loads
+            console.log('Starting task monitor');
+            checkTaskStatus();
+
+            // Clean up on page unload
+            window.addEventListener('beforeunload', () => {
+                if (pollTimeout) {
+                    clearTimeout(pollTimeout);
+                }
+            });
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,259 @@
+{# Reusable deal card component without animated background - pass a 'deal' object #}
+{% load deal_colors %}
+
+<style>
+    .deal-container {
+        position: relative;
+        min-height: 100vh;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem;
+        z-index: 1;
+    }
+
+    .header-section {
+        margin-bottom: 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    @media (min-width: 768px) {
+        .header-section {
+            flex-direction: row;
+            align-items: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+        font-size: 1rem;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        transition: all 0.2s;
+    }
+
+    .back-link:hover {
+        transform: translateY(-1px);
+    }
+
+    .deal-title {
+        position: relative;
+        font-size: 2.5rem;
+        font-weight: 900;
+        color: {{ deal.primary_foreground_color }};
+        margin: 0;
+        line-height: 1.2;
+        z-index: 10;
+        padding: 0.25rem;
+        flex: 1;
+    }
+
+    .deal-title::before {
+        content: attr(data-text);
+        position: absolute;
+        left: 0;
+        top: 0;
+        z-index: -1;
+        padding: 0.25rem;
+        -webkit-text-stroke-width: 3px;
+        -webkit-text-stroke-color: transparent;
+        background: linear-gradient(110deg, {{ deal.color_palette.all|palette_gradient_css }});
+        background-size: 300% 100%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        animation: shimmer 6s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+
+    @media (min-width: 768px) {
+        .deal-title {
+            font-size: 3.5rem;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .deal-title {
+            font-size: 4.5rem;
+        }
+    }
+
+    .image-card {
+        position: relative;
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(20px);
+        border-radius: 1rem;
+        overflow: hidden;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        margin-bottom: 1.5rem;
+        cursor: pointer;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .image-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 25px 70px rgba(0, 0, 0, 0.5);
+    }
+
+    .image-card a {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .deal-image-wrapper {
+        position: relative;
+        width: 100%;
+        padding-top: 133%; /* ~3:4 aspect ratio for mobile - more vertical space */
+        background: rgba(0, 0, 0, 0.2);
+    }
+
+    @media (min-width: 640px) {
+        .deal-image-wrapper {
+            padding-top: 75%; /* 4:3 aspect ratio for tablets */
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .deal-image-wrapper {
+            padding-top: 56.25%; /* 16:9 aspect ratio for desktop */
+        }
+    }
+
+    .deal-image {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .image-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+        padding: 2rem 1.5rem 1.5rem;
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+
+    .price-marker {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.75rem 1.25rem;
+        border-radius: 0.75rem;
+        font-size: 1.5rem;
+        font-weight: 900;
+    }
+
+    .expiry-marker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        border-radius: 0.75rem;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .deal-link-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        width: 100%;
+        text-decoration: none;
+        font-size: 1.25rem;
+        font-weight: 700;
+        padding: 1rem 2rem;
+        border-radius: 0.75rem;
+        transition: all 0.3s;
+    }
+
+    .deal-link-button:hover {
+        transform: translateY(-2px);
+    }
+</style>
+
+<div class="deal-container">
+    <!-- Header with Title -->
+    <div class="header-section">
+        {% if show_back_button %}
+        <a href="{% url 'deals:home' %}" class="inline-flex items-center text-base md:text-lg px-4 py-2 rounded-lg border-2 border-white/20 backdrop-blur-sm transition-all hover:scale-105 hover:shadow-xl deal-bg-primary deal-fg-primary deal-glow-shadow-sm deal-glow-shadow-sm-hover">
+            ← Back
+        </a>
+        {% endif %}
+
+        <h1 class="deal-title" data-text="{{ deal.name }}">{{ deal.name }}</h1>
+
+        {% if user.is_staff and deal.status == 'draft' %}
+        <span style="display: inline-block; background: #ca8a04; color: white; padding: 0.25rem 0.75rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: bold;">
+            DRAFT
+        </span>
+        {% endif %}
+    </div>
+
+    <!-- Clickable Image Card with Title, Price and Expiry Markers -->
+    <div class="image-card">
+        <a href="{{ deal.link }}" target="_blank" rel="noopener noreferrer">
+            <div class="deal-image-wrapper">
+                {% if deal.image %}
+                <img src="{{ deal.image.url }}" alt="{{ deal.name }}" class="deal-image">
+                {% endif %}
+            </div>
+            <div class="image-overlay">
+                <div class="price-marker deal-bg-primary deal-fg-primary deal-glow-shadow-md border-white-20">
+                    {% if deal.original_price %}
+                    <span style="text-decoration: line-through; opacity: 0.7; margin-right: 0.5rem; font-size: 0.9em;">${{ deal.original_price }}</span>
+                    {% endif %}
+                    {% if deal.price == 0 %}
+                    FREE
+                    {% else %}
+                    ${{ deal.price }}
+                    {% endif %}
+                </div>
+                <div class="expiry-marker deal-bg-primary deal-fg-primary deal-glow-shadow-md border-white-20">
+                    <span class="text-emoji">⏱️</span>
+                    <span>
+                        {% if deal.is_active %}
+                        Expires {{ deal.expires|timeuntil }}
+                        {% else %}
+                        <span style="color: #f87171;">Expired</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Deal Link Button -->
+    <a href="{{ deal.link }}"
+       target="_blank"
+       rel="noopener noreferrer"
+       class="deal-link-button hover-sheen deal-bg-primary deal-fg-primary deal-glow-shadow-lg deal-glow-shadow-lg-hover border-white-20">
+        <span class="text-emoji">🔗</span>
+        <span>Deal Link</span>
+    </a>
+
+    <!-- Image Attribution -->
+    {% if deal.image_attribution %}
+    <p style="margin-top: 1rem; text-align: center; font-size: 0.875rem; color: {{ deal.primary_foreground_color }}; opacity: 0.7;">
+        Image: {{ deal.image_attribution }}
+    </p>
+    {% endif %}
+</div>

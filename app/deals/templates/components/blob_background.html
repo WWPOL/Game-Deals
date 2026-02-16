@@ -1,0 +1,132 @@
+{# Optimized blob background component - pass a list of color objects with background_color, foreground_color, and weight #}
+{% load deal_colors %}
+
+<style>
+    .animation-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        overflow: hidden;
+    }
+
+    .animation-container svg {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        /* Use CSS filter instead of SVG filter for better performance */
+        filter: blur(60px);
+        opacity: 0.8;
+    }
+
+    /* Optimized blob animation using CSS - GPU accelerated */
+    .morphing-blob {
+        will-change: transform;
+        transform: translateZ(0); /* Force GPU layer */
+    }
+
+    /* CSS animations for smooth, hardware-accelerated movement */
+    @keyframes blob-float-1 {
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(60px, -50px); }
+    }
+
+    @keyframes blob-float-2 {
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(-50px, 60px); }
+    }
+
+    @keyframes blob-float-3 {
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(40px, 45px); }
+    }
+
+    @keyframes blob-float-4 {
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(-45px, -40px); }
+    }
+
+    /* Reduced motion support for accessibility */
+    @media (prefers-reduced-motion: reduce) {
+        .animation-container svg {
+            filter: blur(40px);
+        }
+        .morphing-blob {
+            animation: none !important;
+        }
+    }
+</style>
+
+<div class="animation-container deal-gradient-bg">
+    <svg viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
+    </svg>
+</div>
+
+<script>
+    (function() {
+        var paletteColors = [
+            {% for color in colors %}
+            {
+                background: "{{ color.background_color }}",
+                weight: {{ color.weight }}
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+        var svg = document.querySelector('.animation-container svg');
+
+        // Simplified blob shape with fewer points for better performance
+        function createBlobPath(cx, cy, size) {
+            var points = 5; // Reduced from 8 to 5 for simpler paths
+            var path = 'M';
+            for (var i = 0; i <= points; i++) {
+                var angle = (i / points) * Math.PI * 2;
+                var randomRadius = size * (0.75 + Math.random() * 0.5);
+                var x = cx + Math.cos(angle) * randomRadius;
+                var y = cy + Math.sin(angle) * randomRadius;
+
+                if (i === 0) {
+                    path += x + ',' + y;
+                } else {
+                    var prevAngle = ((i - 1) / points) * Math.PI * 2;
+                    var prevRadius = size * (0.75 + Math.random() * 0.5);
+                    var cpx = cx + Math.cos(prevAngle + 0.5) * prevRadius;
+                    var cpy = cy + Math.sin(prevAngle + 0.5) * prevRadius;
+                    path += ' Q' + cpx + ',' + cpy + ' ' + x + ',' + y;
+                }
+            }
+            return path + 'Z';
+        }
+
+        // Reduced blob count: max 1-2 blobs per color instead of 2-5+
+        var animations = ['blob-float-1', 'blob-float-2', 'blob-float-3', 'blob-float-4'];
+
+        paletteColors.forEach(function(colorEntry, index) {
+            // Use weight to determine blob size - limit to 1-2 blobs per color
+            var blobSize = 400 * (colorEntry.weight * 2.5);
+            var blobCount = colorEntry.weight > 0.2 ? 2 : 1; // Max 2 blobs per color
+
+            for (var i = 0; i < blobCount; i++) {
+                // Random position across canvas
+                var cx = Math.random() * 1000;
+                var cy = Math.random() * 1000;
+
+                var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('class', 'morphing-blob');
+                path.setAttribute('d', createBlobPath(cx, cy, blobSize));
+                path.setAttribute('fill', colorEntry.background);
+
+                // Use CSS animation instead of JS - better performance
+                var animIndex = (index * 2 + i) % animations.length;
+                var duration = 20 + Math.random() * 15; // 20-35 seconds
+                var delay = (index * 2 + i) * 1.5; // Stagger start times
+
+                path.style.animation = animations[animIndex] + ' ' + duration + 's ease-in-out ' + delay + 's infinite alternate';
+                path.style.transformOrigin = 'center';
+
+                svg.appendChild(path);
+            }
+        });
+    })();
+</script>

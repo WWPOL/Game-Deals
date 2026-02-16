@@ -1,0 +1,17 @@
+{% extends "admin/base.html" %}
+{% load static admin_list %}
+
+{# This base template extends unfold's admin/base.html which includes: #}
+{# - Full admin UI with sidebar, header, and branding #}
+{# - Messages block with proper styling #}
+{# - All standard admin functionality #}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block extrahead %}
+    {# Load jQuery for widgets that need it (like django-select2) #}
+    <script src="{% static 'admin/js/vendor/jquery/jquery.min.js' %}"></script>
+    {{ block.super }}
+{% endblock %}

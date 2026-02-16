@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: app
+        image: ghcr.io/wwpol/game-deals:latest
+        env:
+        - name: TEMP_DOWNLOAD_DIR
+          value: /tmp/game-deals
+        envFrom:
+        - secretRef:
+            name: app-secret
+        - configMapRef:
+            name: app-config
+        volumeMounts:
+        - name: temp-downloads
+          mountPath: /tmp/game-deals
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      volumes:
+      - name: temp-downloads
+        emptyDir:
+          sizeLimit: 256Mi

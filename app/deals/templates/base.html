@@ -1,0 +1,122 @@
+{% load static %}
+{% load tz_detect %}
+{% load deal_colors %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Game Deals{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'css/common.css' %}">
+    <link rel="stylesheet" href="{% static 'css/deal-colors.css' %}">
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .deal-card {
+            animation: fadeIn 0.3s ease-out;
+        }
+        /* Make emojis match text color by converting to grayscale */
+        .text-emoji {
+            filter: grayscale(1) brightness(1.2);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    {% if deal %}
+        {% deal_variables deal %}
+    {% elif first_active_deal %}
+        {% deal_variables first_active_deal %}
+    {% endif %}
+
+    <div class="{% if deal %}{% deal_scope deal %}{% elif first_active_deal %}{% deal_scope first_active_deal %}{% endif %}">
+    {% block nav %}
+    <nav class="shadow-sm fixed top-0 left-0 right-0 z-10 deal-fg-primary backdrop-blur">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <!-- Brand -->
+                <div class="flex items-center">
+                    <a href="{% url 'deals:home' %}" class="flex items-center">
+                        <span class="text-2xl font-bold deal-fg-primary whitespace-nowrap">🎮 Game Deals</span>
+                        <span class="ml-3 text-sm deal-fg-primary hidden sm:block">by Olly G</span>
+                    </a>
+                </div>
+
+                <!-- Center: Pagination Header (hidden on mobile) -->
+                <div class="hidden md:flex flex-1 justify-center px-4">
+                    {% include 'components/deal_pagination_header.html' %}
+                </div>
+
+                <!-- Mobile: Active Deals Header -->
+                <div class="flex md:hidden flex-1 justify-center px-2">
+                    {% include 'components/deal_pagination_header.html' %}
+                </div>
+
+                <!-- Desktop Nav Items (right-aligned) -->
+                <div class="hidden md:flex items-center gap-4">
+                    {% include 'components/nav_items.html' %}
+                </div>
+
+                <!-- Mobile Hamburger Button -->
+                <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg deal-fg-primary hover:opacity-80 transition-opacity">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Mobile Menu Dropdown -->
+            <div id="mobile-menu" class="hidden md:hidden border-t border-white/20">
+                <div class="py-2">
+                    {% include 'components/nav_items.html' with mobile=True %}
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% endblock %}
+
+    <main class="pt-16">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block footer %}
+      <footer class="background-blur deal-fg-primary mt-12 relative">
+        <div class="w-full">
+            <div class="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+              <div class="text-center p-5">
+                    <p class="font-semibold mb-2">🎮 Olly G's Game Deals</p>
+                    <p class="text-sm">
+                        Never miss a great deal on your favorite games
+                    </p>
+                    <p class="text-xs mt-3">
+                        No affiliate links • No ads • Always free
+                    </p>
+                    <p class="text-xs mt-3">
+                      <a href="{% url 'admin:login' %}">Login</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    {% endblock %}
+
+    {% block extra_js %}{% endblock %}
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        if (mobileMenuBtn && mobileMenu) {
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+    </script>
+
+    {% tz_detect %}
+    </div> <!-- Close deal scope wrapper -->
+</body>
+</html>
