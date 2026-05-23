@@ -125,3 +125,14 @@ To migrate deals from the legacy Firebase setup to this Django app:
    ```bash
    ./manage.py queue_download_images
    ```
+   
+# Troubleshooting
+## View On Site Button Goes To Wrong Domain
+In the admin panel while viewing a deal, if you click "View On Site" and it takes you to the wrong domain your Django site domain may be set incorrectly. To fix:
+
+1. Make sure you have set the `SITE_URL` environment variable
+2. Run the `update_site_domain` management script:
+   ```bash
+   ./manage.py update_site_domain
+   ```
+3. Restart the Django app process
